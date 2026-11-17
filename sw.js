@@ -1,6 +1,6 @@
 // Network-first: сайт всегда берётся свежим, кэш нужен только для офлайна.
-const CACHE = "journal-v4";
-const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"];
+const CACHE = "journal-v5";
+const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(
@@ -21,7 +21,7 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;      // Firebase, Telegram и Worker не трогаем
-  if (url.pathname.startsWith("/api/")) return;
+  if (url.pathname.indexOf("/api/") !== -1) return;
 
   e.respondWith((async () => {
     try {
@@ -35,7 +35,7 @@ self.addEventListener("fetch", e => {
       const hit = await caches.match(req);
       if (hit) return hit;
       if (req.mode === "navigate") {
-        return (await caches.match("/index.html")) || (await caches.match("/")) || Response.error();
+        return (await caches.match("./index.html")) || (await caches.match("./")) || Response.error();
       }
       return Response.error();
     }
