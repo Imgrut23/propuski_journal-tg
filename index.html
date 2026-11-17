@@ -1097,6 +1097,24 @@ html.ios #helloT{font-family:"Snell Roundhand","Apple Chancery","Brush Script MT
 #helloT.f{opacity:0}
 @keyframes helloW{from{-webkit-mask-position:100% 0;mask-position:100% 0}to{-webkit-mask-position:0 0;mask-position:0 0}}
 #helloS{position:absolute;bottom:calc(28px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:13px system-ui,sans-serif;color:#fff;opacity:.45}
+/* ===== Honor MagicOS (только Сарычев А.) ===== */
+html.honor.honor[data-theme="light"]{--hbase:#eaf1ff;--page:#eaf1ff;--ink:#0a1430;--mute:#55627f;--acc:#1a6bff;--acc-ink:#fff;--line:rgba(30,70,160,.14);--soft:rgba(255,255,255,.55);--hc:255,255,255;--ho:rgba(20,60,170,.16);--he:rgba(255,255,255,.45)}
+html.honor.honor[data-theme="dark"]{--hbase:#04070f;--page:#04070f;--ink:#edf3ff;--mute:#a3b3d6;--acc:#5aa2ff;--acc-ink:#04122e;--line:rgba(140,170,255,.18);--soft:rgba(255,255,255,.07);--hc:24,34,66;--ho:rgba(0,0,0,.5);--he:rgba(180,205,255,.2)}
+html.honor.honor{background:radial-gradient(60% 40% at 12% 0%,rgba(26,107,255,.42),transparent 62%),radial-gradient(55% 40% at 100% 18%,rgba(0,208,255,.30),transparent 62%),radial-gradient(70% 50% at 45% 108%,rgba(142,92,255,.34),transparent 66%),var(--hbase)!important;background-attachment:fixed!important}
+html.honor.honor body{font-family:"HONOR Sans","HarmonyOS Sans","MiSans","Google Sans Text",-apple-system,"SF Pro Text",Roboto,system-ui,sans-serif!important;letter-spacing:-.005em;-webkit-font-smoothing:antialiased}
+html.honor.honor .card,html.honor.honor .dv,html.honor.honor .sheet,html.honor.honor .floatBox,html.honor.honor #bnav,html.honor.honor .fab{
+ background:linear-gradient(140deg,rgba(var(--hc),calc(var(--ga,.5) + .14)),rgba(var(--hc),var(--ga,.5)))!important;
+ -webkit-backdrop-filter:blur(var(--gb,26px)) saturate(170%)!important;backdrop-filter:blur(var(--gb,26px)) saturate(170%)!important;
+ border:0!important;box-shadow:0 14px 38px var(--ho),inset 0 0 0 1px var(--he),inset 0 1px 0 rgba(255,255,255,.6)!important}
+html.honor.honor .card,html.honor.honor .dv{border-radius:26px}
+html.honor.honor .card::before,html.honor.honor .card::after,html.honor.honor .dv::before,html.honor.honor .sheet::before,html.honor.honor .sheet::after,html.honor.honor #bnav::before,html.honor.honor #bnav::after{display:none!important}
+html.honor.honor .main{background:linear-gradient(135deg,#1a6bff,#00b8ff)!important;color:#fff!important;border:0;border-radius:999px;box-shadow:0 8px 22px rgba(26,107,255,.38)}
+html.honor.honor .wrap h1{background:linear-gradient(90deg,var(--acc),#00c2ff 60%,#8e5cff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+html.honor.honor input,html.honor.honor select,html.honor.honor textarea{border-radius:16px}
+#hCap{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:95;display:flex;align-items:center;gap:8px;height:30px;padding:0 11px;border-radius:999px;background:rgba(10,14,28,.8);color:#fff;font:600 13px system-ui,sans-serif;white-space:nowrap;overflow:hidden;max-width:50px;transition:max-width .55s cubic-bezier(.3,1.25,.5,1);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 6px 20px rgba(26,107,255,.35),inset 0 0 0 1px rgba(255,255,255,.18)}
+#hCap.open{max-width:240px}
+#hCap i{flex:0 0 10px;height:10px;border-radius:50%;background:conic-gradient(#1a6bff,#00d4ff,#8e5cff,#1a6bff);animation:hSpin 3s linear infinite}
+@keyframes hSpin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -1300,12 +1318,17 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
 <div id="glassSect"><div class="sect"><h2>Стекло</h2>
 <label class="mute" for="gaR">Прозрачность</label><input type="range" id="gaR" min="15" max="95" value="58" style="width:100%">
 <label class="mute" for="gbR" style="display:block;margin-top:8px">Размытие</label><input type="range" id="gbR" min="0" max="50" value="28" style="width:100%">
-<p class="mute" style="margin:6px 0 0">Работает при включённом «✨ Стекло».</p></div><div class="set-divider"></div></div><div class="sect"><h2>Вход без Telegram и пароля</h2>
-<p class="mute" id="qrNote" style="margin-top:0">Покажите QR или отправьте ссылку на своё устройство. Она работает один раз и 10 минут.</p>
-<div class="row"><button class="main" id="qrMake" style="width:100%">Создать QR и ссылку</button></div>
+<p class="mute" style="margin:6px 0 0">Работает при включённом «✨ Стекло».</p></div><div class="set-divider"></div></div><div class="sect qrHeadOnly hidden"><h2>QR-вход для студента</h2>
+<p class="mute" id="qrNote" style="margin-top:0">Выберите студента и покажите ему QR или отправьте ссылку. Он войдёт под своим именем (один раз, 10 минут), а затем привяжет свой Telegram в настройках.</p>
+<div class="row"><select id="qrWho" aria-label="Студент"></select></div>
+<div class="row" style="margin-top:8px"><button class="main" id="qrMake" style="width:100%">Создать QR и ссылку</button></div>
 <div id="qrOut" class="hidden" style="text-align:center;margin-top:12px"><div id="qrBox" style="display:inline-block;padding:10px;background:#fff;border-radius:16px"></div>
 <input id="qrLink" readonly style="margin-top:10px;width:100%"><div class="row" style="margin-top:8px"><button id="qrCopy">Скопировать</button><button id="qrShare">Поделиться</button></div></div>
-</div></div></details>
+</div>
+<div class="sect qrUserOnly hidden"><h2>Telegram</h2><p class="mute" id="tgBindNote" style="margin-top:0"></p>
+<div id="tgBindBox" style="display:flex;justify-content:center;min-height:8px"></div>
+<button class="main" id="tgBindBtn" style="width:100%">Привязать Telegram</button></div>
+</div></details>
 
       <!-- ГРУППА 2: ИНСТРУМЕНТЫ И ИГРЫ -->
       <details class="set-group card" id="grpTools" data-keep="1" open style="border-radius:20px; margin-bottom:14px; padding:0; overflow:hidden;">
@@ -1823,6 +1846,7 @@ $("guestBtn").onclick=startGuest;
 $("guestTile").onclick=startGuest;
 
 function show(){
+  qrSync();honorSync();
   $("login").classList.toggle("hidden",!!me);
   $("app").classList.toggle("hidden",!me);
   if(!me){applyLoginMode();if(typeof mountTg==="function")mountTg();}
@@ -1833,7 +1857,9 @@ function show(){
   const sup=norm(me)===norm(SUPER_ADMIN);
   $("modeSwitch").classList.toggle("hidden",!sup);$("svcBtn").classList.toggle("hidden",!sup);
   if(sup)[...$("modeSwitch").children].forEach(b=>{const on=(b.dataset.m==="head")===isHead;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on?"true":"false")});
-  if(!tab&&isGuest){tab="grp"}
+  const dOK=GROUP==="4501";
+  if(!tab&&isGuest){tab=dOK?"diary":"grp"}
+  else if(!tab&&dOK){tab=isHead?"today":"diary";if(isHead)setSched(true,true)}
   else if(!tab){
     const sv=lsGet("absence:tab:"+(isHead?"h":"u")), ok=NAVS[isHead?"head":"user"].some(x=>x[0]===sv)||(!isHead&&sv==="diary");
     tab=ok?sv:(isHead?"today":"mark");
@@ -3325,15 +3351,16 @@ async function qrRedeem(){
 }
 function loadQR(ok,fail){if(window.QRCode)return ok();const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";s.onload=ok;s.onerror=fail;document.head.appendChild(s)}
 $("qrMake").onclick=async()=>{
-  if(!me||isGuest){qrNote("Сначала войдите в свой аккаунт.");return}
-  if(isHead||qrIsHead(me)){qrNote("Для старосты вход по QR отключён — используйте обычный вход.");return}
+  if(!me||isGuest||!isHead||isTempHead){qrNote("QR-вход создаёт только староста.");return}
+  const who=$("qrWho").value;if(!who){qrNote("Выберите студента.");return}
+  if(qrIsHead(who)){qrNote("Для старост и админа QR-вход отключён.");return}
   if(!(window.crypto&&crypto.subtle)){qrNote("Нужен https-адрес сайта.");return}
   const t=[...crypto.getRandomValues(new Uint8Array(16))].map(v=>v.toString(16).padStart(2,"0")).join("");
-  try{await fetch(qrRoot()+"/"+await qrHash(t)+".json",{method:"PUT",body:JSON.stringify({n:me,g:GROUP,exp:Date.now()+QR_TTL})})}catch(e){qrNote("Нет связи с сервером.");return}
+  try{await fetch(qrRoot()+"/"+await qrHash(t)+".json",{method:"PUT",body:JSON.stringify({n:who,g:GROUP,exp:Date.now()+QR_TTL})})}catch(e){qrNote("Нет связи с сервером.");return}
   const link=location.origin+location.pathname+"#qr="+t;
   $("qrLink").value=link;$("qrOut").classList.remove("hidden");$("qrBox").innerHTML="";
   loadQR(()=>new QRCode($("qrBox"),{text:link,width:180,height:180,correctLevel:QRCode.CorrectLevel.M}),()=>{$("qrBox").textContent="QR не загрузился — возьмите ссылку"});
-  logAct("создал QR-вход");
+  qrNote("QR для: "+who+". Действует 10 минут, один раз.");logAct("создал QR-вход",who);
 };
 $("qrCopy").onclick=()=>{const i=$("qrLink");i.select();try{navigator.clipboard.writeText(i.value)}catch(e){document.execCommand("copy")}qrNote("Ссылка скопирована.")};
 $("qrShare").onclick=()=>{const u=$("qrLink").value;if(navigator.share)navigator.share({title:"Вход в журнал",url:u}).catch(()=>{});else $("qrCopy").click()};
@@ -3341,6 +3368,42 @@ $("qrShare").onclick=()=>{const u=$("qrLink").value;if(navigator.share)navigator
  if(a)A.value=a;if(b)B.value=b;const ap=()=>{r.style.setProperty("--ga",A.value/100);r.style.setProperty("--gb",B.value+"px")};
  A.oninput=B.oninput=()=>{lsSet("absence:ga",A.value);lsSet("absence:gb",B.value);ap()};ap()})();
 
+/* ===== QR: видимость блоков и привязка Telegram изнутри ===== */
+const tgBound=()=>{const m=(db.cfg&&db.cfg.tgId)||{};return Object.keys(m).some(i=>m[i]===me)};
+function qrSync(){
+  const hd=!!(me&&!isGuest&&isHead&&!isTempHead),us=!!(me&&!isGuest&&!isHead);
+  document.querySelectorAll(".qrHeadOnly").forEach(e=>e.classList.toggle("hidden",!hd));
+  document.querySelectorAll(".qrUserOnly").forEach(e=>e.classList.toggle("hidden",!us));
+  if(hd){const w=$("qrWho"),c=w.value;w.innerHTML=db.students.filter(n=>!qrIsHead(n)).map(n=>"<option>"+esc(n)+"</option>").join("");if(c)w.value=c}
+  if(us){const b=tgBound();$("tgBindNote").textContent=b?"Telegram привязан ✓ — теперь можно входить через него.":"Привяжите свой Telegram, чтобы входить без QR.";$("tgBindBtn").classList.toggle("hidden",b||tgBindOn)}
+}
+let tgBindOn=false;
+$("tgBindBtn").onclick=()=>{
+  if(!TG_BOT||location.protocol!=="https:"){$("tgBindNote").textContent="Привязка работает только на сайте по https.";return}
+  tgBindOn=true;$("tgBindBtn").classList.add("hidden");
+  const sc=document.createElement("script");sc.async=true;sc.src="https://telegram.org/js/telegram-widget.js?22";
+  sc.setAttribute("data-telegram-login",TG_BOT);sc.setAttribute("data-size","large");sc.setAttribute("data-radius","12");
+  sc.setAttribute("data-onauth","onTgBind(user)");sc.setAttribute("data-request-access","write");
+  sc.onerror=()=>{tgBindOn=false;$("tgBindBtn").classList.remove("hidden");$("tgBindNote").textContent="Не загрузилась кнопка Telegram. Попробуйте ещё раз."};
+  $("tgBindBox").appendChild(sc);
+};
+async function onTgBind(u){
+  const note=t=>{$("tgBindNote").textContent=t};note("Привязываю…");
+  try{
+    const {ok,j}=await tgCall({tg:u,claim:{name:me,code:STUDENT_CODE}});
+    if(ok&&j.name&&norm(j.name)===norm(me)){await pull();tgBindOn=false;$("tgBindBox").innerHTML="";logAct("привязал Telegram",me);qrSync();return}
+    note(j.error||(j.name?"Этот Telegram уже привязан к другому студенту.":"Не удалось привязать Telegram."));
+  }catch(e){note("Нет связи с сервером входа.")}
+}
+/* ===== Honor-тема для админа ===== */
+function honorSync(){
+  const on=!!(me&&!isGuest&&norm(me)===norm(SUPER_ADMIN)),r=document.documentElement,was=r.classList.contains("honor");
+  r.classList.toggle("honor",on);
+  let c=$("hCap");
+  if(!on){if(c)c.remove();return}
+  if(!c){c=document.createElement("div");c.id="hCap";c.innerHTML="<i></i><span></span>";c.onclick=()=>c.classList.toggle("open");document.body.appendChild(c)}
+  if(!was){c.lastChild.textContent="Привет, Арсений";setTimeout(()=>c.classList.add("open"),500);setTimeout(()=>c.classList.remove("open"),3800)}
+}
 /* ===== запуск ===== */
 $("date").value=workDate();
 schedule();
