@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Пропуски">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Журнал пропусков</title>
 <style>
 /* ===== БАЗОВЫЕ ПЕРЕМЕННЫЕ И ТЕМЫ ===== */
@@ -3170,6 +3171,7 @@ let installEv=window.__ip||null;
 const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 function paintInstall(){
+    if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.initData){document.querySelectorAll(".inst").forEach(b=>b.classList.add("hidden"));return}
     const btns = document.querySelectorAll(".inst");
     const inst=isStandalone();
     btns.forEach(b=>{b.classList.remove("hidden");b.innerHTML=inst?'<span>✅</span>Установлено':'<span>⬇️</span>Установить'});
@@ -3302,8 +3304,18 @@ $("tgUnbindBtn").onclick=()=>{
   $("rpwMsg").textContent="Telegram отвязан. "+n+" сможет привязаться заново.";render();
 };
 let tgMounted=false;
+const TWA=(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.initData)?Telegram.WebApp:null;
 function mountTg(){
   if(tgMounted||me)return;
+  if(TWA){
+    // Внутри Telegram Mini App виджет не нужен: Telegram сам передаёт подписанные данные пользователя
+    tgMounted=true;
+    try{TWA.ready();TWA.expand()}catch(e){}
+    const w=$("tgWidget");
+    w.innerHTML='<button type="button" id="twaBtn" class="main" style="min-width:220px">Войти через Telegram</button>';
+    const go=()=>onTgAuth({webapp:true,initData:TWA.initData,id:TWA.initDataUnsafe&&TWA.initDataUnsafe.user&&TWA.initDataUnsafe.user.id});
+    $("twaBtn").onclick=go;go();return;
+  }
   if(!TG_BOT||location.protocol!=="https:"){
     $("tgErr").textContent=!TG_BOT?"Вход ещё не настроен.":"Вход работает только на сайте по https.";
     return;
