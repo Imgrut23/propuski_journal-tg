@@ -1013,11 +1013,11 @@ details::details-content { transition: none !important; }
 
 <section id="login" class="card hidden">
   <h1>Журнал пропусков</h1>
-  <div class="tabs">
+  <div class="tabs hidden">
     <button type="button" id="tabU" class="main">Студент</button>
     <button type="button" id="tabH">Староста</button>
   </div>
-  <form id="loginForm">
+  <form id="loginForm" class="hidden">
     <div><label class="mute" for="who">Выберите себя в списке</label>
     <select id="who" required></select></div>
     <div id="codeBox"><label class="mute" for="code" id="codeLbl">Пароль</label>
@@ -1028,7 +1028,7 @@ details::details-content { transition: none !important; }
     <div class="err" id="err"></div>
     <button class="main" style="width:100%">Войти</button>
   </form>
-  <div id="tgBox" class="hidden" style="margin-top:14px;text-align:center"><div class="mute" style="margin-bottom:8px">или</div><div id="tgWidget" style="display:flex;justify-content:center"></div></div>
+  <div id="tgBox" style="margin-top:6px;text-align:center"><p class="mute" style="margin:0 0 14px">Вход через Telegram. При первом входе нужно один раз выбрать своё имя и ввести код группы.</p><div id="tgWidget" style="display:flex;justify-content:center;min-height:40px"></div><label class="chk" style="justify-content:center;margin-top:10px"><input type="checkbox" id="rem2" checked> Запомнить меня</label><div id="claimBox" class="hidden" style="margin-top:12px;text-align:left"><label class="mute" for="claimName">Кто вы в списке группы</label><select id="claimName"></select><label class="mute" for="claimCode" style="display:block;margin-top:10px">Код группы</label><input id="claimCode" type="password" autocomplete="off"><button type="button" class="main" id="claimBtn" style="width:100%;margin-top:12px">Привязать Telegram</button></div><div class="err" id="tgErr" style="margin-top:6px"></div></div>
 </section>
 
 <!-- Всплывающее окно глобального Рандома -->
@@ -1224,7 +1224,7 @@ details::details-content { transition: none !important; }
           <div class="set-divider"></div>
           <div class="sect">
             <h2>Сброс данных студента</h2>
-            <div class="row" style="margin-bottom:8px"><div><select id="rpw" aria-label="Пароль"></select></div><button id="rpwBtn">Сброс пароля</button></div>
+            <div class="row" style="margin-bottom:8px"><div><select id="rpw" aria-label="Пароль"></select></div><button id="rpwBtn">Сброс пароля</button><button id="tgUnbindBtn">Отвязать Telegram</button></div>
             <p class="mute" id="rpwMsg" style="margin:0 0 12px"></p>
             
             <div class="row"><div><select id="rbase" aria-label="Часы"></select></div><button id="rbaseBtn">Сброс часов</button></div>
@@ -2478,6 +2478,7 @@ function renderInfoModal() {
   } else {
     $("infoContent").innerHTML = `
       <ul style="padding-left:20px; margin:0; display:flex; flex-direction:column; gap:10px;">
+        <li><b>v2.18:</b> Вход только через Telegram, пароли убраны. Привязка без @юзернейма: выбрать имя и ввести код группы; староста может отвязать Telegram в настройках.</li>
         <li><b>v2.17:</b> В дневнике можно выбрать вопрос к семинару («Беру»). Статистика старосты: переключатель «Прогулы / Успеваемость», где видно, сколько и какие вопросы выбрал каждый.</li>
         <li><b>v2.16:</b> Дневник встроен прямо в сайт в едином стиле с журналом и оставлен только для группы 4501; исправлены ошибки инициализации и добавлена очистка лога для старосты.</li>
         <li><b>v2.15:</b> Статистика компактная: все строки умещаются на экран, даты — одной кнопкой с быстрыми периодами, сводка убрана.</li>
@@ -2796,21 +2797,61 @@ paintInstall();
 /* ===== ВХОД ЧЕРЕЗ TELEGRAM ===== */
 const TG_BOT="proverkassa_bot"; // username бота БЕЗ @
 const TG_API="https://propuski.lelelaal7.workers.dev/"; // адрес Worker
-async function onTgAuth(u){
-  $("err").textContent="Проверяю Telegram…";
-  try{
-    const r=await fetch(TG_API||"/api/tg-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(u)});
-    const j=await r.json();
-    if(!r.ok||!j.name){$("err").textContent=j.error||"Не удалось войти через Telegram.";return}
-    $("err").textContent="";
-    rememberSet({n:j.name,r:"user"},$("rem").checked);
-    await start(j.name,"user");
-    logAct("вошёл через Telegram");
-  }catch(e){$("err").textContent="Нет связи с сервером входа."}
+let tgPending=null;
+async function tgCall(payload){
+  const r=await fetch(TG_API||"/api/tg-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  let j={};try{j=await r.json()}catch(e){}
+  return {ok:r.ok,j};
 }
+async function tgFinish(name,viaClaim){
+  const role=HEADS.some(h=>norm(h)===norm(name))?"head":"user";
+  rememberSet({n:name,r:role},$("rem2").checked);
+  $("claimBox").classList.add("hidden");$("claimCode").value="";
+  await start(name,role);
+  logAct(viaClaim?"привязал Telegram и вошёл":"вошёл через Telegram");
+}
+async function onTgAuth(u){
+  const err=t=>{$("tgErr").textContent=t};
+  tgPending=u;err("Проверяю Telegram…");
+  try{
+    const {ok,j}=await tgCall({tg:u});
+    if(ok&&j.name){err("");await tgFinish(j.name,false);return}
+    if(j.needClaim){
+      err("");
+      $("claimName").innerHTML='<option value="">Выберите себя…</option>'+(j.free||[]).map(n=>'<option>'+esc(n)+'</option>').join("");
+      $("claimBox").classList.remove("hidden");
+      return;
+    }
+    err(j.error||"Не удалось войти через Telegram.");
+  }catch(e){err("Нет связи с сервером входа.")}
+}
+$("claimBtn").onclick=async()=>{
+  const err=t=>{$("tgErr").textContent=t};
+  const name=$("claimName").value,code=$("claimCode").value;
+  if(!tgPending){err("Сначала нажмите кнопку Telegram.");return}
+  if(!name){err("Выберите себя в списке.");return}
+  if(!code){err("Введите код группы.");return}
+  err("Проверяю…");
+  try{
+    const {ok,j}=await tgCall({tg:tgPending,claim:{name,code}});
+    if(ok&&j.name){err("");await tgFinish(j.name,true);return}
+    err(j.error||"Не удалось привязать Telegram.");
+  }catch(e){err("Нет связи с сервером входа.")}
+};
+$("tgUnbindBtn").onclick=()=>{
+  const n=$("rpw").value;if(!n)return;
+  const map=(db.cfg&&db.cfg.tgId)||{};
+  const ids=Object.keys(map).filter(i=>map[i]===n);
+  if(!ids.length){$("rpwMsg").textContent=n+": Telegram не привязан.";return}
+  ids.forEach(i=>{delete db.cfg.tgId[i];net("/cfg/tgId/"+encodeURIComponent(i),null)});
+  save();logAct("отвязал Telegram",n);
+  $("rpwMsg").textContent="Telegram отвязан. "+n+" сможет привязаться заново.";render();
+};
 (function(){
-  if(!TG_BOT||location.protocol!=="https:")return;
-  $("tgBox").classList.remove("hidden");
+  if(!TG_BOT||location.protocol!=="https:"){
+    $("tgErr").textContent=!TG_BOT?"Вход ещё не настроен.":"Вход работает только на сайте по https.";
+    return;
+  }
   const sc=document.createElement("script");
   sc.async=true;sc.src="https://telegram.org/js/telegram-widget.js?22";
   sc.setAttribute("data-telegram-login",TG_BOT);
