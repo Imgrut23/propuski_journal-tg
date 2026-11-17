@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      { "source": "/api/tg-login", "function": { "functionId": "tgLogin", "region": "europe-west1" } }
+    ]
+  },
+  "functions": [{ "source": "functions", "codebase": "default" }]
+}
