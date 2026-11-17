@@ -1507,9 +1507,15 @@ function net(path,val){
   return fetch(base()+path+".json",{method:val===null?"DELETE":"PUT",body:val===null?undefined:JSON.stringify(val)}).catch(()=>{});
 }
 const RENAMES={"Каланцёр Дарья":"Каланцер Дарья"};
-let migrated=false;
+let migrated=false, studentsFixed=false;
 function migrate(){
   db.students=[...new Set(db.students.map(n=>RENAMES[n]||n))];
+  // Возвращаем в список тех, кто есть в списке группы по умолчанию, но пропал из базы
+  if(db.students.length){
+    const have=new Set(db.students.map(n=>norm(n)));
+    DEFAULT_STUDENTS.forEach(n=>{if(!have.has(norm(n))){db.students.push(n);studentsFixed=true}});
+    if(studentsFixed)db.students.sort((a,b)=>a.localeCompare(b,"ru"));
+  }
   for(const[o,w]of Object.entries(RENAMES)){
     const ok=k(o),nk=k(w);
     for(const m of[db.users,db.base])if(m[ok]!==undefined){if(m[nk]===undefined)m[nk]=m[ok];delete m[ok];migrated=true}
@@ -1632,6 +1638,7 @@ async function start(name,r){
 
   if(isHead&&!db.students.some(x=>norm(x)===norm(name))){db.students.push(name);db.students.sort((a,b)=>a.localeCompare(b,"ru"));putStudents()}
   if(isHead&&seeded){putStudents();seeded=false}
+  if(isHead&&studentsFixed){putStudents();studentsFixed=false}
   if(isHead&&migrated){putStudents();net("/marks",db.marks);net("/users",db.users);net("/base",db.base);migrated=false}
   tab=null;
   if(isHead){const lim=Date.now()-60*864e5;Object.keys(db.log).forEach(x=>{if(db.log[x].t<lim){delete db.log[x];net("/log/"+x,null)}})}
@@ -2323,6 +2330,7 @@ setInterval(async()=>{
   if(me&&DB_URL&&(!document.activeElement || !document.activeElement.matches("select,input,textarea"))){
     const before=JSON.stringify(db);
     await pull();
+    if(isHead&&studentsFixed){putStudents();studentsFixed=false}
     if(JSON.stringify(db)!==before){render();if(window._dvPaint)window._dvPaint();}
   }
   rollover();
@@ -2855,6 +2863,11 @@ document.querySelectorAll(".inst").forEach(b=>b.onclick=async()=>{
     try{ev.prompt();await ev.userChoice.catch(()=>{})}catch(e){}
     installEv=null;window.__ip=null;paintInstall();return;
   }
+  // диагностика: что именно мешает установке
+  let diag=[];
+  try{const r=await fetch("manifest.webmanifest",{cache:"no-store"});if(!r.ok)diag.push("файл manifest.webmanifest не найден на сайте");else await r.json()}catch(e){diag.push("manifest.webmanifest не читается")}
+  try{const g=await (navigator.serviceWorker&&navigator.serviceWorker.getRegistration());if(!g)diag.push("не запущен service worker (файл index.js)")}catch(e){}
+  if(location.protocol!=="https:")diag.push("сайт открыт не по https");
   const ua=navigator.userAgent;
   const inApp=/Telegram|FBAN|FBAV|Instagram|VKClient|; wv\)/i.test(ua);
   let msg;
@@ -2862,7 +2875,7 @@ document.querySelectorAll(".inst").forEach(b=>b.onclick=async()=>{
   else if(isIOS) msg="iPhone: откройте сайт в Safari → кнопка «Поделиться» → «На экран Домой».";
   else if(/Android/i.test(ua)) msg="Chrome: меню ⋮ → «Установить приложение» (или «Добавить на главный экран»). Если такого пункта нет, обновите страницу и подождите несколько секунд.";
   else msg="Chrome/Edge: нажмите значок установки в адресной строке справа или меню ⋮ → «Установить…».";
-  alert(msg);
+  alert(msg+(diag.length?"\n\nПричина: "+diag.join("; ")+".":""));
 });
 paintInstall();
 
