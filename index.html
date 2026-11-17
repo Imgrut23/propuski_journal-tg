@@ -2,6 +2,7 @@
 <html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
+<script>window.__ip=null;addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__ip=e;});</script>
 <meta name="viewport" content="width=device-width, initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f6f6f4" id="theme-color-meta">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1029,6 +1030,7 @@ details::details-content { transition: none !important; }
     <button class="main" style="width:100%">Войти</button>
   </form>
   <div id="tgBox" style="margin-top:6px;text-align:center"><p class="mute" style="margin:0 0 14px">Вход через Telegram. При первом входе нужно один раз выбрать своё имя и ввести код группы.</p><div id="tgWidget" style="display:flex;justify-content:center;min-height:40px"></div><label class="chk" style="justify-content:center;margin-top:10px"><input type="checkbox" id="rem2" checked> Запомнить меня</label><div id="claimBox" class="hidden" style="margin-top:12px;text-align:left"><label class="mute" for="claimName">Кто вы в списке группы</label><select id="claimName"></select><label class="mute" for="claimCode" style="display:block;margin-top:10px">Код группы</label><input id="claimCode" type="password" autocomplete="off"><button type="button" class="main" id="claimBtn" style="width:100%;margin-top:12px">Привязать Telegram</button></div><div class="err" id="tgErr" style="margin-top:6px"></div></div>
+  <button type="button" id="guestBtn" style="width:100%;margin-top:14px">👁 Войти как гость (только просмотр)</button>
 </section>
 
 <!-- Всплывающее окно глобального Рандома -->
@@ -1070,11 +1072,15 @@ details::details-content { transition: none !important; }
 
   <!-- ОКНО ИНФО (ЛОГИ / ЧТО НОВОГО) -->
   <div id="infoModal" class="floatBox hidden" role="dialog" aria-label="Информация">
-    <div class="tabs" style="margin-bottom:12px;">
-      <button type="button" id="tabLog" class="main">Лог</button>
-      <button type="button" id="tabNew">Что нового</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <div class="tabs" style="margin-bottom:0;flex:1;">
+        <button type="button" id="tabLog" class="main">Лог</button>
+        <button type="button" id="tabNew">Что нового</button>
+      </div>
+      <button type="button" id="infoClose" aria-label="Закрыть" title="Закрыть" style="flex:0 0 auto;width:40px;height:40px;min-height:40px;padding:0;border-radius:50%;font-size:18px;line-height:1;">✕</button>
     </div>
     <div id="infoContent" class="scroll" style="flex:1; overflow-y:auto; font-size:13px; padding-right:8px;"></div>
+    <button type="button" id="infoClose2" class="main" style="flex:0 0 auto;width:100%;margin-top:12px;">Закрыть</button>
     <div class="dv-foot-card info-author">
       <div class="author-info">
         <div class="author-name">Сарычев Арсений</div>
@@ -1161,6 +1167,21 @@ details::details-content { transition: none !important; }
               <button id="ckvrDel" style="flex:0 0 auto; border:1px solid var(--line);">Забрать</button>
             </div>
             <div id="ckvrList" class="mute" style="margin-top:8px"></div>
+          </div>
+          <div class="set-divider"></div>
+          <div class="sect">
+            <h2 style="color:var(--acc)">Вход по паролю</h2>
+            <p class="mute" style="margin-top:0" id="pwStatus"></p>
+            <div class="row" style="margin-bottom:8px"><button class="main" id="pwToggle" style="width:100%"></button></div>
+            <div class="row" style="margin-bottom:8px">
+              <select id="pwName" aria-label="Студент"></select>
+              <input type="text" id="pwVal" placeholder="Новый пароль (от 4 символов)" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </div>
+            <div class="row">
+              <button id="pwSetBtn" class="main">Задать пароль</button>
+              <button id="pwResetAll" class="danger">Обнулить всем</button>
+            </div>
+            <p class="mute" id="pwMsg" style="margin:8px 0 0"></p>
           </div>
         </div>
       </details>
@@ -1474,7 +1495,7 @@ function describe(m, showReason = false){
 }
 const descH=(m,r)=>esc(describe(m,r));
 
-let tab=null, me=null, isHead=false, isTempHead=false, role="user", seeded=false, dirty=false, db={students:[],marks:{},users:{},base:{},cfg:{},log:{},picks:{}}, undo=[], lastWork=workDate();
+let tab=null, me=null, isGuest=false, isHead=false, isTempHead=false, role="user", seeded=false, dirty=false, db={students:[],marks:{},users:{},base:{},cfg:{},log:{},picks:{}}, undo=[], lastWork=workDate();
 let markMode = "today"; 
 let lastRandTime = 0;
 
@@ -1541,6 +1562,12 @@ function rememberSet(o,rem){
 function savedLogin(){try{return JSON.parse(sessionStorage.getItem("absence:current")||lsGet("absence:current"))}catch(e){return null}}
 function rememberClear(){lsSet("absence:current","");try{sessionStorage.removeItem("absence:current")}catch(e){}}
 
+function applyLoginMode(){
+  const on=!!(db.cfg&&db.cfg.pwLogin);
+  $("loginForm").classList.toggle("hidden",!on);
+  const t=document.querySelector("#login .tabs");if(t)t.classList.toggle("hidden",!on);
+  if(on&&!$("who").options.length)fillWho();
+}
 function setRole(r){
   role=r;$("tabU").classList.toggle("main",r==="user");$("tabH").classList.toggle("main",r==="head");
   $("code").value="";$("gcode").value="";$("err").textContent="";fillWho();
@@ -1583,10 +1610,10 @@ $("loginForm").onsubmit=async e=>{
   await start(v,r);
   logAct("вошёл как "+(r==="head"?"староста":"студент"));
 };
-$("logout").onclick=()=>{rememberClear();setSched(false,true);me=null;tab=null;$("code").value="";$("gcode").value="";fillWho();show()};
+$("logout").onclick=()=>{isGuest=false;document.documentElement.classList.remove("guest");rememberClear();setSched(false,true);me=null;tab=null;$("code").value="";$("gcode").value="";fillWho();show()};
 
 async function start(name,r){
-  me=name;dirty=false;await pull();
+  me=name;dirty=false;isGuest=false;document.documentElement.classList.remove("guest");await pull();
   
   isHead = r==="head" || norm(name) === norm(SUPER_ADMIN);
   isTempHead = false;
@@ -1607,15 +1634,27 @@ async function start(name,r){
   $("date").value=workDate();lastWork=workDate();show();
 }
 
+async function startGuest(){
+  me="Гость";isGuest=true;isHead=false;isTempHead=false;dirty=false;
+  await pull();
+  if(db.cfg&&db.cfg.randAlert)lastRandTime=db.cfg.randAlert.t;
+  tab=null;$("date").value=workDate();lastWork=workDate();
+  document.documentElement.classList.add("guest");
+  show();
+}
+$("guestBtn").onclick=startGuest;
+
 function show(){
   $("login").classList.toggle("hidden",!!me);
   $("app").classList.toggle("hidden",!me);
+  if(!me){applyLoginMode();if(typeof mountTg==="function")mountTg();}
   if(!me){navKey=null;$("bnav").innerHTML="";$("streak").classList.add("hidden");return}
-  $("user").textContent=me+(isHead?" · староста":" · студент");
+  $("user").textContent=isGuest?"Гость · только просмотр":me+(isHead?" · староста":" · студент");
   const sup=norm(me)===norm(SUPER_ADMIN);
   $("modeSwitch").classList.toggle("hidden",!sup);
   if(sup)[...$("modeSwitch").children].forEach(b=>{const on=(b.dataset.m==="head")===isHead;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on?"true":"false")});
-  if(!tab){
+  if(!tab&&isGuest){tab="grp"}
+  else if(!tab){
     const sv=lsGet("absence:tab:"+(isHead?"h":"u")), ok=NAVS[isHead?"head":"user"].some(x=>x[0]===sv)||(!isHead&&sv==="diary");
     tab=ok?sv:(isHead?"today":"mark");
     if(isHead&&lsGet("absence:sched")==="on") setSched(true,true);
@@ -1872,7 +1911,7 @@ $("thBtn").onclick = () => {
 };
 
 let navKey=null, rv=0; const rdone={h:0,u:0};
-const NAVS={head:[["today","Сегодня"],["stats","Статистика"],["self","Моя"],["set","Настройки"]],user:[["mark","Отметка"],["me","Мои"],["grp","Группа"]]};
+const NAVS={head:[["today","Сегодня"],["stats","Статистика"],["self","Моя"],["set","Настройки"]],user:[["mark","Отметка"],["me","Мои"],["grp","Группа"]],guest:[["grp","Группа"],["diary","Дневник"]]};
 function applyTab(){
   if(isHead&&tab==="diary") tab="today";
   const diary=!isHead&&tab==="diary";
@@ -1883,7 +1922,7 @@ function applyTab(){
   document.querySelectorAll("[data-t]").forEach(e=>{
     let vis=(self&&e.closest("#user-view"))?e.dataset.t!=="grp":e.dataset.t.split(" ").includes(tab);
     e.classList.toggle("tabhide",!vis)});
-  const nk=isHead?"head":"user";
+  const nk=isGuest?"guest":(isHead?"head":"user");
   if(navKey!==nk){
     navKey=nk;
     renderNav(NAVS[nk].map(([id,l])=>`<button type="button" class="${id===tab?"on":""}" data-tab="${id}">${l}</button>`).join(""));
@@ -2016,6 +2055,12 @@ function renderHead(){
     
     if(isRealHead) {
       $("thName").innerHTML = db.students.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
+      const pwOn=!!(db.cfg&&db.cfg.pwLogin), pn=$("pwName"), pv=pn.value;
+      const pOpts=db.students.map(s=>`<option value="${esc(s)}">${esc(s)}${db.users[k(s)]?"":" (нет пароля)"}</option>`).join("");
+      if(pn.dataset.sig!==pOpts){pn.innerHTML=pOpts;pn.dataset.sig=pOpts;if(pv)pn.value=pv}
+      $("pwToggle").textContent=pwOn?"🔒 Выключить вход по паролю":"🔓 Включить вход по паролю";
+      $("pwToggle").className=pwOn?"danger":"main";
+      $("pwStatus").textContent=pwOn?"Вход по паролю включён (рядом с Telegram).":"Сейчас вход только через Telegram.";
       const th = db.cfg && db.cfg.tempHead;
       
       $("thCancelBtn").classList.add("hidden"); 
@@ -2153,6 +2198,7 @@ function renderHead(){
 
 function renderUser(){
   const n=myName();
+  if(isGuest){$("santaCard").classList.add("hidden");renderGroupList();return}
   
   if(db.cfg && db.cfg.santa && db.cfg.santaMap) {
     $("santaCard").classList.remove("hidden");
@@ -2237,6 +2283,10 @@ function renderUser(){
     items.map(([x,m])=>`<tr><td>${fmt(x)}</td><td>${descH(m, true)}</td><td>${hoursOf(m)}</td></tr>`).join("")+"</tbody></table></div>":
     '<p class="mute">Пропусков нет.</p>');
 
+  renderGroupList();
+}
+
+function renderGroupList(){
   const todayStr = workDate();
   const abs = db.students.filter(s => getMark(todayStr, s) && (hoursOf(getMark(todayStr, s)) > 0 || pairsOf(getMark(todayStr, s)).includes("Н")));
   const unm = db.students.filter(s => !getMark(todayStr, s));
@@ -2270,6 +2320,29 @@ setInterval(async()=>{
 },30000);
 
 /* обработчики настроек старосты (вешаются один раз) */
+$("pwToggle").onclick=()=>{
+  db.cfg=db.cfg||{};
+  db.cfg.pwLogin=!db.cfg.pwLogin;
+  save();net("/cfg/pwLogin",db.cfg.pwLogin);
+  logAct(db.cfg.pwLogin?"включил вход по паролю":"выключил вход по паролю");
+  render();
+};
+$("pwSetBtn").onclick=async()=>{
+  const n=$("pwName").value,pw=$("pwVal").value;
+  if(!n)return;
+  if(pw.length<4){$("pwMsg").textContent="Пароль — минимум 4 символа.";return}
+  const h=await hashPw(n,pw);
+  db.users[k(n)]=h;save();await net("/users/"+encodeURIComponent(k(n)),h);
+  logAct("задал пароль",n);
+  $("pwVal").value="";
+  $("pwMsg").textContent="Пароль для "+n+" задан. Передайте его лично.";render();
+};
+$("pwResetAll").onclick=async()=>{
+  if(!confirm("Обнулить пароли ВСЕМ студентам? Каждый задаст новый при следующем входе по паролю."))return;
+  db.users={};save();await net("/users",null);
+  logAct("обнулил пароли всем");
+  $("pwMsg").textContent="Пароли обнулены у всех.";render();
+};
 $("thCancelBtn").onclick=()=>{db.cfg.tempHead=null;save();net("/cfg",db.cfg);render()};
 $("ckvrAdd").onclick=()=>{
   const v=$("ckvrName").value;
@@ -2317,7 +2390,11 @@ $("rbaseBtn").onclick=()=>{
   $("rbaseMsg").textContent="Часы сброшены. "+n+" теперь может внести их заново.";render();
 };
 
-if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+if("serviceWorker" in navigator){
+  let swReloaded=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(swReloaded||!navigator.serviceWorker.controller)return;swReloaded=true;location.reload()});
+  addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
+}
 
 /* ===== календарь пропусков ===== */
 const MONTHS=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
@@ -2478,6 +2555,9 @@ function renderInfoModal() {
   } else {
     $("infoContent").innerHTML = `
       <ul style="padding-left:20px; margin:0; display:flex; flex-direction:column; gap:10px;">
+        <li><b>v2.21:</b> В «Инфо» добавлена кнопка «Закрыть». Кнопка «Установить» подсказывает, что делать, если браузер не даёт установить приложение сразу.</li>
+        <li><b>v2.20:</b> Режим гостя: вход без имени, можно только смотреть отсутствующих сегодня и дневник, менять ничего нельзя.</li>
+        <li><b>v2.19:</b> Староста может включить вход по паролю, задать пароль студенту лично и обнулить пароли всем (Настройки → Управление ролями). Добавлена кнопка закрытия в «Инфо», вход через Telegram стал надёжнее.</li>
         <li><b>v2.18:</b> Вход только через Telegram, пароли убраны. Привязка без @юзернейма: выбрать имя и ввести код группы; староста может отвязать Telegram в настройках.</li>
         <li><b>v2.17:</b> В дневнике можно выбрать вопрос к семинару («Беру»). Статистика старосты: переключатель «Прогулы / Успеваемость», где видно, сколько и какие вопросы выбрал каждый.</li>
         <li><b>v2.16:</b> Дневник встроен прямо в сайт в едином стиле с журналом и оставлен только для группы 4501; исправлены ошибки инициализации и добавлена очистка лога для старосты.</li>
@@ -2498,6 +2578,7 @@ $("infoBtn").onclick = (e) => {
    $("infoModal").classList.toggle("hidden", !isHidden);
    if(isHidden) renderInfoModal();
 };
+$("infoClose").onclick = $("infoClose2").onclick = () => $("infoModal").classList.add("hidden");
 $("tabLog").onclick = () => { infoTab = "log"; renderInfoModal(); };
 $("tabNew").onclick = () => { infoTab = "new"; renderInfoModal(); };
 
@@ -2727,7 +2808,7 @@ function setSched(o,noSave){
   syncSched();
   if(o) scrollTo(0,0); else navSync();
 }
-$("schedBtn").onclick=()=>{ if(isHead) setSched(!schedOn); else goTab(tab==="diary"?"mark":"diary"); };
+$("schedBtn").onclick=()=>{ if(isHead) setSched(!schedOn); else goTab(tab==="diary"?(isGuest?"grp":"mark"):"diary"); };
 $("diaryMini").onclick=()=>$("schedBtn").onclick();
 $("dvBackBtn").onclick=()=>$("schedBtn").onclick();
 
@@ -2748,18 +2829,29 @@ $("dvBackBtn").onclick=()=>$("schedBtn").onclick();
 })();
 
 /* ===== установка приложения ===== */
-let installEv=null;
+let installEv=window.__ip||null;
 const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 function paintInstall(){
     const btns = document.querySelectorAll(".inst");
     btns.forEach(b=>b.classList.toggle("hidden",isStandalone()));
 }
-addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEv=e;paintInstall()});
-addEventListener("appinstalled",()=>{installEv=null;document.querySelectorAll(".inst").forEach(b=>b.classList.add("hidden"))});
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEv=e;window.__ip=e;paintInstall()});
+addEventListener("appinstalled",()=>{installEv=null;window.__ip=null;document.querySelectorAll(".inst").forEach(b=>b.classList.add("hidden"))});
 document.querySelectorAll(".inst").forEach(b=>b.onclick=async()=>{
-  if(installEv){installEv.prompt();await installEv.userChoice.catch(()=>{});installEv=null;paintInstall();return}
-  alert(isIOS?"Нажмите «Поделиться» → «На экран Домой».":"Откройте меню браузера → «Установить приложение» или «Добавить на главный экран».");
+  const ev=installEv||window.__ip;
+  if(ev){
+    try{ev.prompt();await ev.userChoice.catch(()=>{})}catch(e){}
+    installEv=null;window.__ip=null;paintInstall();return;
+  }
+  const ua=navigator.userAgent;
+  const inApp=/Telegram|FBAN|FBAV|Instagram|VKClient|; wv\)/i.test(ua);
+  let msg;
+  if(inApp) msg="Сайт открыт во встроенном браузере (например, в Telegram), в нём установить приложение нельзя. Откройте ссылку в Chrome (Android) или Safari (iPhone): меню ⋮ → «Открыть в браузере», затем нажмите «Установить» ещё раз.";
+  else if(isIOS) msg="iPhone: откройте сайт в Safari → кнопка «Поделиться» → «На экран Домой».";
+  else if(/Android/i.test(ua)) msg="Chrome: меню ⋮ → «Установить приложение» (или «Добавить на главный экран»). Если такого пункта нет, обновите страницу и подождите несколько секунд.";
+  else msg="Chrome/Edge: нажмите значок установки в адресной строке справа или меню ⋮ → «Установить…».";
+  alert(msg);
 });
 paintInstall();
 
@@ -2799,9 +2891,23 @@ const TG_BOT="proverkassa_bot"; // username бота БЕЗ @
 const TG_API="https://propuski.lelelaal7.workers.dev/"; // адрес Worker
 let tgPending=null;
 async function tgCall(payload){
-  const r=await fetch(TG_API||"/api/tg-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-  let j={};try{j=await r.json()}catch(e){}
-  return {ok:r.ok,j};
+  // Worker может «просыпаться» долго или отдавать 5xx на первом запросе — повторяем до 3 раз.
+  let last=null;
+  for(let i=0;i<3;i++){
+    const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(),15000);
+    try{
+      const r=await fetch(TG_API||"/api/tg-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),signal:ctl.signal});
+      clearTimeout(tm);
+      let j={};try{j=await r.json()}catch(e){}
+      if(r.status>=500&&i<2){last={ok:r.ok,j};await new Promise(res=>setTimeout(res,600*(i+1)));continue}
+      return {ok:r.ok,j};
+    }catch(e){
+      clearTimeout(tm);last=null;
+      if(i===2)throw e;
+      await new Promise(res=>setTimeout(res,600*(i+1)));
+    }
+  }
+  return last||{ok:false,j:{}};
 }
 async function tgFinish(name,viaClaim){
   const role=HEADS.some(h=>norm(h)===norm(name))?"head":"user";
@@ -2810,8 +2916,11 @@ async function tgFinish(name,viaClaim){
   await start(name,role);
   logAct(viaClaim?"привязал Telegram и вошёл":"вошёл через Telegram");
 }
+let tgBusy=false;
 async function onTgAuth(u){
   const err=t=>{$("tgErr").textContent=t};
+  if(tgBusy)return;
+  tgBusy=true;
   tgPending=u;err("Проверяю Telegram…");
   try{
     const {ok,j}=await tgCall({tg:u});
@@ -2823,7 +2932,8 @@ async function onTgAuth(u){
       return;
     }
     err(j.error||"Не удалось войти через Telegram.");
-  }catch(e){err("Нет связи с сервером входа.")}
+  }catch(e){err("Нет связи с сервером входа. Нажмите кнопку Telegram ещё раз.")}
+  finally{tgBusy=false}
 }
 $("claimBtn").onclick=async()=>{
   const err=t=>{$("tgErr").textContent=t};
@@ -2847,11 +2957,15 @@ $("tgUnbindBtn").onclick=()=>{
   save();logAct("отвязал Telegram",n);
   $("rpwMsg").textContent="Telegram отвязан. "+n+" сможет привязаться заново.";render();
 };
-(function(){
+let tgMounted=false;
+function mountTg(){
+  if(tgMounted||me)return;
   if(!TG_BOT||location.protocol!=="https:"){
     $("tgErr").textContent=!TG_BOT?"Вход ещё не настроен.":"Вход работает только на сайте по https.";
     return;
   }
+  if($("login").classList.contains("hidden"))return; // виджет нужно создавать, когда форма уже видна
+  tgMounted=true;
   const sc=document.createElement("script");
   sc.async=true;sc.src="https://telegram.org/js/telegram-widget.js?22";
   sc.setAttribute("data-telegram-login",TG_BOT);
@@ -2859,14 +2973,15 @@ $("tgUnbindBtn").onclick=()=>{
   sc.setAttribute("data-radius","12");
   sc.setAttribute("data-onauth","onTgAuth(user)");
   sc.setAttribute("data-request-access","write");
+  sc.onerror=()=>{tgMounted=false;$("tgWidget").innerHTML="";$("tgErr").textContent="Не загрузилась кнопка Telegram. Обновите страницу.";};
   $("tgWidget").appendChild(sc);
-})();
+}
 
 /* ===== запуск ===== */
 $("date").value=workDate();
 schedule();
 const saved=savedLogin();
-if(saved&&saved.n)start(saved.n,saved.r);else{show();pull().then(fillWho)}
+if(saved&&saved.n)start(saved.n,saved.r);else{show();pull().then(()=>{fillWho();applyLoginMode()})}
 fillWho();
 </script>
 <script>
