@@ -1115,6 +1115,24 @@ html.honor.honor input,html.honor.honor select,html.honor.honor textarea{border-
 #hCap.open{max-width:240px}
 #hCap i{flex:0 0 10px;height:10px;border-radius:50%;background:conic-gradient(#1a6bff,#00d4ff,#8e5cff,#1a6bff);animation:hSpin 3s linear infinite}
 @keyframes hSpin{to{transform:rotate(360deg)}}
+/* ===== Лекции, кнопка меню, горизонтальный режим ===== */
+.dv-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.lib-pill{display:inline-flex;align-items:center;gap:4px;padding:6px 11px;border-radius:999px;background:var(--soft);color:var(--mute);font-size:13px;font-weight:500;text-decoration:none;white-space:nowrap;box-shadow:inset 0 0 0 1px var(--line)}
+.lib-pill:active{opacity:.7}
+html.ios .fab i{background:var(--acc)}
+html.honor.honor .fab i{background:linear-gradient(90deg,#1a6bff,#00b8ff)}
+@media (orientation:landscape) and (max-height:560px){
+  .wrap{max-width:1040px;padding:calc(8px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 84px calc(12px + env(safe-area-inset-left))}
+  .fab{right:calc(12px + env(safe-area-inset-right))}
+  #bnav{left:calc(12px + env(safe-area-inset-left));right:calc(72px + env(safe-area-inset-right))}
+  .sheet{right:calc(12px + env(safe-area-inset-right));max-height:calc(100dvh - 96px - env(safe-area-inset-bottom));overflow-y:auto}
+  #login{max-width:560px;margin-top:2vh}
+  #hCap{top:calc(4px + env(safe-area-inset-top))}
+}
+@media (orientation:landscape) and (max-height:560px) and (min-width:700px){
+  #head,#user-view{column-count:2;column-gap:14px}
+  #head>.card,#user-view>.card{break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -1179,6 +1197,7 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
       <button type="button" id="schedBtn" class="tile" aria-pressed="false" title="Дневник группы 4501"><span>📅</span><em id="schedLbl" style="font-style:normal">Дневник</em></button>
       <button type="button" id="legendBtn" class="tile" aria-expanded="false"><span>❓</span>Обозначения</button>
       <button type="button" id="guestTile" class="tile" title="Только просмотр"><span>👁</span>Режим гостя</button>
+      <button type="button" id="libTile" class="tile" title="Лекции на Google Диске" onclick="window.open('https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM','_blank','noopener')"><span>📚</span>Лекции</button>
       <button type="button" id="logout" class="tile out"><span>🚪</span>Выйти</button>
     </div>
   </aside>
@@ -1492,7 +1511,7 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
         <h1>Дневник</h1>
         <span class="group-pill" id="grpPill">Группа 4501</span>
       </div>
-      <button type="button" id="dvBackBtn" class="dv-back">К журналу</button>
+      <span class="dv-acts"><a class="lib-pill" href="https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM" target="_blank" rel="noopener" title="Лекции на Google Диске">📚 Лекции</a><button type="button" id="dvBackBtn" class="dv-back">К журналу</button></span>
     </div>
 
     <div class="card sticky-bar">
@@ -3399,10 +3418,10 @@ async function onTgBind(u){
 function honorSync(){
   const on=!!(me&&!isGuest&&norm(me)===norm(SUPER_ADMIN)),r=document.documentElement,was=r.classList.contains("honor");
   r.classList.toggle("honor",on);
-  let c=$("hCap");
-  if(!on){if(c)c.remove();return}
-  if(!c){c=document.createElement("div");c.id="hCap";c.innerHTML="<i></i><span></span>";c.onclick=()=>c.classList.toggle("open");document.body.appendChild(c)}
-  if(!was){c.lastChild.textContent="Привет, Арсений";setTimeout(()=>c.classList.add("open"),500);setTimeout(()=>c.classList.remove("open"),3800)}
+  if(!on){const o=$("hCap");if(o)o.remove();return}
+  if(was||$("hCap"))return;
+  const c=document.createElement("div");c.id="hCap";c.innerHTML="<i></i><span>Привет, Арсений</span>";document.body.appendChild(c);
+  setTimeout(()=>c.classList.add("open"),400);setTimeout(()=>c.classList.remove("open"),3400);setTimeout(()=>c.remove(),4200);
 }
 /* ===== запуск ===== */
 $("date").value=workDate();
