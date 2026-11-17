@@ -5,9 +5,9 @@
 <script>window.__ip=null;addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__ip=e;});</script>
 <meta name="viewport" content="width=device-width, initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f6f6f4" id="theme-color-meta">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" href="/favicon.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Пропуски">
@@ -2444,7 +2444,7 @@ $("rbaseBtn").onclick=()=>{
 if("serviceWorker" in navigator){
   let swReloaded=false;
   navigator.serviceWorker.addEventListener("controllerchange",()=>{if(swReloaded||!navigator.serviceWorker.controller)return;swReloaded=true;location.reload()});
-  addEventListener("load",()=>navigator.serviceWorker.register("/sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
+  addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(e=>{window.__swErr=String(e&&e.message||e)}));
 }
 
 /* ===== календарь пропусков ===== */
@@ -2900,7 +2900,7 @@ document.querySelectorAll(".inst").forEach(b=>b.onclick=async()=>{
   // диагностика: что именно мешает установке
   let diag=[];
   try{const r=await fetch("manifest.webmanifest",{cache:"no-store"});if(!r.ok)diag.push("файл manifest.webmanifest не найден на сайте");else await r.json()}catch(e){diag.push("manifest.webmanifest не читается")}
-  try{const g=await (navigator.serviceWorker&&navigator.serviceWorker.getRegistration());if(!g)diag.push("не запущен service worker (файл sw.js)")}catch(e){}
+  try{const g=await (navigator.serviceWorker&&navigator.serviceWorker.getRegistration());if(!g)diag.push("не запущен service worker (файл sw.js)"+(window.__swErr?": "+window.__swErr:""))}catch(e){}
   if(location.protocol!=="https:")diag.push("сайт открыт не по https");
   const ua=navigator.userAgent;
   const inApp=/Telegram|FBAN|FBAV|Instagram|VKClient|; wv\)/i.test(ua);
