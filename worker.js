@@ -2,7 +2,10 @@
 // Секрет BOT_TOKEN задаётся в настройках Worker (Settings → Variables and Secrets).
 // Необязательная переменная GROUP_CODE — код группы для первой привязки (по умолчанию 4501).
 
-const DB = "https://propuski-791e4-default-rtdb.europe-west1.firebasedatabase.app/journal";
+const ROOT = "https://propuski-791e4-default-rtdb.europe-west1.firebasedatabase.app";
+// Группа 4501 хранится в /journal, остальные — в /journal_<номер>
+const dbOf = (g) => ROOT + (g === "4501" ? "/journal" : "/journal_" + g);
+const GROUP_RE = /^[0-9A-Za-zА-Яа-я_-]{2,12}$/;
 
 // Стартовая привязка администратора по @юзернейму (дальше привязка идёт по Telegram ID)
 const SEED = { "imgrut234": "Сарычев Арсений" };
@@ -33,7 +36,7 @@ async function verify(data, token) {
   return Date.now() / 1000 - Number(rest.auth_date) < 86400; // не старше суток
 }
 
-const bind = (id, name) =>
+const bind = (DB, id, name) =>
   fetch(DB + "/cfg/tgId/" + encodeURIComponent(id) + ".json", {
     method: "PUT",
     body: JSON.stringify(name),
@@ -54,6 +57,14 @@ export default {
       return json({ error: "Подпись Telegram не прошла проверку. Нажмите кнопку входа ещё раз." }, 401);
     }
 
+    const group = String(body.group || "4501");
+    if (!GROUP_RE.test(group)) return json({ error: "Неверная группа." }, 400);
+    const DB = dbOf(group);
+    const reg = await fetch(ROOT + "/registry/" + encodeURIComponent(group) + ".json").then((r) => r.json()).catch(() => null);
+    if (reg && reg.deleted) return json({ error: "Такой группы нет." }, 404);
+    // код группы: из реестра; для 4501 по умолчанию — прежний
+    const groupCode = String((reg && reg.code) || (group === "4501" ? env.GROUP_CODE || "4501" : (group === "4502" || group === "4503" ? group : "")));
+
     const [students, cfg] = await Promise.all([
       fetch(DB + "/students.json").then((r) => r.json()),
       fetch(DB + "/cfg.json").then((r) => r.json()),
@@ -72,21 +83,24 @@ export default {
       const u = norm(data.username);
       name = list.find((s) => norm(tgNames[s]) === u) || (SEED[u] && list.includes(SEED[u]) ? SEED[u] : undefined);
       if (name) {
-        await bind(id, name);
+        await bind(DB, id, name);
         return json({ name });
       }
+      // главный администратор входит в любую группу, даже если его нет в её списке
+      if (SEED[u]) return json({ name: SEED[u] });
     }
 
     // 3) первая привязка без @username: выбрать своё имя + код группы
     const taken = new Set(Object.values(tgIds));
     if (claim) {
-      const code = String(env.GROUP_CODE || "4501");
+      const code = groupCode;
+      if (!code) return json({ error: "Для этой группы не задан код. Обратитесь к главному администратору." }, 403);
       if (String(claim.code) !== code) return json({ error: "Неверный код группы." }, 403);
       if (!list.includes(claim.name)) return json({ error: "Такого имени нет в списке." }, 400);
       if (taken.has(claim.name)) {
         return json({ error: "Это имя уже привязано к другому Telegram. Обратитесь к старосте." }, 403);
       }
-      await bind(id, claim.name);
+      await bind(DB, id, claim.name);
       return json({ name: claim.name });
     }
 
