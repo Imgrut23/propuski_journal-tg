@@ -1062,8 +1062,53 @@ details::details-content { transition: none !important; }
 .svc-msg.bad { color: var(--bad); }
 .svc-new { border: 1px dashed var(--line); border-radius: 16px; padding: 12px; margin-top: 12px; }
 </style>
+<script>(function(){var u=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(u)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)||(/Safari/.test(u)&&!/Chrome|Chromium|CriOS|FxiOS|Android|Edg|OPR/.test(u));document.documentElement.classList.add(ios?"ios":"pixel")})();</script>
+<style id="skin">
+/* ===== iOS-скин ===== */
+html.ios{--acc:#007aff;--acc-ink:#fff;--bad:#ff3b30;--ok:#34c759}
+html.ios[data-theme="dark"]{--acc:#0a84ff;--bad:#ff453a;--ok:#30d158}
+html.ios:not(.glass-theme)[data-theme="light"]{--page:#f2f2f7;--card:#fff;--soft:#e9e9ee;--line:rgba(60,60,67,.18);--ink:#000;--mute:#6c6c70}
+html.ios:not(.glass-theme)[data-theme="dark"]{--page:#000;--card:#1c1c1e;--soft:#2c2c2e;--line:rgba(84,84,88,.5);--ink:#fff;--mute:#98989f}
+html.ios.glass-theme[data-theme="light"]{--g-card:rgba(255,255,255,var(--ga,.58))}
+html.ios.glass-theme[data-theme="dark"]{--g-card:rgba(28,28,30,var(--ga,.52))}
+html.ios.glass-theme .card,html.ios.glass-theme .fab,html.ios.glass-theme .sheet,html.ios.glass-theme #bnav,html.ios.glass-theme .floatBox,html.ios.glass-theme #login,html.ios.glass-theme .dv{
+ -webkit-backdrop-filter:blur(var(--gb,28px)) saturate(180%)!important;backdrop-filter:blur(var(--gb,28px)) saturate(180%)!important}
+html.ios body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",system-ui,sans-serif!important;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
+html.ios h1{font-weight:700;letter-spacing:-.025em}
+html.ios .card{border-radius:22px}
+html.ios .main{background:var(--acc);color:#fff;border-radius:14px;font-weight:600}
+html.ios input,html.ios select,html.ios textarea{border-radius:12px}
+/* ===== Pixel / Material You ===== */
+html.pixel body{font-family:"Google Sans Text","Google Sans","Product Sans",Roboto,"Segoe UI",system-ui,sans-serif!important;letter-spacing:0!important;-webkit-font-smoothing:auto}
+html.pixel[data-theme="light"]{--page:#f9f9ff;--card:#eceef6;--bg:#f9f9ff;--soft:#e1e2ec;--ink:#191c20;--mute:#44474e;--line:#c4c6d0;--acc:#0b57d0;--acc-ink:#fff;--bad:#ba1a1a;--ok:#146c2e}
+html.pixel[data-theme="dark"]{--page:#111318;--card:#1d2024;--bg:#111318;--soft:#282a2f;--ink:#e2e2e9;--mute:#c4c6d0;--line:#44474e;--acc:#a8c7fa;--acc-ink:#062e6f;--bad:#ffb4ab;--ok:#7edc92}
+html.pixel .card{border-radius:28px;box-shadow:none}
+html.pixel .main{background:var(--acc);color:var(--acc-ink);border-radius:999px;font-weight:500}
+html.pixel input,html.pixel select,html.pixel textarea{border-radius:14px}
+html.pixel #glassToggle{display:none}
+html.pixel #glassSect{display:none}
+/* ===== Приветствие при первом входе ===== */
+#hello{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#000;transition:opacity .6s,transform .6s,filter .6s}
+#hello.out{opacity:0;transform:scale(1.08);filter:blur(8px);pointer-events:none}
+#helloT{font-size:clamp(56px,19vw,112px);font-weight:700;line-height:1.3;padding:0 .12em;text-align:center;background:linear-gradient(90deg,#ff9f0a,#ff375f,#bf5af2,#0a84ff,#30d158);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;font-family:"Google Sans","Product Sans",Roboto,system-ui,sans-serif}
+html.ios #helloT{font-family:"Snell Roundhand","Apple Chancery","Brush Script MT",cursive;font-weight:600}
+#helloT{-webkit-mask-image:linear-gradient(90deg,#000 46%,transparent 56%);mask-image:linear-gradient(90deg,#000 46%,transparent 56%);-webkit-mask-size:220% 100%;mask-size:220% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:100% 0;mask-position:100% 0;transition:opacity .45s}
+#helloT.w{animation:helloW 1.6s cubic-bezier(.45,.05,.4,1) forwards}
+#helloT.f{opacity:0}
+@keyframes helloW{from{-webkit-mask-position:100% 0;mask-position:100% 0}to{-webkit-mask-position:0 0;mask-position:0 0}}
+#helloS{position:absolute;bottom:calc(28px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:13px system-ui,sans-serif;color:#fff;opacity:.45}
+</style>
 </head>
 <body>
+<script>(function(){try{if(localStorage.getItem("absence:hello"))return}catch(e){}
+var W=["Hello","Hola","Bonjour","こんにちは","Ciao","Привет"],i=0,tm,h=document.createElement("div");
+h.id="hello";h.innerHTML='<div id="helloT"></div><div id="helloS">Коснитесь, чтобы пропустить</div>';document.body.appendChild(h);
+var t=h.firstChild;
+function done(){clearTimeout(tm);h.classList.add("out");try{localStorage.setItem("absence:hello","1")}catch(e){}setTimeout(function(){h.remove()},700)}
+function step(){if(i>=W.length)return done();t.className="";t.textContent=W[i];void t.offsetWidth;t.className="w";i++;if(i===W.length)tm=setTimeout(done,2800);else tm=setTimeout(function(){t.classList.add("f");tm=setTimeout(step,450)},2200)}
+h.onclick=done;
+if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.textContent=W[0];tm=setTimeout(done,900)}else step();
+})();</script>
 <div class="bg" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
 <section id="login" class="card hidden">
@@ -1248,6 +1293,19 @@ details::details-content { transition: none !important; }
           </div>
         </div>
       </details>
+
+<details class="set-group card" id="grpSkin" data-keep="1" open style="border-radius:20px;margin-bottom:14px;padding:0;overflow:hidden">
+<summary class="set-summary">📲 Вход по QR и вид</summary>
+<div class="set-content">
+<div id="glassSect"><div class="sect"><h2>Стекло</h2>
+<label class="mute" for="gaR">Прозрачность</label><input type="range" id="gaR" min="15" max="95" value="58" style="width:100%">
+<label class="mute" for="gbR" style="display:block;margin-top:8px">Размытие</label><input type="range" id="gbR" min="0" max="50" value="28" style="width:100%">
+<p class="mute" style="margin:6px 0 0">Работает при включённом «✨ Стекло».</p></div><div class="set-divider"></div></div><div class="sect"><h2>Вход без Telegram и пароля</h2>
+<p class="mute" id="qrNote" style="margin-top:0">Покажите QR или отправьте ссылку на своё устройство. Она работает один раз и 10 минут.</p>
+<div class="row"><button class="main" id="qrMake" style="width:100%">Создать QR и ссылку</button></div>
+<div id="qrOut" class="hidden" style="text-align:center;margin-top:12px"><div id="qrBox" style="display:inline-block;padding:10px;background:#fff;border-radius:16px"></div>
+<input id="qrLink" readonly style="margin-top:10px;width:100%"><div class="row" style="margin-top:8px"><button id="qrCopy">Скопировать</button><button id="qrShare">Поделиться</button></div></div>
+</div></div></details>
 
       <!-- ГРУППА 2: ИНСТРУМЕНТЫ И ИГРЫ -->
       <details class="set-group card" id="grpTools" data-keep="1" open style="border-radius:20px; margin-bottom:14px; padding:0; overflow:hidden;">
@@ -1541,7 +1599,7 @@ function lsSet(x,v){try{localStorage.setItem(x,v)}catch(e){}}
 const UA = navigator.userAgent;
 const DEFAULT_GLASS = true;
 const glassPref = lsGet("absence:glass");
-let isGlass = glassPref ? glassPref === "on" : DEFAULT_GLASS;
+let isGlass = document.documentElement.classList.contains("pixel") ? false : (glassPref ? glassPref === "on" : DEFAULT_GLASS);
 function applyGlass() {
   document.documentElement.classList.toggle("glass-theme", isGlass);
   const btn = document.getElementById("glassToggle");
@@ -3249,12 +3307,46 @@ $("svcBtn").onclick=e=>{
 };
 $("svcClose").onclick=()=>$("svcModal").classList.add("hidden");
 
+/* ===== ВХОД ПО QR / ССЫЛКЕ ===== */
+const QR_TTL=10*60*1000, qrRoot=()=>ROOT_URL()+"/qrlogin";
+async function qrHash(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}
+function qrNote(m){const n=$("qrNote");if(n)n.textContent=m}
+const qrIsHead=n=>HEADS.some(x=>norm(x)===norm(n))||norm(n)===norm(SUPER_ADMIN);
+async function qrRedeem(){
+  const m=/[#&?]qr=([a-f0-9]{32})/.exec(location.hash+location.search);if(!m)return null;
+  history.replaceState(null,"",location.pathname);
+  try{
+    const u=qrRoot()+"/"+await qrHash(m[1])+".json",rec=await (await fetch(u)).json();
+    if(rec)await fetch(u,{method:"DELETE"});
+    if(!rec||!rec.n||rec.exp<Date.now()){alert("Ссылка входа недействительна или устарела. Создайте новую в настройках.");return null}
+    if(qrIsHead(rec.n)){alert("Для аккаунта старосты вход по QR отключён.");return null}
+    const o={n:rec.n,r:"user",g:rec.g||GROUP};rememberSet(o,true);return o;
+  }catch(e){alert("Не удалось войти по ссылке: нет связи или нужен https.");return null}
+}
+function loadQR(ok,fail){if(window.QRCode)return ok();const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";s.onload=ok;s.onerror=fail;document.head.appendChild(s)}
+$("qrMake").onclick=async()=>{
+  if(!me||isGuest){qrNote("Сначала войдите в свой аккаунт.");return}
+  if(isHead||qrIsHead(me)){qrNote("Для старосты вход по QR отключён — используйте обычный вход.");return}
+  if(!(window.crypto&&crypto.subtle)){qrNote("Нужен https-адрес сайта.");return}
+  const t=[...crypto.getRandomValues(new Uint8Array(16))].map(v=>v.toString(16).padStart(2,"0")).join("");
+  try{await fetch(qrRoot()+"/"+await qrHash(t)+".json",{method:"PUT",body:JSON.stringify({n:me,g:GROUP,exp:Date.now()+QR_TTL})})}catch(e){qrNote("Нет связи с сервером.");return}
+  const link=location.origin+location.pathname+"#qr="+t;
+  $("qrLink").value=link;$("qrOut").classList.remove("hidden");$("qrBox").innerHTML="";
+  loadQR(()=>new QRCode($("qrBox"),{text:link,width:180,height:180,correctLevel:QRCode.CorrectLevel.M}),()=>{$("qrBox").textContent="QR не загрузился — возьмите ссылку"});
+  logAct("создал QR-вход");
+};
+$("qrCopy").onclick=()=>{const i=$("qrLink");i.select();try{navigator.clipboard.writeText(i.value)}catch(e){document.execCommand("copy")}qrNote("Ссылка скопирована.")};
+$("qrShare").onclick=()=>{const u=$("qrLink").value;if(navigator.share)navigator.share({title:"Вход в журнал",url:u}).catch(()=>{});else $("qrCopy").click()};
+(function(){const r=document.documentElement,A=$("gaR"),B=$("gbR"),a=lsGet("absence:ga"),b=lsGet("absence:gb");
+ if(a)A.value=a;if(b)B.value=b;const ap=()=>{r.style.setProperty("--ga",A.value/100);r.style.setProperty("--gb",B.value+"px")};
+ A.oninput=B.oninput=()=>{lsSet("absence:ga",A.value);lsSet("absence:gb",B.value);ap()};ap()})();
+
 /* ===== запуск ===== */
 $("date").value=workDate();
 schedule();
 (async()=>{
   await loadReg();
-  const saved=savedLogin();
+  const saved=(await qrRedeem())||savedLogin();
   applyGroup((saved&&saved.g)||GROUP);
   fillGroupPick();
   if(saved&&saved.n)start(saved.n,saved.r);
