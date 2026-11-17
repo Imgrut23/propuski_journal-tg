@@ -736,6 +736,36 @@ html body, html.glass-theme[data-theme] body { background: transparent !importan
 /* Пустой день и футер дневника */
 #schedView .no-data { text-align: center; padding: 40px 20px; color: var(--mute); margin-bottom: 0; }
 #schedView .no-data::before { content: '☕'; display: block; font-size: 30px; margin-bottom: 8px; }
+
+/* ===== периоды дневника ===== */
+#schedView .period-card{padding:18px 18px 16px;margin-bottom:0;border-left:4px solid var(--pc,var(--acc))}
+#schedView .pc-badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pc);background:color-mix(in srgb,var(--pc) 14%,transparent);padding:3px 10px;border-radius:999px}
+#schedView .pc-title{font-size:18px;font-weight:700;color:var(--ink);margin:10px 0 2px}
+#schedView .pc-range{color:var(--mute);font-size:13px}
+#schedView .pc-bar{height:6px;border-radius:99px;background:var(--soft);margin-top:14px;overflow:hidden}
+#schedView .pc-bar i{display:block;height:100%;background:var(--pc);border-radius:99px}
+#schedView .pc-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-top:6px}
+#schedView .lessons .period-card,#schedView .panel>.period-card{margin-bottom:10px}
+.pc-session{--pc:#d08a12}.pc-vacation{--pc:var(--ok)}.pc-practice{--pc:#4f83e0}
+/* ===== напоминание об оплате ===== */
+#payBox:empty{display:none}
+.pay-card{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:12px;border-left:4px solid var(--acc)}
+.pay-card.urgent{border-left-color:var(--bad);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--bad) 35%,transparent)}
+.pay-ico{font-size:22px;flex:0 0 auto}
+.pay-main{flex:1;min-width:0}
+.pay-t{font-weight:650;font-size:14.5px}
+.pay-s{font-size:12.5px;color:var(--mute);margin-top:2px;line-height:1.35}
+.pay-card button{min-height:34px;padding:0 12px;font-size:13px;flex:0 0 auto}
+/* ===== лог ===== */
+.lg-bar{display:flex;gap:8px;margin-bottom:6px}
+.lg-bar input{flex:1;min-width:0;min-height:34px;font-size:13px}
+.lg-bar button{min-height:34px;padding:0 12px;font-size:13px}
+.lg-day{position:sticky;top:0;z-index:1;background:var(--card);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mute);padding:12px 0 4px}
+.lg-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);line-height:1.35}
+.lg-row:last-of-type{border-bottom:none}
+.lg-t{flex:0 0 38px;font-variant-numeric:tabular-nums;color:var(--mute);font-size:12px;padding-top:1px}
+.lg-b{flex:1;min-width:0;word-break:break-word}
+.lg-for{display:inline-block;font-size:11.5px;background:var(--soft);color:var(--mute);border-radius:999px;padding:1px 9px;margin-left:2px}
 #schedView .no-data .big { font-size: 17px; font-weight: 650; color: var(--ink); margin-bottom: 4px; }
 .dv-foot-card {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
@@ -1133,6 +1163,26 @@ html.honor.honor .fab i{background:linear-gradient(90deg,#1a6bff,#00b8ff)}
   #head,#user-view{column-count:2;column-gap:14px}
   #head>.card,#user-view>.card{break-inside:avoid}
 }
+/* ===== Дневник: компактнее ===== */
+#schedView{gap:6px}
+#schedView .dv-head{padding:8px 12px;gap:8px;flex-wrap:nowrap}
+#schedView .brand-wrap{gap:6px;flex:1 1 auto}
+#schedView .brand-wrap h1{font-size:17px}
+#schedView .group-pill{font-size:11.5px;padding:2px 8px;white-space:nowrap}
+#schedView .dv-acts{flex-wrap:nowrap;gap:6px;flex:0 0 auto}
+#schedView .lib-pill{font-size:12px;padding:0 9px;min-height:30px}
+#schedView .dv-back{min-height:30px;padding:0 10px;font-size:12px;white-space:nowrap}
+#schedView .sticky-bar{padding:8px 10px}
+#schedView .week-head{margin:0 2px 6px;gap:6px}
+#schedView .week-month{font-size:15.5px}
+#schedView .week-meta{margin-top:1px}
+#schedView .today-button{min-height:28px;padding:0 10px;font-size:12px}
+#schedView .day-nav{gap:4px}
+#schedView .day-arrow{width:30px;height:30px;min-height:30px;font-size:16px}
+#schedView .day-tab{padding:4px 2px;gap:1px;border-radius:12px}
+#schedView .day-tab .day-num{width:26px;height:26px;font-size:13px}
+#schedView .lessons{gap:8px}
+html.honor.honor #schedView .dv-head,html.honor.honor #schedView .sticky-bar{border-radius:20px}
 </style>
 </head>
 <body>
@@ -1148,7 +1198,7 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
 <div class="bg" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
 <section id="login" class="card hidden">
-  <div class="lg-hero"><div class="lg-logo"><svg viewBox="0 0 96 96" aria-hidden="true"><defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f6e2e0"/></linearGradient></defs><rect width="96" height="96" rx="24" fill="#ffffff" fill-opacity=".16"/><rect x="25" y="17" width="48" height="62" rx="7" fill="url(#lgg)"/><rect x="25" y="17" width="9" height="62" rx="5" fill="#f1d3d0"/><g fill="#9b1c1e"><circle cx="25" cy="29" r="3"/><circle cx="25" cy="42" r="3"/><circle cx="25" cy="55" r="3"/><circle cx="25" cy="68" r="3"/></g><g stroke="#e2d6d6" stroke-width="3" stroke-linecap="round"><path d="M41 31h24M41 42h24M41 53h14"/></g><circle cx="69" cy="68" r="14" fill="#fff"/><circle cx="69" cy="68" r="11.5" fill="#13795b"/><path d="M63.5 68.3l4 4 8-8" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h1>Журнал пропусков</h1><p class="lg-sub" id="lgSub">Группа 4501 · пропуски и дневник</p><div class="lg-feats"><span>📋 Журнал</span><span>📅 Дневник</span><span>📲 Как приложение</span></div></div>
+  <div class="lg-hero"><div class="lg-logo"><svg viewBox="0 0 96 96" aria-hidden="true"><defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f6e2e0"/></linearGradient></defs><rect width="96" height="96" rx="24" fill="#ffffff" fill-opacity=".16"/><rect x="25" y="17" width="48" height="62" rx="7" fill="url(#lgg)"/><rect x="25" y="17" width="9" height="62" rx="5" fill="#f1d3d0"/><g fill="#9b1c1e"><circle cx="25" cy="29" r="3"/><circle cx="25" cy="42" r="3"/><circle cx="25" cy="55" r="3"/><circle cx="25" cy="68" r="3"/></g><g stroke="#e2d6d6" stroke-width="3" stroke-linecap="round"><path d="M41 31h24M41 42h24M41 53h14"/></g><circle cx="69" cy="68" r="14" fill="#fff"/><circle cx="69" cy="68" r="11.5" fill="#13795b"/><path d="M63.5 68.3l4 4 8-8" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h1>Журнал пропусков</h1><p class="lg-sub" id="lgSub">4501 · пропуски и дневник</p><div class="lg-feats"><span>📋 Журнал</span><span>📅 Дневник</span><span>📲 Как приложение</span></div></div>
   <div class="lg-body">
   <h2 class="lg-title">Добро пожаловать 👋</h2><p class="lg-hint">Выберите группу и войдите</p>
   <div id="grpRow" class="lg-grp"><label class="mute" for="grpPick">Ваша группа</label><select id="grpPick" aria-label="Группа"></select></div>
@@ -1194,7 +1244,7 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
       <button type="button" id="svcBtn" class="tile hidden" title="Группы, старосты, коды"><span>🛠</span>Сервис</button>
       <button type="button" id="infoBtn" class="tile"><span>ℹ️</span>Инфо и лог</button>
       <button type="button" id="glassToggle" class="tile" title="Включить/выключить стекло"><span>✨</span>Стекло</button>
-      <button type="button" id="schedBtn" class="tile" aria-pressed="false" title="Дневник группы 4501"><span>📅</span><em id="schedLbl" style="font-style:normal">Дневник</em></button>
+      <button type="button" id="schedBtn" class="tile" aria-pressed="false" title="Дневник 4501"><span>📅</span><em id="schedLbl" style="font-style:normal">Дневник</em></button>
       <button type="button" id="legendBtn" class="tile" aria-expanded="false"><span>❓</span>Обозначения</button>
       <button type="button" id="guestTile" class="tile" title="Только просмотр"><span>👁</span>Режим гостя</button>
       <button type="button" id="libTile" class="tile" title="Лекции на Google Диске" onclick="window.open('https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM','_blank','noopener')"><span>📚</span>Лекции</button>
@@ -1204,7 +1254,7 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
 
   <div id="svcModal" class="floatBox hidden" role="dialog" aria-label="Сервисное меню">
     <div class="svc-head"><h2 style="margin:0;color:var(--acc)">🛠 Сервисное меню</h2><button type="button" id="svcClose" class="quiet" aria-label="Закрыть">✕</button></div>
-    <p class="mute" style="margin:6px 0 10px;font-size:12.5px">Группы по курсам. Старост назначаете только вы.</p>
+    <p class="mute" id="svcIntro" style="margin:6px 0 10px;font-size:12.5px"></p>
     <div id="svcBody" class="scroll"></div>
   </div>
   <div id="legendBox" class="floatBox hidden" role="dialog" aria-label="Обозначения"><h2>Обозначения</h2><ul>
@@ -1229,7 +1279,7 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
     <div class="dv-foot-card info-author">
       <div class="author-info">
         <div class="author-name">Сарычев Арсений</div>
-        <div class="author-role" id="gAuth1">Журнал · Группа 4501</div>
+        <div class="author-role" id="gAuth1">Журнал · 4501</div>
       </div>
       <a href="https://t.me/Imgrut234" target="_blank" rel="noopener" class="author-link-btn">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1239,6 +1289,8 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
       </a>
     </div>
   </div>
+
+  <div id="payBox"></div>
 
   <!-- Староста -->
   <div id="head" class="hidden">
@@ -1480,7 +1532,7 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
   </div>
 
   <!-- Дневник (расписание группы 4501) -->
-  <section id="schedView" class="hidden" aria-label="Дневник группы 4501">
+  <section id="schedView" class="hidden" aria-label="Дневник 4501">
     <input type="radio" name="day" id="day-mon" class="hidden-radio" checked>
     <input type="radio" name="day" id="day-tue" class="hidden-radio">
     <input type="radio" name="day" id="day-wed" class="hidden-radio">
@@ -1505,11 +1557,45 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
     <input type="radio" name="week" id="week-15" class="hidden-radio">
     <input type="radio" name="week" id="week-16" class="hidden-radio">
     <input type="radio" name="week" id="week-17" class="hidden-radio">
+    <input type="radio" name="week" id="week-18" class="hidden-radio">
+    <input type="radio" name="week" id="week-19" class="hidden-radio">
+    <input type="radio" name="week" id="week-20" class="hidden-radio">
+    <input type="radio" name="week" id="week-21" class="hidden-radio">
+    <input type="radio" name="week" id="week-22" class="hidden-radio">
+    <input type="radio" name="week" id="week-23" class="hidden-radio">
+    <input type="radio" name="week" id="week-24" class="hidden-radio">
+    <input type="radio" name="week" id="week-25" class="hidden-radio">
+    <input type="radio" name="week" id="week-26" class="hidden-radio">
+    <input type="radio" name="week" id="week-27" class="hidden-radio">
+    <input type="radio" name="week" id="week-28" class="hidden-radio">
+    <input type="radio" name="week" id="week-29" class="hidden-radio">
+    <input type="radio" name="week" id="week-30" class="hidden-radio">
+    <input type="radio" name="week" id="week-31" class="hidden-radio">
+    <input type="radio" name="week" id="week-32" class="hidden-radio">
+    <input type="radio" name="week" id="week-33" class="hidden-radio">
+    <input type="radio" name="week" id="week-34" class="hidden-radio">
+    <input type="radio" name="week" id="week-35" class="hidden-radio">
+    <input type="radio" name="week" id="week-36" class="hidden-radio">
+    <input type="radio" name="week" id="week-37" class="hidden-radio">
+    <input type="radio" name="week" id="week-38" class="hidden-radio">
+    <input type="radio" name="week" id="week-39" class="hidden-radio">
+    <input type="radio" name="week" id="week-40" class="hidden-radio">
+    <input type="radio" name="week" id="week-41" class="hidden-radio">
+    <input type="radio" name="week" id="week-42" class="hidden-radio">
+    <input type="radio" name="week" id="week-43" class="hidden-radio">
+    <input type="radio" name="week" id="week-44" class="hidden-radio">
+    <input type="radio" name="week" id="week-45" class="hidden-radio">
+    <input type="radio" name="week" id="week-46" class="hidden-radio">
+    <input type="radio" name="week" id="week-47" class="hidden-radio">
+    <input type="radio" name="week" id="week-48" class="hidden-radio">
+    <input type="radio" name="week" id="week-49" class="hidden-radio">
+    <input type="radio" name="week" id="week-50" class="hidden-radio">
+    <input type="radio" name="week" id="week-51" class="hidden-radio">
 
     <div class="card dv-head">
       <div class="brand-wrap">
         <h1>Дневник</h1>
-        <span class="group-pill" id="grpPill">Группа 4501</span>
+        <span class="group-pill" id="grpPill">4501</span>
       </div>
       <span class="dv-acts"><a class="lib-pill" href="https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM" target="_blank" rel="noopener" title="Лекции на Google Диске">📚 Лекции</a><button type="button" id="dvBackBtn" class="dv-back">К журналу</button></span>
     </div>
@@ -1549,7 +1635,7 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
     <div class="card dv-foot-card">
       <div class="author-info">
         <div class="author-name">Voina Roman</div>
-        <div class="author-role" id="gAuth2">Расписание · Группа 4501</div>
+        <div class="author-role" id="gAuth2">Расписание · 4501</div>
       </div>
       <a href="https://t.me/machiavellianismus" target="_blank" rel="noopener" class="author-link-btn">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1569,6 +1655,11 @@ if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){t.t
 /* ===== НАСТРОЙКИ ===== */
 let HEADS=["Алейников Владислав","Далидович Александра","Жигалкович Елизавета"];
 const SUPER_ADMIN="Сарычев Арсений"; 
+/* сервисный человек группы: назначается супер-админом, права только в своей группе */
+const svcNames=g=>{const r=REG[g||GROUP];return(r&&Array.isArray(r.svc))?r.svc:[]};
+const isSvcName=(n,g)=>!!n&&svcNames(g).some(x=>norm(x)===norm(n));
+const isSvcHere=()=>!!me&&!isGuest&&isSvcName(me);
+const canSvc=()=>(!!me&&norm(me)===norm(SUPER_ADMIN))||isSvcHere();
 let DEFAULT_STUDENTS=[
 "Алейников Владислав","Аполоник Алина","Буссоль Алексей","Быкова Анастасия","Война Роман","Готин Никита",
 "Грижневич Алёна","Далидович Александра","Евстратовская Дарья","Жигалкович Елизавета","Жолнерович Валерия",
@@ -1581,19 +1672,21 @@ let HEAD_CODE="матарас";
 /* ===== ГРУППЫ (реестр ведёт супер-админ в сервисном меню) ===== */
 const G4501={heads:HEADS.slice(),students:DEFAULT_STUDENTS.slice()};
 const DEFAULT_REG={
-  "4501":{title:"Группа 4501",faculty:"ФП",course:"3",code:"4501",headCode:"матарас",heads:HEADS.slice()},
-  "4502":{title:"Группа 4502",faculty:"ФП",course:"3",code:"4502",headCode:"",heads:[]},
-  "4503":{title:"Группа 4503",faculty:"ФП",course:"3",code:"4503",headCode:"",heads:[]}
+  "4501":{title:"4501",faculty:"ФП",course:"3",code:"4501",headCode:"матарас",heads:HEADS.slice(),svc:[]},
+  "4502":{title:"4502",faculty:"ФП",course:"3",code:"4502",headCode:"",heads:[],svc:[]},
+  "4503":{title:"4503",faculty:"ФП",course:"3",code:"4503",headCode:"",heads:[],svc:[]}
 };
 let REG=JSON.parse(JSON.stringify(DEFAULT_REG));
 let GROUP=(function(){try{return localStorage.getItem("absence:group")||"4501"}catch(e){return"4501"}})();
 const ROOT_URL=()=>DB_URL.replace(/\/$/,"");
 const groupPath=g=>g==="4501"?"/journal":"/journal_"+g;
-const grpTitle=g=>(REG[g]&&REG[g].title)||("Группа "+g);
+const grpTitle=g=>String((REG[g]&&REG[g].title)||g).replace(/^Группа\s+/i,"");
 function normReg(v,def){
   const o={...(def||{}),...v};
   const h=o.heads;
   o.heads=Array.isArray(h)?h.filter(Boolean):(h&&typeof h==="object"?Object.values(h).filter(Boolean):[]);
+  const sv=o.svc;
+  o.svc=Array.isArray(sv)?sv.filter(Boolean):(sv&&typeof sv==="object"?Object.values(sv).filter(Boolean):[]);
   return o;
 }
 async function loadReg(){
@@ -1818,7 +1911,6 @@ $("loginForm").onsubmit=async e=>{
   }
   rememberSet({n:v,r,g:GROUP},$("rem").checked);
   await start(v,r);
-  logAct("вошёл как "+(r==="head"?"староста":"студент"));
 };
 $("logout").onclick=()=>{
   if(isGuest){
@@ -1832,7 +1924,7 @@ $("logout").onclick=()=>{
 async function start(name,r){
   me=name;dirty=false;isGuest=false;document.documentElement.classList.remove("guest");await pull();
   
-  isHead = r==="head" || norm(name) === norm(SUPER_ADMIN);
+  isHead = r==="head" || norm(name) === norm(SUPER_ADMIN) || isSvcName(name);
   isTempHead = false;
   
   if (!isHead && db.cfg && db.cfg.tempHead && db.cfg.tempHead.n === norm(name) && Date.now() < db.cfg.tempHead.exp) {
@@ -1872,20 +1964,20 @@ function show(){
   if(!me){navKey=null;$("bnav").innerHTML="";$("streak").classList.add("hidden");return}
   $("guestTile").classList.toggle("hidden",isGuest);
   $("logout").lastChild.textContent=isGuest?"Выйти из гостя":"Выйти";
-  $("user").textContent=isGuest?"Гость · только просмотр · "+GROUP:me+(isHead?" · староста":" · студент")+" · "+GROUP;
   const sup=norm(me)===norm(SUPER_ADMIN);
-  $("modeSwitch").classList.toggle("hidden",!sup);$("svcBtn").classList.toggle("hidden",!sup);
+  $("user").textContent=isGuest?"Гость · только просмотр · "+GROUP:me+(isSvcHere()&&!sup?" · сервис":isHead?" · староста":" · студент")+" · "+GROUP;
+  $("modeSwitch").classList.toggle("hidden",!sup);$("svcBtn").classList.toggle("hidden",!canSvc());
   if(sup)[...$("modeSwitch").children].forEach(b=>{const on=(b.dataset.m==="head")===isHead;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on?"true":"false")});
   const dOK=GROUP==="4501";
   if(!tab&&isGuest){tab=dOK?"diary":"grp"}
   else if(!tab&&dOK){tab=isHead?"today":"diary";if(isHead)setSched(true,true)}
   else if(!tab){
-    const sv=lsGet("absence:tab:"+(isHead?"h":"u")), ok=NAVS[isHead?"head":"user"].some(x=>x[0]===sv)||(!isHead&&sv==="diary");
+    const sv=null, ok=NAVS[isHead?"head":"user"].some(x=>x[0]===sv)||(!isHead&&sv==="diary");
     tab=ok?sv:(isHead?"today":"mark");
-    if(isHead&&lsGet("absence:sched")==="on") setSched(true,true);
   }
   applyTab();
   render();
+  paintPay();
 }
 
 function stats(from, to, ignoreBase=false){
@@ -2159,7 +2251,7 @@ function applyTab(){
 }
 /* быстрая смена вкладки: без полной перерисовки */
 function goTab(t){
-  tab=t; lsSet("absence:tab:"+(isHead?"h":"u"),t); scrollTo(0,0); applyTab();
+  tab=t; scrollTo(0,0); applyTab();
   const h=isHead&&tab!=="self";
   if(tab==="diary") return;
   if(rdone[h?"h":"u"]!==rv) render(); else renderCal();
@@ -2275,7 +2367,7 @@ function renderHead(){
   if(document.activeElement!==$("limitIn"))$("limitIn").value=getLimit();
   
   if(isHead) {
-    const isRealHead = HEADS.map(norm).includes(norm(me)) || norm(me) === norm(SUPER_ADMIN);
+    const isRealHead = HEADS.map(norm).includes(norm(me)) || norm(me) === norm(SUPER_ADMIN) || isSvcHere();
     $("grpRoles").classList.toggle("hidden", !isRealHead);
     
     if(isRealHead) {
@@ -2728,6 +2820,32 @@ function renderPerf(){
 
 /* ===== ИНФО И ЛОГ ===== */
 let infoTab = "new"; 
+
+/* ----- лог: только действия, по дням ----- */
+const LOG_NOISE=/^(вошёл|вышел|вход|выход)/i;
+let logCache=[],logQ="",logLimit=60;
+function logDayLabel(t){
+  const d=new Date(t),n=new Date(),st=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime();
+  const diff=Math.round((st(n)-st(d))/864e5);
+  if(diff===0)return"Сегодня";if(diff===1)return"Вчера";
+  return d.getDate()+" "+RU_MON_G[d.getMonth()]+(d.getFullYear()!==n.getFullYear()?" "+d.getFullYear():"");
+}
+function renderLogList(){
+  const box=document.getElementById("logList");if(!box)return;
+  const all=logCache.filter(x=>!logQ||((x.w||"")+" "+x.a+" "+(x.n||"")).toLowerCase().includes(logQ));
+  const shown=all.slice(0,logLimit);
+  if(!shown.length){box.innerHTML='<p class="mute">Ничего не найдено.</p>';return}
+  let html="",day="";
+  for(const x of shown){
+    const lab=logDayLabel(x.t);
+    if(lab!==day){day=lab;html+=`<div class="lg-day">${esc(lab)}</div>`}
+    const d=new Date(x.t);
+    html+=`<div class="lg-row"><span class="lg-t">${pad(d.getHours())}:${pad(d.getMinutes())}</span><div class="lg-b"><b>${esc(x.w||"?")}</b> ${esc(x.a)}${x.n&&x.n!==x.w?` <span class="lg-for">для ${esc(x.n)}</span>`:""}</div></div>`;
+  }
+  if(all.length>shown.length)html+=`<button type="button" id="logMore" class="quiet" style="width:100%;margin-top:10px">Показать ещё (${all.length-shown.length})</button>`;
+  box.innerHTML=html;
+  const mb=document.getElementById("logMore");if(mb)mb.onclick=()=>{logLimit+=60;renderLogList()};
+}
 function renderInfoModal() {
   $("tabLog").classList.toggle("hidden", !isHead);
   if(!isHead && infoTab === "log") infoTab = "new";
@@ -2736,51 +2854,44 @@ function renderInfoModal() {
   $("tabNew").classList.toggle("main", infoTab === "new");
   
   if (infoTab === "log") {
-    let logs = Object.values(db.log || {});
-    
-    if (norm(me) !== norm(SUPER_ADMIN)) {
-        logs = logs.filter(x => norm(x.w) === norm(me));
-    }
-
-    const clearBar = isHead && logs.length
-      ? '<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button type="button" id="clearLogsBtn" class="danger" style="min-height:32px;padding:0 12px;font-size:12px;">🗑 Очистить лог</button></div>'
-      : '';
-
-    if (!logs.length) {
-        $("infoContent").innerHTML = '<p class="mute">Лог пуст.</p>';
+    const seeAll = canSvc();
+    logCache = Object.values(db.log || {})
+      .filter(x => !LOG_NOISE.test(String(x.a || "").trim()))
+      .map(x => ({...x, a: String(x.a || "").replace(/\s+и вошёл$/i, "")}))
+      .filter(x => seeAll || norm(x.w) === norm(me))
+      .sort((a, b) => b.t - a.t);
+    logQ = ""; logLimit = 60;
+    if (!logCache.length) {
+      $("infoContent").innerHTML = '<p class="mute">Лог пуст.</p>';
     } else {
-        const arr = logs.sort((a,b) => b.t - a.t).slice(0, 100);
-        $("infoContent").innerHTML = clearBar + '<ul style="padding:0; margin:0; list-style:none; display:flex; flex-direction:column; gap:12px;">' +
-          arr.map(x => {
-            const d = new Date(x.t);
-            const time = pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes());
-            return `<li><span class="mute" style="font-size:12px">${time}</span><br><b>${esc(x.w||"?")}</b> ${esc(x.a)} ${x.n&&x.n!==x.w ? `(для: ${esc(x.n)})` : ''}</li>`;
-          }).join('') + '</ul>';
-        const cb = $("clearLogsBtn");
-        if (cb) {
-          cb.onclick = async () => {
-            if (!isHead) return;
-            if (!confirm("Очистить лог действий?")) return;
-            if (norm(me) === norm(SUPER_ADMIN)) {
-              db.log = {};
-              save();
-              await net("/log", null);
-            } else {
-              for (const [key, val] of Object.entries(db.log || {})) {
-                if (norm(val.w) === norm(me)) {
-                  delete db.log[key];
-                  net("/log/" + key, null);
-                }
-              }
-              save();
+      $("infoContent").innerHTML =
+        '<div class="lg-bar"><input id="logQ" type="search" placeholder="Поиск: имя или действие" autocomplete="off">' +
+        '<button type="button" id="clearLogsBtn" class="danger" title="Очистить лог">🗑</button></div><div id="logList"></div>';
+      renderLogList();
+      $("logQ").oninput = e => { logQ = e.target.value.trim().toLowerCase(); logLimit = 60; renderLogList(); };
+      $("clearLogsBtn").onclick = async () => {
+        if (!isHead) return;
+        if (!confirm("Очистить лог действий?")) return;
+        if (seeAll) {
+          db.log = {};
+          save();
+          await net("/log", null);
+        } else {
+          for (const [key, val] of Object.entries(db.log || {})) {
+            if (norm(val.w) === norm(me)) {
+              delete db.log[key];
+              net("/log/" + key, null);
             }
-            renderInfoModal();
-          };
+          }
+          save();
         }
+        renderInfoModal();
+      };
     }
   } else {
     $("infoContent").innerHTML = `
       <ul style="padding-left:20px; margin:0; display:flex; flex-direction:column; gap:10px;">
+        <li><b>v2.22:</b> Группа теперь просто «4501». В дневнике отмечены сессии, каникулы и практика до лета 2027. Напоминание об оплате за 3 курс (за 10 дней до срока). Лог: без входов и выходов, по дням, с поиском. Сервисный человек группы: назначается в сервисном меню и управляет только своей группой.</li>
         <li><b>v2.21:</b> В «Инфо» добавлена кнопка «Закрыть». Кнопка «Установить» подсказывает, что делать, если браузер не даёт установить приложение сразу.</li>
         <li><b>v2.20:</b> Режим гостя: вход без имени, можно только смотреть отсутствующих сегодня и дневник, менять ничего нельзя.</li>
         <li><b>v2.19:</b> Староста может включить вход по паролю, задать пароль студенту лично и обнулить пароли всем (Настройки → Управление ролями). Добавлена кнопка закрытия в «Инфо», вход через Telegram стал надёжнее.</li>
@@ -3029,7 +3140,7 @@ function syncSched(){
   if(on && window._dvRefresh) window._dvRefresh();
 }
 function setSched(o,noSave){
-  schedOn=o; if(!noSave) lsSet("absence:sched",o?"on":"off");
+  schedOn=o;
   document.documentElement.classList.toggle("sched",o);
   syncSched();
   if(o) scrollTo(0,0); else navSync();
@@ -3147,7 +3258,7 @@ async function tgFinish(name,viaClaim){
   rememberSet({n:name,r:role,g:GROUP},$("rem2").checked);
   $("claimBox").classList.add("hidden");$("claimCode").value="";
   await start(name,role);
-  logAct(viaClaim?"привязал Telegram и вошёл":"вошёл через Telegram");
+  if(viaClaim)logAct("привязал Telegram");
 }
 let tgBusy=false;
 async function onTgAuth(u){
@@ -3239,7 +3350,7 @@ async function regPut(g,obj){
   const r=await fetch(ROOT_URL()+"/registry/"+encodeURIComponent(g)+".json",{method:"PUT",body:JSON.stringify(obj)});
   if(!r.ok)throw new Error("HTTP "+r.status);
 }
-const regOut=g=>{const r=REG[g]||{};return{title:r.title||"Группа "+g,faculty:r.faculty||"",course:String(r.course||""),code:r.code||"",headCode:r.headCode||"",heads:(r.heads&&r.heads.length)?r.heads:false}};
+const regOut=g=>{const r=REG[g]||{};return{title:r.title||g,faculty:r.faculty||"",course:String(r.course||""),code:r.code||"",headCode:r.headCode||"",heads:(r.heads&&r.heads.length)?r.heads:false}};
 const lines=t=>[...new Set(String(t||"").split(/\n/).map(x=>x.trim().replace(/\s+/g," ")).filter(Boolean))];
 async function svcStudents(g){
   try{
@@ -3249,14 +3360,15 @@ async function svcStudents(g){
   }catch(e){return null}
 }
 function svcRender(){
-  const box=$("svcBody"),ids=Object.keys(REG).sort(grpOrder);
+  const box=$("svcBody"),sup=isSup(),ids=(sup?Object.keys(REG):[GROUP].filter(g=>REG[g])).sort(grpOrder);
+  $("svcIntro").textContent=sup?"Группы по курсам. Старост и сервисных людей групп назначаете только вы.":"Ваша группа: старосты, коды и список студентов. Другие группы вам недоступны.";
   let html="",last="";
   for(const g of ids){
     const r=REG[g],sec=(r.faculty||"Без факультета")+" · "+(r.course?r.course+" курс":"без курса");
     if(sec!==last){html+=`<div class="svc-sec">${esc(sec)}</div>`;last=sec}
     html+=`<div class="svc-g${g===GROUP?" cur":""}" data-g="${esc(g)}">
-      <div class="svc-top"><div class="nm">${esc(g)}<small>${esc(r.title||"")}${r.heads&&r.heads.length?" · старост: "+r.heads.length:" · старост нет"}</small></div>
-        <button type="button" class="main" data-act="open">${g===GROUP?"Открыта":"Открыть"}</button>
+      <div class="svc-top"><div class="nm">${esc(g)}<small>${esc([grpTitle(g)!==g?grpTitle(g):"",r.heads&&r.heads.length?"старост: "+r.heads.length:"старост нет",sup&&r.svc&&r.svc.length?"сервис: "+r.svc.length:""].filter(Boolean).join(" · "))}</small></div>
+        ${sup?`<button type="button" class="main" data-act="open">${g===GROUP?"Открыта":"Открыть"}</button>`:""}
         <button type="button" data-act="edit">Изменить</button></div>
       <div class="svc-edit hidden">
         <div><label>Название</label><input data-f="title" value="${esc(r.title||"")}"></div>
@@ -3265,14 +3377,15 @@ function svcRender(){
         <div class="svc-2"><div><label>Код группы (для студентов)</label><input data-f="code" value="${esc(r.code||"")}"></div>
           <div><label>Пароль старосты (необязательно)</label><input data-f="headCode" value="${esc(r.headCode||"")}"></div></div>
         <div><label>Старосты — по одному в строке, ФИО как в списке группы</label><textarea data-f="heads">${esc((r.heads||[]).join("\n"))}</textarea></div>
+        ${sup?`<div><label>Сервисный человек группы — по одному в строке (управляет только этой группой)</label><textarea data-f="svc" style="min-height:60px">${esc((r.svc||[]).join("\n"))}</textarea></div>`:""}
         <div class="svc-acts"><button type="button" class="main" data-act="save">Сохранить группу</button></div>
         <div><label>Список студентов — по одному в строке</label><textarea data-f="students" placeholder="Загружаю…"></textarea></div>
         <div class="svc-acts"><button type="button" class="main" data-act="saveStu">Сохранить список</button>
-          <button type="button" class="danger" data-act="del">Удалить группу</button></div>
+          ${sup?`<button type="button" class="danger" data-act="del">Удалить группу</button>`:""}</div>
         <div class="svc-msg"></div>
       </div></div>`;
   }
-  html+=`<div class="svc-new" id="svcNew"><div class="svc-sec" style="margin-top:0">Новая группа</div>
+  if(sup)html+=`<div class="svc-new" id="svcNew"><div class="svc-sec" style="margin-top:0">Новая группа</div>
     <div class="svc-edit">
       <div class="svc-2"><div><label>Номер группы</label><input id="nId" placeholder="4504" maxlength="12"></div>
         <div><label>Код группы</label><input id="nCode" placeholder="придумайте"></div></div>
@@ -3283,8 +3396,9 @@ function svcRender(){
 }
 function svcMsg(card,t,bad){const m=card.querySelector(".svc-msg");m.textContent=t;m.classList.toggle("bad",!!bad)}
 $("svcBody").addEventListener("click",async e=>{
-  const b=e.target.closest("button[data-act]");if(!b||!isSup())return;
+  const b=e.target.closest("button[data-act]");if(!b||!canSvc())return;
   const card=b.closest(".svc-g"),g=card.dataset.g,act=b.dataset.act,f=n=>card.querySelector('[data-f="'+n+'"]');
+  if(!isSup()&&(g!==GROUP||act==="open"||act==="del"))return;
   try{
     if(act==="open"){
       if(g===GROUP)return;
@@ -3305,12 +3419,14 @@ $("svcBody").addEventListener("click",async e=>{
       const code=f("code").value.trim();
       if(!code){svcMsg(card,"Укажите код группы.",1);return}
       const heads=lines(f("heads").value);
-      if(heads.length){
+      const svcL=(isSup()&&f("svc"))?lines(f("svc").value):(REG[g].svc||[]);
+      const people=[...heads,...svcL];
+      if(people.length){
         const stu=await svcStudents(g);
-        const known=new Set((stu||[]).map(norm)),miss=heads.filter(h=>!known.has(norm(h)));
-        if(stu&&miss.length&&!confirm("Этих людей нет в списке группы:\n"+miss.join("\n")+"\n\nВсё равно назначить старостами?"))return;
+        const known=new Set((stu||[]).map(norm)),miss=people.filter(h=>!known.has(norm(h)));
+        if(stu&&miss.length&&!confirm("Этих людей нет в списке группы:\n"+miss.join("\n")+"\n\nВсё равно назначить?"))return;
       }
-      const o={title:f("title").value.trim()||"Группа "+g,faculty:f("faculty").value.trim(),course:f("course").value.trim(),code,headCode:f("headCode").value.trim(),heads:heads.length?heads:false};
+      const o={title:f("title").value.trim()||g,faculty:f("faculty").value.trim(),course:f("course").value.trim(),code,headCode:f("headCode").value.trim(),heads:heads.length?heads:false,svc:svcL.length?svcL:false};
       await regPut(g,o);REG[g]=normReg(o,{});
       if(g===GROUP){HEADS=REG[g].heads.slice();STUDENT_CODE=REG[g].code;HEAD_CODE=REG[g].headCode||"";paintGroup()}
       fillGroupPick();svcMsg(card,"Сохранено.");logAct("изменил группу "+g,g);
@@ -3340,23 +3456,60 @@ $("svcBody").addEventListener("click",async e=>{
   if(!/^[0-9A-Za-zА-Яа-я_-]{2,12}$/.test(id)){bad("Номер: 2–12 символов, буквы и цифры.");return}
   if(REG[id]){bad("Такая группа уже есть.");return}
   if(!code){bad("Придумайте код группы.");return}
-  const o={title:"Группа "+id,faculty:$("nFac").value.trim(),course:$("nCourse").value.trim(),code,headCode:"",heads:false};
+  const o={title:id,faculty:$("nFac").value.trim(),course:$("nCourse").value.trim(),code,headCode:"",heads:false};
   try{await regPut(id,o);REG[id]=normReg(o,{});fillGroupPick();svcRender();logAct("создал группу "+id,id)}
   catch(err){bad("Не удалось создать. Проверьте связь.")}
 });
 $("svcBtn").onclick=e=>{
-  e.stopPropagation();if(!isSup())return;
+  e.stopPropagation();if(!canSvc())return;
   const sc=$("sheetScrim");if(sc)sc.click();
   $("legendBox").classList.add("hidden");$("infoModal").classList.add("hidden");
   $("svcModal").classList.remove("hidden");svcRender();
 };
 $("svcClose").onclick=()=>$("svcModal").classList.add("hidden");
 
+/* ===== НАПОМИНАНИЕ ОБ ОПЛАТЕ (3 курс, 4810 руб.) ===== */
+const PAY_PLAN={"4501":[
+  {id:"2026-09",pct:30,sum:1443,from:"2026-09-01",to:"2026-09-15"},
+  {id:"2026-11",pct:20,sum:962, from:"2026-11-15",to:"2026-11-30"},
+  {id:"2027-01",pct:30,sum:1443,from:"2027-01-15",to:"2027-01-31"},
+  {id:"2027-04",pct:20,sum:962, from:"2027-04-15",to:"2027-04-30"}
+]};
+const PAY_TOTAL=4810, PAY_REMIND_DAYS=10;
+const RU_MON_G=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const payDays=n=>{const a=Math.abs(n)%100,b=a%10;return a>10&&a<20?"дней":b===1?"день":b>1&&b<5?"дня":"дней"};
+const payDate=t=>{const a=t.split("-").map(Number);return new Date(a[0],a[1]-1,a[2])};
+const payFmt=d=>d.getDate()+" "+RU_MON_G[d.getMonth()];
+const payKey=id=>"absence:paid:"+norm(me||"")+":"+id;
+function payDue(){
+  const n=new Date(),today=new Date(n.getFullYear(),n.getMonth(),n.getDate());
+  for(const p of (PAY_PLAN[GROUP]||[])){
+    const from=payDate(p.from),to=payDate(p.to),rem=new Date(from);rem.setDate(rem.getDate()-PAY_REMIND_DAYS);
+    if(today>=rem&&today<=to&&lsGet(payKey(p.id))!=="1")return{p,from,to,left:Math.round((to-today)/864e5),toStart:Math.round((from-today)/864e5)};
+  }
+  return null;
+}
+function payHtml(){
+  if(!me||isGuest)return"";
+  const d=payDue();if(!d)return"";
+  const open=d.toStart<=0,urgent=open&&d.left<=3;
+  const line=open
+    ?(d.left===0?"Сегодня последний день":"Оплатить до "+payFmt(d.to)+" · осталось "+d.left+" "+payDays(d.left))
+    :"Оплата откроется "+payFmt(d.from)+" (через "+d.toStart+" "+payDays(d.toStart)+"), срок до "+payFmt(d.to);
+  return `<div class="card pay-card${urgent?" urgent":""}"><div class="pay-ico">💳</div><div class="pay-main"><div class="pay-t">Оплата за 3 курс: ${d.p.pct}% — ${d.p.sum} руб.</div><div class="pay-s">${esc(line)} · всего ${PAY_TOTAL} руб.</div></div><button type="button" class="quiet" data-pay="${esc(d.p.id)}">Оплачено</button></div>`;
+}
+function paintPay(){const b=document.getElementById("payBox");if(b)b.innerHTML=payHtml()}
+document.getElementById("payBox").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-pay]");if(!b)return;
+  lsSet(payKey(b.dataset.pay),"1");paintPay();
+});
+setInterval(paintPay,3600*1000);
+
 /* ===== ВХОД ПО QR / ССЫЛКЕ ===== */
 const QR_TTL=10*60*1000, qrRoot=()=>ROOT_URL()+"/qrlogin";
 async function qrHash(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}
 function qrNote(m){const n=$("qrNote");if(n)n.textContent=m}
-const qrIsHead=n=>HEADS.some(x=>norm(x)===norm(n))||norm(n)===norm(SUPER_ADMIN);
+const qrIsHead=n=>HEADS.some(x=>norm(x)===norm(n))||norm(n)===norm(SUPER_ADMIN)||isSvcName(n);
 async function qrRedeem(){
   const m=/[#&?]qr=([a-f0-9]{32})/.exec(location.hash+location.search);if(!m)return null;
   history.replaceState(null,"",location.pathname);
@@ -6378,7 +6531,39 @@ const VERIFIED_LESSONS = {
 
   const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const START = new Date(2026, 7, 31);
-  const MAX = 17;
+  const MAX = 51;
+
+  // ─── ПЕРИОДЫ УЧЕБНОГО ГОДА (сессии, каникулы, практика) ────────
+  const PERIODS = {
+    '4501': [
+      { from: '2027-01-04', to: '2027-01-24', type: 'session',  label: 'Сессия',   note: 'Экзаменационная сессия' },
+      { from: '2027-01-25', to: '2027-02-07', type: 'vacation', label: 'Каникулы', note: 'Занятий нет' },
+      { from: '2027-05-24', to: '2027-06-13', type: 'session',  label: 'Сессия',   note: 'Экзаменационная сессия' },
+      { from: '2027-06-14', to: '2027-07-04', type: 'practice', label: 'Практика', note: 'Производственная практика' },
+      { from: '2027-07-05', to: null,         type: 'vacation', label: 'Каникулы', note: 'Занятий нет' }
+    ]
+  };
+  const MONTHS_G = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const isoToDate = t => { const a = t.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };
+  const fmtShort = dt => dt.getDate() + ' ' + MONTHS_G[dt.getMonth()];
+  const pluralDays = n => { const a = Math.abs(n) % 100, b = a % 10; return a > 10 && a < 20 ? 'дней' : b === 1 ? 'день' : b > 1 && b < 5 ? 'дня' : 'дней'; };
+  function periodOf(key, g) { return (PERIODS[g] || []).find(p => key >= p.from && (!p.to || key <= p.to)) || null; }
+  function periodHtml(p, key) {
+    const from = isoToDate(p.from), cur = isoToDate(key);
+    const dayNo = Math.round((cur - from) / 864e5) + 1;
+    let range, bar = '', meta = '';
+    if (p.to) {
+      const to = isoToDate(p.to), total = Math.round((to - from) / 864e5) + 1, left = total - dayNo;
+      range = fmtShort(from) + ' – ' + fmtShort(to);
+      bar = '<div class="pc-bar"><i style="width:' + Math.round(dayNo / total * 100) + '%"></i></div>';
+      meta = '<div class="pc-meta"><span>' + dayNo + '-й день из ' + total + '</span><span>' +
+             (left > 0 ? 'ещё ' + left + ' ' + pluralDays(left) : 'последний день') + '</span></div>';
+    } else {
+      range = 'с ' + fmtShort(from);
+    }
+    return '<div class="card period-card pc-' + p.type + '"><div class="pc-top"><span class="pc-badge">' + escapeHtml(p.label) +
+           '</span></div><div class="pc-title">' + escapeHtml(p.note) + '</div><div class="pc-range">' + range + '</div>' + bar + meta + '</div>';
+  }
 
   const DATA = [["4501", "mon", 0, []], ["4501", "mon", 1, [["Лекция", "1 пара", "8.30–<br/>9.50", "Налоговое право", "т. 1-3 Лекция<br/>Дешук А.В.<br/>Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданское право (часть 2)", "т. 1.2 Лекция<br/>Березнев Р.Ю. Л/з № 2-404"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура т. 4.1 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Криминалистика", "т. 2 с Беломытцев Н.Н.<br/>ауд. 3-403"]]], ["4501", "mon", 2, [["Лекция", "1 пара", "8.30–<br/>9.50", "Хозяйственное право", "т. 6-7 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовное право (особенная часть)", "т. 35 Лекция<br/>Духовник Ю.Е. Л/з № 2-404"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Уголовный процесс", "т. 13/1 с Мытник П.В.<br/>ауд. 3-403"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Гражданское право", "т. 1.1 с Березнев Р.Ю.<br/>ауд. 3-403"]]], ["4501", "mon", 3, [["Лекция", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 4.2 Лекция<br/>Пашута И.В. Л/з № 2-404"], ["Практика", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 3 пр Иванькович Д.В.<br/>ауд. 3-403"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Гражданский процесс", "т. 6 Лекция<br/>Костюк А.С. Л/з № 2-404"]]], ["4501", "mon", 4, [["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 14 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 3,4 с<br/>Березнев Р.Ю. ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Криминалистика", "т. 4.4 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132, Ковальчук А.С. ауд. 3-204, ауд.130"], ["Практика", "5 пара", "15.50–<br/>17.10", "Криминалистика", "т. 4.4 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132, Ковальчук А.С. ауд. 3-204, ауд.130"]]], ["4501", "mon", 5, [["Лекция", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 10 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Уголовный процесс", "т. 15 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Криминалистика", "т. 5.2 с Беломытцев Н.Н.<br/>ауд. 3-403"], ["Практика", "5 пара", "15.50–<br/>17.10", "Физкультура т. 4.6 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "mon", 6, [["Лекция", "1 пара", "8.30–<br/>9.50", "Хозяйственное право", "т. 11 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданский процесс", "т. 11-12 Лекция<br/>Костюк А.С. Л/з № 2-404"], ["Практика", "3 пара", "11.30–<br/>12.50", "Криминалистика", "т. 5.4 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, Ковальчук А.С. ауд. 3-310"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Таможенное право", "т. 5.4 с Нестер И.С.<br/>ауд. 3-403"]]], ["4501", "mon", 7, [["Лекция", "1 пара", "8.30–<br/>9.50", "Гражданский процесс", "т. 13-14 Лекция<br/>Костюк А.С. Л/з № 2-304"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 7 с Березнев Р.Ю. ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминалистика", "т. 6.2 с Беломытцев Н.Н.<br/>ауд. 3-403"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 12-13 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"]]], ["4501", "mon", 8, [["Практика", "1 пара", "8.30–<br/>9.50", "Таможенное право", "т. 5.7 пр Нестер И.С.<br/>ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Уголовное право т. 38 пр Меерсон В.Р. ауд. 3-403", ""], ["Лекция", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 8.2 Лекция<br/>Березнев Р.Ю. Л/з № 2-404"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 14 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"]]], ["4501", "mon", 9, [["Семинар", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 8 с Иванькович Д.В.<br/>ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 7.2 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132 , Ковальчук А.С. ауд. 3-302, ауд.130"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Хозяйственное право", "т. 15 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "mon", 10, [["Семинар", "1 пара", "8.30–<br/>9.50", "Таможенное право", "т. 6.2 с Нестер И.С.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 8.2 с Березнев Р.Ю.<br/>ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Криминалистика", "т. 8.1 Лекция<br/>Пашута И.В. Л/з № 2-404"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Криминалистика", "т. 8.2 Лекция<br/>Пашута И.В. Л/з № 2-404"]]], ["4501", "mon", 11, [["Семинар", "4 пара", "14.20–<br/>15.40", "Уголовное право т. 40 с", "Меерсон В.Р. ауд. 3-403"], ["Лекция", "5 пара", "15.50–<br/>17.10", "Гражданское право", "т. 9 Лекция<br/>Березнев Р.Ю. Л/з № 2-304"], ["Лекция", "6 пара", "17.20–<br/>18.40", "Таможенное право", "т. 7.1 Лекция<br/>Нестер И.С. Л/з № 2-304"]]], ["4501", "mon", 12, [["Практика", "1 пара", "8.30–<br/>9.50", "Физкультура т. 7.2 пр", "Рудько В.А.<br/>Преподаватель 2.9. с/зал"], ["Практика", "2 пара", "10.00–<br/>11.20", "Уголовное право т. 40 пр Меерсон В.Р. ауд. 3-403", ""], ["Лекция", "3 пара", "11.30–<br/>12.50", "Хозяйственное право", "т. 18 Лекция<br/>Вильмак Д.Г. Л/з № 2-304"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Криминалистика", "т. 9.1 Лекция<br/>Пашута И.В. Л/з № 2-304"]]], ["4501", "mon", 13, [["Лекция", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 10.1 Лекция<br/>Пашута И.В. Л/з № 2-404"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 13.2,14 Лекция<br/>Березнев Р.Ю. Л/з № 2-304"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Таможенное право", "т. 8.2 с Нестер И.С.<br/>ауд. 3-403"], ["Практика", "5 пара", "15.50–<br/>17.10", "Физкультура т. 7.3 пр", "Рудько В.А.<br/>Преподаватель 2.9. с/зал"]]], ["4501", "mon", 14, [["Практика", "1 пара", "8.30–<br/>9.50", "Физкультура т. 7.4 пр", "Рудько В.А.<br/>Преподаватель 2.9. с/зал"], ["", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 13.2, 14 с<br/>Березнев Р.Ю. ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Криминалистика", "т. 11.1 Лекция<br/>Пашута И.В. Л/з № 2-404"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Гражданский процесс", "т. 26-27 Лекция<br/>Костюк А.С. Л/з № 2-404"]]], ["4501", "mon", 15, [["Практика", "1 пара", "8.30–<br/>9.50", "Криминалистика т.11.3 пр", "Марцынкевич Н.А.<br/>ауд. 3-403 Ковальчук А.С. ауд. 3-302"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданский процесс", "т. 28 Лекция<br/>Костюк А.С. Л/з № 2-210"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Хозяйственное право", "т. 21 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["", "4 пара", "14.20–<br/>15.40", "Информационный/ кураторский час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "mon", 16, [["Лекция", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 14 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Хозяйственное право", "т. 22-23 Лекция<br/>Данькова Т.Н. Л/з № 2-404"], ["", "4 пара", "14.20–<br/>15.40", "14.20 Криминалистика", "Зачет Пашута И.В.<br/>ауд. 3-403, ауд. 3-400, Костюкевич Д.В. ауд. 3-302, ауд. 3-401"]]], ["4501", "mon", 17, [["Лекция", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 15 Лекция<br/>Кузьменкова С.В.<br/>Л/з № 2-404"], ["", "4 пара", "14.20–<br/>15.40", "14.20 Физкультура Зачет", "Рудько В.А.<br/>Преподаватель 2.9. с/зал"]]], ["4501", "tue", 0, [["Лекция", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 1 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 1-3 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Лекция", "5 пара", "15.50–<br/>17.10", "Криминалистика", "т. 1.1 Лекция<br/>Пашута И.В.<br/>Л/з № 2-404"], ["", "6 пара", "17.20–<br/>18.40", "Информационный час Григорьева Е.Н. ауд. 3-403", ""]]], ["4501", "tue", 1, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовное право т. 34 с", "Меерсон В.Р. ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 4-5 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Таможенное право", "т. 3.1 Лекция<br/>Нестер И.С.<br/>Л/з № 2-404"]]], ["4501", "tue", 2, [["Семинар", "1 пара", "8.30–<br/>9.50", "Налоговое право", "т. 1-3 с Дешук А.В.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Налоговое право", "т. 1-3 с Дешук А.В.<br/>ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Таможенное право", "т. 4.1 Лекция<br/>Нестер И.С.<br/>Л/з № 2-404"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Таможенное право", "т. 4.2 Лекция<br/>Нестер И.С.<br/>Л/з № 2-404"]]], ["4501", "tue", 3, [["Лекция", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 8 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура т. 4.4 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"], ["Практика", "4 пара", "14.20–<br/>15.40", "Криминалистика т.4.3 пр", "Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132 , Ковальчук А.С. ауд. 3-408, ауд.130"], ["Практика", "5 пара", "15.50–<br/>17.10", "Криминалистика т.4.3 пр", "Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132 , Ковальчук А.С. ауд. 3-408, ауд.130"]]], ["4501", "tue", 4, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовное право т. 36 с", "Меерсон В.Р. ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 9 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Практика", "3 пара", "11.30–<br/>12.50", "Таможенное право", "т. 4.5 пр Нестер И.С.<br/>ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "tue", 5, [["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 5 с Березнев Р.Ю.<br/>ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура (факульт) т. 6.1 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"], ["Лекция", "5 пара", "15.50–<br/>17.10", "Таможенное право", "т. 5.2 Лекция<br/>Нестер И.С.<br/>Л/з № 2-210"]]], ["4501", "tue", 6, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 16 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 6 с Березнев Р.Ю. ауд. 3-403"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура т.6.1 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "tue", 7, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 17-18/1 Лекция<br/>Мытник П.В. Л/з № 2-304"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 17-18/2 Лекция<br/>Мытник П.В. Л/з № 2-304"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 6 с Иванькович Д.В.<br/>ауд. 3-403"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Налоговое право", "т. 6.1 с Дешук А.В.<br/>ауд. 3-403"]]], ["4501", "tue", 8, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 17-18/3 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Практика", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 6.4 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, Ковальчук А.С. ауд. 3-302"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура т. 6.3 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "tue", 9, [["Лекция", "1 пара", "8.30–<br/>9.50", "Таможенное право", "т. 6.1 Лекция<br/>Нестер И.С.<br/>Л/з № 2-404"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 8.1 с<br/>Березнев Р.Ю. ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданский процесс", "т.16 с Костюк А.С.<br/>ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура т. 6.4 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "tue", 10, [["Практика", "2 пара", "10.00–<br/>11.20", "Таможенное право", "т. 6.3 пр Нестер И.С.<br/>ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Уголовный процесс", "т. 19 с Мытник П.В.<br/>ауд. 3-403"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Криминология", "т. 9 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"], ["Практика", "5 пара", "15.50–<br/>17.10", "Физкультура т. 6.5 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "tue", 11, [["Лекция", "1 пара", "8.30–<br/>9.50", "Хозяйственное право", "т. 17 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Налоговое право", "т. 6.4 Лекция<br/>Дешук А.В.<br/>Л/з № 2-404"], ["Практика", "3 пара", "11.30–<br/>12.50", "Криминалистика т. 8.4 пр", "Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132 , Ковальчук А.С. ауд. 3-401, ауд.130"], ["Практика", "4 пара", "14.20–<br/>15.40", "Криминалистика т. 8.5 пр", "Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132 , Ковальчук А.С.<br/>ауд. 3-210, ауд.130"]]], ["4501", "tue", 12, [["Лекция", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 11 Лекция<br/>Кузьменкова С.В. Л/з № 2-304"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданский процесс", "т. 21-22 Лекция<br/>Костюк А.С. Л/з № 2-404"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 10,11,12 с<br/>Березнев Р.Ю. ауд. 3-403"]]], ["4501", "tue", 13, [["Лекция", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 12 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 19 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Налоговое право", "т. 7 с Дешук А.В.<br/>ауд. 3-403"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Таможенное право", "т. 9.1 с Нестер И.С.<br/>ауд. 3-403"]]], ["4501", "tue", 14, [["Практика", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 12 пр Иванькович Д.В. ауд. 3-403"], ["Практика", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 12 пр Иванькович Д.В. ауд. 3-403"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 20 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"]]], ["4501", "tue", 15, [["Лекция", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 13 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 16,17 Лекция<br/>Березнев Р.Ю. Л/з № 2-404"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Уголовное право", "(особенная часть)<br/>т. 42.2 Лекция<br/>Духовник Ю.Е. Л/з № 2-404"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Гражданский процесс т.28 с Костюк А.С.", "ауд. 3-403"]]], ["4501", "tue", 16, [["Семинар", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 14 с Иванькович Д.В.<br/>ауд. 3-403"], ["Практика", "3 пара", "11.30–<br/>12.50", "Уголовное право т. 42.1 пр Меерсон В.Р. ауд. 3-403", ""], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура т. 7.6 пр", "Рудько В.А.<br/>Преподаватель 2.9. с/зал"]]], ["4501", "tue", 17, [["Практика", "1 пара", "8.30–<br/>9.50", "Уголовное право т. 42.2 пр Меерсон В.Р. ауд. 3-403", ""], ["Лекция", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 24-25 Лекция<br/>Данькова Т.Н. Л/з № 2-404"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 15 с Иванькович Д.В.<br/>ауд. 3-403"]]], ["4501", "wed", 0, [["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 13/1 Лекция<br/>Мытник П.В. Л/з № 2-304"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Гражданский", "процесс<br/>т. 1 Лекция<br/>Костюк А.С.<br/>Л/з № 2-304"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 1-3 с Вильмак Д.Г.<br/>ауд. 3-403"], ["Практика", "5 пара", "15.50–<br/>17.10", "Физкультура (факульт) т. 4.1 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "wed", 1, [["Практика", "1 пара", "8.30–<br/>9.50", "Уголовное право т. 34 пр Меерсон В.Р. ауд. 3-403", ""], ["Практика", "2 пара", "10.00–<br/>11.20", "Физкультура (факульт) т. 4.3 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 2 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Налоговое право", "т. 1-3 Лекция<br/>Дешук А.В.<br/>Л/з № 2-404"]]], ["4501", "wed", 2, [["Семинар", "1 пара", "8.30–<br/>9.50", "Хозяйственное право", "т. 6-7 с Вильмак Д.Г.<br/>ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 4.1 Лекция<br/>Пашута И.В. Л/з № 2-404"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 3 Лекция<br/>Кузьменкова С.В. Л/з № 2-210"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура т. 4.2 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "wed", 3, [["Лекция", "1 пара", "8.30–<br/>9.50", "Налоговое право", "т. 4 Лекция<br/>Дешук А.В.<br/>Л/з № 2-304"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 2.1 с<br/>Березнев Р.Ю. ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Таможенное право", "т. 4.3 с Нестер И.С.<br/>ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "wed", 4, [["Лекция", "1 пара", "8.30–<br/>9.50", "Гражданский", "процесс<br/>т. 7 Лекция<br/>Костюк А.С. Л/з № 2-210"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 14 с Мытник П.В.<br/>ауд. 3-403"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура т. 4.5 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "wed", 5, [["Семинар", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 5 с Иванькович Д.В.<br/>ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Налоговое право", "т. 5 Лекция<br/>Дешук А.В.<br/>Л/з № 2-304"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Гражданский процесс", "т. 10 Лекция<br/>Костюк А.С. Л/з № 2-404"], ["Практика", "4 пара", "14.20–<br/>15.40", "Уголовное право т. 36 пр Меерсон В.Р.", "ауд. 3-403"]]], ["4501", "wed", 6, [["Лекция", "1 пара", "8.30–<br/>9.50", "Гражданское право", "т. 7 Лекция Березнев Р.Ю. Л/з № 2-304"], ["", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 11 c Вильмак Д.Г.<br/>ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Уголовное право т. 37 с", "Меерсон В.Р. ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "wed", 7, [["Лекция", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 7 Лекция<br/>Кузьменкова С.В. Л/з № 2-304"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданский процесс т.13-14 с Костюк А.С.", "ауд. 3-403"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура т. 6.2 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Таможенное право", "т. 5.5 с Нестер И.С.<br/>ауд. 3-403"]]], ["4501", "wed", 8, [["Практика", "1 пара", "8.30–<br/>9.50", "Таможенное право", "т. 5.8 пр Нестер И.С.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Налоговое право", "т. 6.1 с Дешук А.В.<br/>ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Налоговое право", "т. 6.2 Лекция<br/>Дешук А.В.<br/>Л/з № 2-404"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "wed", 9, [["Лекция", "1 пара", "8.30–<br/>9.50", "Хозяйственное право", "т. 16 Лекция<br/>Вильмак Д.Г. Л/з № 2-404"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 17-18/2 с Мытник П.В.<br/>ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Налоговое право", "т. 6.2 с Дешук А.В.<br/>ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура (факульт) т. 6.5 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "wed", 10, [["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданский процесс", "т. 18-19 Лекция<br/>Костюк А.С. Л/з № 2-304"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 8.3 с Березнев Р.Ю.<br/>ауд. 3-403"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Налоговое право", "т. 6.3 с Дешук А.В.<br/>ауд. 3-403"], ["Практика", "5 пара", "15.50–<br/>17.10", "Физкультура (факульт)", "т. 6.6 пр Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "wed", 11, [["Лекция", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 10 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданский процесс", "т. 20 Лекция<br/>Костюк А.С. Л/з № 2-404"], ["", "3 пара", "11.30–<br/>12.50", "Хозяйственное право", "т. 17 c Вильмак Д.Г.<br/>ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура т. 7.1 пр", "Рудько В.А.<br/>Преподаватель 2.9. с/зал"]]], ["4501", "wed", 12, [["Практика", "1 пара", "8.30–<br/>9.50", "Физкультура (факульт) т. 7.3 пр Рудько В.А.", "Преподаватель 2.9. с/зал"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Налоговое право", "т. 7 Лекция<br/>Дешук А.В. Л/з № 2-404"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминалистика", "т. 9.2 с Костюкевич Д.В.<br/>ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 18 c<br/>Вильмак Д.Г.<br/>ауд. 3-403"]]], ["4501", "wed", 13, [["Лекция", "1 пара", "8.30–<br/>9.50", "Гражданский процесс", "т. 23-25 Лекция<br/>Костюк А.С. Л/з № 2-304"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 10.2 с Костюкевич Д.В. ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 13.1 с<br/>Березнев Р.Ю. ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "wed", 14, [["Практика", "1 пара", "8.30–<br/>9.50", "Уголовное право т. 41 пр Меерсон В.Р. ауд. 3-403", ""], ["Практика", "2 пара", "10.00–<br/>11.20", "Физкультура (факульт) т. 7.5 пр Рудько В.А.", "Преподаватель 2.9. с/зал"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Налоговое право", "т. 8 с Дешук А.В.<br/>ауд. 3-403"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Гражданское право", "т. 15 Лекция<br/>Березнев Р.Ю. Л/з № 2-404"]]], ["4501", "wed", 15, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 27 с Мытник П.В.<br/>ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 28 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура т. 7.5 пр", "Рудько В.А.<br/>Преподаватель 2.9. с/зал"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 21 с Вильмак Д.Г.<br/>ауд. 3-403"]]], ["4501", "wed", 16, [["", "2 пара", "10.00–<br/>11.20", "10.00 Гражданское право Зачет Березнев Р.Ю.", "ауд. 3-403"]]], ["4501", "wed", 17, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 31 с Мытник П.В.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Уголовное право т. 43,44,45 с", "Меерсон В.Р. ауд. 3-403"], ["", "3 пара", "11.30–<br/>12.50", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "thu", 0, [["Лекция", "2 пара", "10.00–<br/>11.20", "Физическая культура", "т. 3 Лекция<br/>Равко Р.В.<br/>Л/з № 2-304"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 1 с Иванькович Д.В.<br/>ауд. 3-403"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Уголовное право (особенная часть)", "т. 34.1 Лекция<br/>Духовник Ю.Е. Л/з № 2-404"], ["Лекция", "5 пара", "15.50–<br/>17.10", "Таможенное право", "т. 1-2.1 Лекция<br/>Нестер И.С. Л/з № 2-404"]]], ["4501", "thu", 1, [["", "1 пара", "8.30–<br/>9.50", "Гражданский процесс", "т.1-2 сКостюк А.С.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Таможенное право", "т. 3.2 с<br/>Нестер И.С. ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Криминалистика", "т. 3.1 Лекция<br/>Пашута И.В.<br/>Л/з № 2-404"]]], ["4501", "thu", 2, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданское право", "т. 1.2 с Березнев Р.Ю.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Уголовное право т. 35 с", "Меерсон В.Р. ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Гражданский процесс", "т. 4-5 Лекция<br/>Костюк А.С. Л/з № 2-304"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура (факульт) т. 4.4 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "thu", 3, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданское право", "т. 2.2 с Березнев Р.Ю.<br/>ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 8 пр Вильмак Д.Г.<br/>ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 4 Лекция<br/>Кузьменкова С.В. Л/з № 2-210"], ["Практика", "4 пара", "14.20–<br/>15.40", "Уголовное право т. 35 пр Меерсон В.Р.", "ауд. 3-403"]]], ["4501", "thu", 4, [["Семинар", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 4 с Иванькович Д.В.<br/>ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданский процесс", "т. 8-9 Лекция<br/>Костюк А.С. Л/з № 2-304"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Таможенное право", "т. 5.1 Лекция<br/>Нестер И.С.<br/>Л/з № 2-404"], ["Практика", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 9 пр Вильмак Д.Г.<br/>ауд. 3-403"]]], ["4501", "thu", 5, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовное право", "(особенная часть)<br/>т. 37 Лекция<br/>Духовник Ю.Е. Л/з № 2-404"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 15 с Мытник П.В.<br/>ауд. 3-403"], ["", "3 пара", "11.30–<br/>12.50", "Хозяйственное право", "т. 10 c Вильмак Д.Г.<br/>ауд. 3-403"]]], ["4501", "thu", 6, [["Лекция", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 6.1 Лекция<br/>Пашута И.В. Л/з № 2-304"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Налоговое право", "т. 5.2 с Дешук А.В.<br/>ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Криминология", "т. 5 пр Иванькович Д.В.<br/>ауд. 3-403"], ["Практика", "5 пара", "15.50–<br/>17.10", "Криминология", "т. 5 пр Иванькович Д.В.<br/>ауд. 3-403"]]], ["4501", "thu", 7, [["Лекция", "1 пара", "8.30–<br/>9.50", "Гражданское право", "т. 8.1 Лекция<br/>Березнев Р.Ю. Л/з № 2-304"], ["Практика", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 6.3 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, Ковальчук А.С. ауд. 3-302"], ["Практика", "3 пара", "11.30–<br/>12.50", "Таможенное право", "т. 5.6 пр Нестер И.С.<br/>ауд. 3-403"]]], ["4501", "thu", 8, [["Лекция", "1 пара", "8.30–<br/>9.50", "Гражданское право", "т. 8.3 Лекция<br/>Березнев Р.Ю. Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовное право (особенная часть)", "т. 39 Лекция<br/>Духовник Ю.Е. Л/з № 2-404"], ["", "3 пара", "11.30–<br/>12.50", "Хозяйственное право", "т. 14 c Вильмак Д.Г.<br/>ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура (факульт)", "т. 6.4 пр Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "thu", 9, [["Лекция", "1 пара", "8.30–<br/>9.50", "Налоговое право", "т. 6.3 Лекция<br/>Дешук А.В. Л/з № 2-304"], ["Практика", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 7.3 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132 , Ковальчук А.С. ауд. 3-302, ауд.130"], ["Практика", "3 пара", "11.30–<br/>12.50", "Уголовное право т. 39 пр Меерсон В.Р. ауд. 3-403", ""], ["Семинар", "4 пара", "14.20–<br/>15.40", "Гражданский процесс", "т.17 с Костюк А.С.<br/>ауд. 3-403"]]], ["4501", "thu", 10, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 20 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 16 c Вильмак Д.Г.<br/>ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданский процесс т.18-19 с Костюк А.С.", "ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный/ кураторский час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "thu", 11, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданское право", "т. 9 с Березнев Р.Ю.<br/>ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 21-23 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 10 с Иванькович Д.В.<br/>ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура (факульт) т. 7.2 пр Рудько В.А.", "Преподаватель 2.9. с/зал"]]], ["4501", "thu", 12, [["Лекция", "2 пара", "10.00–<br/>11.20", "Таможенное право", "т. 8.1 Лекция<br/>Нестер И.С. Л/з № 2-304"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Уголовное право (особенная часть)", "т. 41 Лекция<br/>Духовник Ю.Е. Л/з № 2-304"], ["Практика", "4 пара", "14.20–<br/>15.40", "Криминалистика т. 9.3 пр", "Марцынкевич Н.А.<br/>ауд. 3-403, Ковальчук А.С. ауд. 3-401"], ["", "5 пара", "15.50–<br/>17.10", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "thu", 13, [["", "1 пара", "8.30–<br/>9.50", "Хозяйственное право", "т. 19 c Вильмак Д.Г.<br/>ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Налоговое право", "т. 8 Лекция<br/>Сауткин И.В. Л/з № 2-404"], ["", "3 пара", "11.30–<br/>12.50", "11.30 Таможенное право Зачет Нестер И.С.", "ауд. 3-403"]]], ["4501", "thu", 14, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 25-26 с Мытник П.В.<br/>ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 20 пр Вильмак Д.Г.<br/>ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминалистика", "т. 11.2 с Костюкевич Д.В. ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "thu", 15, [["Лекция", "1 пара", "8.30–<br/>9.50", "Криминалистика", "т. 12.1 Лекция<br/>Пашута И.В. Л/з № 2-404"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 29-30 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["", "3 пара", "11.30–<br/>12.50", "11.30 Гражданский процесс Зачет Костюк А.С.", "ауд .3-403"]]], ["4501", "thu", 16, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 29-30 с Мытник П.В.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 22-23 с Вильмак Д.Г.<br/>ауд. 3-403"], ["", "3 пара", "11.30–<br/>12.50", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "thu", 17, []], ["4501", "fri", 0, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовное право (особенная часть)", "т. 34.2 Лекция<br/>Духовник Ю.Е. Л/з № 2-304"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданское право", "(часть 2)<br/>т. 1.1 Лекция<br/>Березнев Р.Ю. Л/з № 2-304"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Гражданский процесс", "т. 2 Лекция<br/>Костюк А.С.<br/>Л/з № 2-304"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Таможенное право", "т. 1-2.2 с Нестер И.С.<br/>ауд. 3-403"]]], ["4501", "fri", 1, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 13/3 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 4-5 с Вильмак Д.Г.<br/>ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 2 с Иванькович Д.В.<br/>ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный/ кураторский час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "fri", 2, [["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 2 Лекция<br/>Березнев Р.Ю. Л/з № 2-304"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 3 с Иванькович Д.В.<br/>ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "fri", 3, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданский процесс т.6 с Костюк А.С.", "ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 13/2 с Мытник П.В.<br/>ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Уголовное право (особенная часть)", "т. 36 Лекция<br/>Духовник Ю.Е. Л/з № 2"], ["Практика", "4 пара", "14.20–<br/>15.40", "Физкультура (факульт) т. 4.5 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "fri", 4, [["Лекция", "1 пара", "8.30–<br/>9.50", "Гражданское право", "т. 5 Лекция<br/>Березнев Р.Ю. Л/з № 2-304"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 5.1 Лекция<br/>Пашута И.В. Л/з № 2-304"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Налоговое право", "т. 4 с Дешук А.В.<br/>ауд. 3-403"]]], ["4501", "fri", 5, [["Лекция", "1 пара", "8.30–<br/>9.50", "Гражданское право", "т. 6 Лекция<br/>Березнев Р.Ю. Л/з № 2-404"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Налоговое право", "т. 5.1 с Дешук А.В.<br/>ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданский процесс", "т.10 с Костюк А.С.<br/>ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный/ кураторский час Григорьева Е.Н. ауд. 3-403", ""]]], ["4501", "fri", 6, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 16 с Мытник П.В.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданский процесс т.11-12 с Костюк А.С.", "ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Налоговое право", "т. 6.1 Лекция<br/>Дешук А.В. Л/з № 2-304"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Криминология", "т. 6 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"]]], ["4501", "fri", 7, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовное право (особенная часть)", "т. 38 Лекция<br/>Духовник Ю.Е. Л/з № 2-404"], ["", "2 пара", "10.00–<br/>11.20", "Хозяйственное право", "т. 12-13 c Вильмак Д.Г.<br/>ауд. 3-403"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура (факульт) т. 6.3 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "fri", 8, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 17-18/1 с Мытник П.В.<br/>ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 7 пр Иванькович Д.В.<br/>ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 8 Лекция<br/>Кузьменкова С.В. Л/з № 2-404"], ["Лекция", "4 пара", "14.20–<br/>15.40", "Криминалистика", "т. 7.1 Лекция<br/>Пашута И.В. Л/з № 2-404"]]], ["4501", "fri", 9, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 19 Лекция<br/>Мытник П.В. Л/з № 2-304"], ["Практика", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 8 пр Иванькович Д.В.<br/>ауд. 3-403"], ["Практика", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 8 пр Иванькович Д.В.<br/>ауд. 3-403"]]], ["4501", "fri", 10, [["Семинар", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 20 с Мытник П.В.<br/>ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Уголовное право (особенная часть)", "т. 40 Лекция<br/>Духовник Ю.Е. Л/з № 2-404"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Криминалистика", "т. 8.3 с Костюкевич Д.В.<br/>ауд. 3-403"]]], ["4501", "fri", 11, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 21-23 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Налоговое право", "т. 6.4 с Дешук А.В.<br/>ауд. 3-403"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданский процесс т.20 с Костюк А.С.", "ауд. 3-403"], ["", "4 пара", "14.20–<br/>15.40", "Информационный час Григорьева Е.Н.", "ауд. 3-403"]]], ["4501", "fri", 12, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 21-23 с<br/>Мытник П.В. ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 24 Лекция<br/>Мытник П.В. Л/з № 2-304"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 13.1 Лекция<br/>Березнев Р.Ю. Л/з № 2-304"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Гражданский процесс", "т.21-22 с Костюк А.С.<br/>ауд. 3-403"]]], ["4501", "fri", 13, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовный процесс", "т. 24 с Мытник П.В.<br/>ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 25-26 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Практика", "3 пара", "11.30–<br/>12.50", "Криминалистика", "т. 10.3 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403 , Ковальчук А.С. ауд. 3-302"], ["Семинар", "4 пара", "14.20–<br/>15.40", "Уголовное право т. 41 с", "Меерсон В.Р. ауд. 3-403"]]], ["4501", "fri", 14, [["Лекция", "1 пара", "8.30–<br/>9.50", "Уголовное право (особенная часть)", "т. 42.1 Лекция<br/>Духовник Ю.Е. Л/з № 2-304"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 27 Лекция<br/>Мытник П.В. Л/з № 2-404"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Гражданское право", "т. 15 с Березнев Р.Ю.<br/>ауд. 3-403"], ["Практика", "4 пара", "14.20–<br/>15.40", "Хозяйственное право", "т. 20 пр Вильмак Д.Г.<br/>ауд. 3-403"]]], ["4501", "fri", 15, [["Семинар", "1 пара", "8.30–<br/>9.50", "Криминалистика", "т. 12.2 с Костюкевич Д.В. ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданское право", "т. 16,17 с Березнев Р.Ю.<br/>ауд. 3-403"]]], ["4501", "fri", 16, []], ["4501", "fri", 17, []], ["4501", "sat", 0, [["Семинар", "1 пара", "8.30–<br/>9.50", "Криминалистика", "т. 1.2 с Беломытцев Н.Н.<br/>ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Физкультура (факульт) т. 4.2 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Уголовный процесс", "т. 13/2 Лекция<br/>Мытник П.В. Л/з № 2-304"]]], ["4501", "sat", 1, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданский процесс т.3 с", "Костюк А.С. ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 3.2 с Беломытцев Н.Н.<br/>ауд. 3-403"]]], ["4501", "sat", 2, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданский процесс", "т.4-5 с Костюк А.С.<br/>ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Физкультура т. 4.3 пр", "Рудько В.А.<br/>Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "sat", 3, [["Семинар", "1 пара", "8.30–<br/>9.50", "Таможенное право", "т. 4.4 с Нестер И.С.<br/>ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Уголовный процесс", "т. 13/3 с Мытник П.В.<br/>ауд. 3-403"]]], ["4501", "sat", 4, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданский процесс", "т.8-9 с Костюк А.С.<br/>ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Физкультура (факульт) т. 4.6 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Криминология", "т. 5 Лекция<br/>Кузьменкова С.В. Л/з № 2-210"]]], ["4501", "sat", 5, [["Практика", "1 пара", "8.30–<br/>9.50", "Криминалистика т.5.3 пр", "Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132, Ковальчук А.С. ауд. 3-310, ауд.130"], ["Практика", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 5.3 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132, Ковальчук А.С. ауд. 3-310, ауд.130"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Таможенное право", "т. 5.3 Лекция<br/>Нестер И.С. Л/з № 1"]]], ["4501", "sat", 6, [["Практика", "1 пара", "8.30–<br/>9.50", "Уголовное право т. 37 пр Меерсон В.Р.", "ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Физкультура (факульт) т.6.2 пр Рудько В.А.", "Преподаватель 2.9.<br/>Спортгородок"]]], ["4501", "sat", 7, [["Семинар", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 7 с Иванькович Д.В.<br/>ауд. 3-403"], ["Лекция", "3 пара", "11.30–<br/>12.50", "Гражданский процесс", "т. 15 Лекция<br/>Костюк А.С. Л/з № 2-404"]]], ["4501", "sat", 8, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданский процесс т.15 с Костюк А.С.", "ауд. 3-403"], ["Лекция", "2 пара", "10.00–<br/>11.20", "Гражданский процесс", "т. 16 Лекция<br/>Костюк А.С. Л/з № 2-304"]]], ["4501", "sat", 9, []], ["4501", "sat", 10, [["Практика", "1 пара", "8.30–<br/>9.50", "Физкультура (факульт) т. 7.1 пр Рудько В.А.", "Преподаватель 2.9. с/зал"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 9 с Иванькович Д.В.<br/>ауд. 3-403"]]], ["4501", "sat", 11, [["Практика", "2 пара", "10.00–<br/>11.20", "Криминалистика", "т. 8.6 пр<br/>Марцынкевич Н.А.<br/>ауд. 3-403, ауд.132, Ковальчук А.С.<br/>ауд. 3-302, ауд.130"], ["Семинар", "3 пара", "11.30–<br/>12.50", "Таможенное право", "т. 7.2 с Нестер И.С.<br/>ауд. 3-403"]]], ["4501", "sat", 12, [["Практика", "1 пара", "8.30–<br/>9.50", "Криминология", "т. 11 пр Иванькович Д.В. ауд. 3-403"], ["Практика", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 11 пр Иванькович Д.В. ауд. 3-403"]]], ["4501", "sat", 13, [["Практика", "1 пара", "8.30–<br/>9.50", "Физкультура (факульт)", "т. 7.4 пр Рудько В.А.<br/>Преподаватель 2.9. с/зал"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Гражданский процесс т.23-25 с Костюк А.С.", "ауд. 3-403"]]], ["4501", "sat", 14, [["Семинар", "1 пара", "8.30–<br/>9.50", "Гражданский процесс", "т.26-27 с Костюк А.С.<br/>ауд. 3-403"], ["", "2 пара", "10.00–<br/>11.20", "10.00 Налоговое право", "Диф.зачет Дешук А.В.<br/>ауд. 3-403"]]], ["4501", "sat", 15, [["Семинар", "1 пара", "8.30–<br/>9.50", "Уголовное право т. 42 с", "Меерсон В.Р. ауд. 3-403"], ["Семинар", "2 пара", "10.00–<br/>11.20", "Криминология", "т. 13 с Иванькович Д.В.<br/>ауд. 3-403"], ["Практика", "3 пара", "11.30–<br/>12.50", "Физкультура (факульт) т. 7.6 пр Рудько В.А.", "Преподаватель 2.9. с/зал"]]], ["4501", "sat", 16, []], ["4501", "sat", 17, []]
 ];
@@ -6675,11 +6860,18 @@ function render() {
     updateDayGlance(row);
     const p = document.createElement('div');
     p.className = `panel panel-${g}-${d}-${w} active`;
+    const pKey = dateKey(w, d);
+    const per = periodOf(pKey, g);
 
     if (!row?.[3]?.length) {
-      p.innerHTML = DATA.some(x => x[0] === g)
-        ? '<div class="card no-data"><div class="big">Занятий нет</div>на этой неделе</div>'
-        : '<div class="card no-data"><div class="big">Расписание не загружено</div>для этой группы пока нет данных</div>';
+      const lastW = Math.max(-1, ...DATA.filter(x => x[0] === g).map(x => x[2]));
+      p.innerHTML = per
+        ? periodHtml(per, pKey)
+        : DATA.some(x => x[0] === g)
+          ? (w > lastW
+              ? '<div class="card no-data"><div class="big">Расписание ещё не загружено</div>занятия этого периода пока не добавлены</div>'
+              : '<div class="card no-data"><div class="big">Занятий нет</div>на этой неделе</div>')
+          : '<div class="card no-data"><div class="big">Расписание не загружено</div>для этой группы пока нет данных</div>';
     } else {
       const l = document.createElement('div');
       l.className = 'lessons';
@@ -6738,6 +6930,7 @@ function render() {
         l.append(c);
       });
       p.append(l);
+      if (per) p.insertAdjacentHTML('afterbegin', periodHtml(per, pKey));
     }
     root.append(p);
     paintPicks(root);
@@ -6787,7 +6980,8 @@ function updateWeekInfo() {
   // Текущая неделя / сегодня
   const now = new Date();
   const isCurrentWeek = w === week(now);
-  if (relEl) relEl.textContent = isCurrentWeek ? 'Текущая неделя' : '';
+  const wper = periodOf(dateKey(w, checked('day') || 'mon'), state.group);
+  if (relEl) relEl.textContent = [isCurrentWeek ? 'Текущая неделя' : '', wper ? wper.label : ''].filter(Boolean).join(' · ');
 
   const todayButton = document.getElementById('today-jump');
   if (todayButton) todayButton.disabled = isCurrentWeek && checked('day') === day(now);
@@ -6865,7 +7059,7 @@ function updateDayGlance(row) {
 
   out.textContent = lessons.length
     ? `${weekDay} · ${lessons.length} ${lessons.length === 1 ? 'пара' : lessons.length < 5 ? 'пары' : 'пар'} · до ${String(Math.floor(last[1] / 60)).padStart(2, '0')}:${String(last[1] % 60).padStart(2, '0')}`
-    : `${weekDay} · занятий нет`;
+    : `${weekDay} · ${periodOf(dateKey(w, d), state.group)?.label.toLowerCase() || 'занятий нет'}`;
 
   const now = new Date();
   out.classList.toggle('is-today', date.toDateString() === now.toDateString());
