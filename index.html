@@ -5,9 +5,9 @@
 <script>window.__ip=null;addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__ip=e;});</script>
 <meta name="viewport" content="width=device-width, initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f6f6f4" id="theme-color-meta">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Пропуски">
@@ -1007,13 +1007,45 @@ details::details-content { transition: none !important; }
 #stat.perf .srow { background: linear-gradient(90deg, color-mix(in srgb, var(--ok) 20%, transparent) var(--w), transparent var(--w)); }
 #stat.perf .srow.open { background: var(--soft); }
 #statMode { margin-bottom: 8px; }
+
+/* ===== ПЕРВЫЙ ВХОД: приветственный экран ===== */
+#login { max-width: 380px; margin: max(4vh, 20px) auto 0; padding: 0 0 22px; overflow: hidden; border-radius: 28px; }
+.lg-hero { position: relative; overflow: hidden; padding: 34px 12px 26px; text-align: center; color: #fff; background: linear-gradient(150deg, #d63a2e 0%, #a3211f 60%, #7d1519 100%); }
+.lg-hero::before, .lg-hero::after { content: ""; position: absolute; border-radius: 50%; background: rgba(255,255,255,.10); pointer-events: none; }
+.lg-hero::before { width: 220px; height: 220px; right: -80px; top: -90px; }
+.lg-hero::after { width: 150px; height: 150px; left: -60px; bottom: -70px; background: rgba(255,255,255,.07); }
+.lg-logo { position: relative; width: 84px; height: 84px; margin: 0 auto 16px; border-radius: 24px; box-shadow: 0 12px 28px rgba(60,0,0,.35); animation: lgPop .7s cubic-bezier(.2,1.3,.4,1) both; }
+.lg-logo svg { width: 100%; height: 100%; display: block; }
+#login .lg-hero h1 { color: #fff; font-size: 26px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.02em; position: relative; }
+.lg-sub { margin: 0; font-size: 14px; opacity: .85; position: relative; }
+.lg-feats { display: flex; gap: 6px; flex-wrap: nowrap; justify-content: center; flex-wrap: wrap; margin-top: 16px; position: relative; }
+.lg-feats span { font-size: 11.5px; white-space: nowrap; font-weight: 600; padding: 6px 9px; border-radius: 99px; background: rgba(255,255,255,.18); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.lg-body { padding: 22px 20px 0; }
+.lg-body .tabs { margin-top: 0; }
+.lg-body h2.lg-title { margin: 0 0 4px; font-size: 18px; font-weight: 650; text-align: center; text-transform: none; letter-spacing: -.01em; color: var(--ink); }
+.lg-hint { margin: 0 0 16px; text-align: center; font-size: 13px; color: var(--mute); }
+#tgBox > .mute { font-size: 12.5px !important; line-height: 1.45; }
+#tgWidget { padding: 6px 0; }
+#guestBtn { background: transparent; border: 1px dashed var(--line); color: var(--mute); }
+.lg-inst { display: flex; width: 100%; margin-top: 12px; gap: 8px; background: color-mix(in srgb, var(--acc) 10%, transparent); color: var(--acc); font-weight: 600; font-size: 14px; }
+.lg-inst span { font-size: 16px; }
+@media (display-mode: standalone) { .lg-inst { display: none !important; } }
+.lg-hero > *, .lg-body > * { animation: lgUp .6s cubic-bezier(.2,.8,.2,1) both; }
+.lg-hero h1 { animation-delay: .12s; } .lg-sub { animation-delay: .2s; } .lg-feats { animation-delay: .28s; }
+.lg-body > *:nth-child(1) { animation-delay: .34s; } .lg-body > *:nth-child(2) { animation-delay: .4s; }
+.lg-body > *:nth-child(3) { animation-delay: .46s; } .lg-body > *:nth-child(4) { animation-delay: .52s; } .lg-body > *:nth-child(5) { animation-delay: .58s; }
+@keyframes lgUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes lgPop { from { opacity: 0; transform: scale(.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .lg-hero > *, .lg-body > *, .lg-logo { animation: none !important; } }
 </style>
 </head>
 <body>
 <div class="bg" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
 <section id="login" class="card hidden">
-  <h1>Журнал пропусков</h1>
+  <div class="lg-hero"><div class="lg-logo"><svg viewBox="0 0 96 96" aria-hidden="true"><defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f6e2e0"/></linearGradient></defs><rect width="96" height="96" rx="24" fill="#ffffff" fill-opacity=".16"/><rect x="25" y="17" width="48" height="62" rx="7" fill="url(#lgg)"/><rect x="25" y="17" width="9" height="62" rx="5" fill="#f1d3d0"/><g fill="#9b1c1e"><circle cx="25" cy="29" r="3"/><circle cx="25" cy="42" r="3"/><circle cx="25" cy="55" r="3"/><circle cx="25" cy="68" r="3"/></g><g stroke="#e2d6d6" stroke-width="3" stroke-linecap="round"><path d="M41 31h24M41 42h24M41 53h14"/></g><circle cx="69" cy="68" r="14" fill="#fff"/><circle cx="69" cy="68" r="11.5" fill="#13795b"/><path d="M63.5 68.3l4 4 8-8" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h1>Журнал пропусков</h1><p class="lg-sub">Группа 4501 · пропуски и дневник</p><div class="lg-feats"><span>📋 Журнал</span><span>📅 Дневник</span><span>📲 Как приложение</span></div></div>
+  <div class="lg-body">
+  <h2 class="lg-title">Добро пожаловать 👋</h2><p class="lg-hint">Войдите, чтобы открыть журнал</p>
   <div class="tabs hidden">
     <button type="button" id="tabU" class="main">Студент</button>
     <button type="button" id="tabH">Староста</button>
@@ -1031,6 +1063,8 @@ details::details-content { transition: none !important; }
   </form>
   <div id="tgBox" style="margin-top:6px;text-align:center"><p class="mute" style="margin:0 0 14px">Вход через Telegram. При первом входе нужно один раз выбрать своё имя и ввести код группы.</p><div id="tgWidget" style="display:flex;justify-content:center;min-height:40px"></div><label class="chk" style="justify-content:center;margin-top:10px"><input type="checkbox" id="rem2" checked> Запомнить меня</label><div id="claimBox" class="hidden" style="margin-top:12px;text-align:left"><label class="mute" for="claimName">Кто вы в списке группы</label><select id="claimName"></select><label class="mute" for="claimCode" style="display:block;margin-top:10px">Код группы</label><input id="claimCode" type="password" autocomplete="off"><button type="button" class="main" id="claimBtn" style="width:100%;margin-top:12px">Привязать Telegram</button></div><div class="err" id="tgErr" style="margin-top:6px"></div></div>
   <button type="button" id="guestBtn" style="width:100%;margin-top:14px">👁 Войти как гость (только просмотр)</button>
+  <button type="button" class="inst lg-inst"><span>⬇️</span>Установить приложение</button>
+  </div>
 </section>
 
 <!-- Всплывающее окно глобального Рандома -->
@@ -2410,7 +2444,7 @@ $("rbaseBtn").onclick=()=>{
 if("serviceWorker" in navigator){
   let swReloaded=false;
   navigator.serviceWorker.addEventListener("controllerchange",()=>{if(swReloaded||!navigator.serviceWorker.controller)return;swReloaded=true;location.reload()});
-  addEventListener("load",()=>navigator.serviceWorker.register("index.js",{updateViaCache:"none"}).catch(()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"})).then(r=>r.update()).catch(()=>{}));
+  addEventListener("load",()=>navigator.serviceWorker.register("/sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
 }
 
 /* ===== календарь пропусков ===== */
@@ -2866,7 +2900,7 @@ document.querySelectorAll(".inst").forEach(b=>b.onclick=async()=>{
   // диагностика: что именно мешает установке
   let diag=[];
   try{const r=await fetch("manifest.webmanifest",{cache:"no-store"});if(!r.ok)diag.push("файл manifest.webmanifest не найден на сайте");else await r.json()}catch(e){diag.push("manifest.webmanifest не читается")}
-  try{const g=await (navigator.serviceWorker&&navigator.serviceWorker.getRegistration());if(!g)diag.push("не запущен service worker (файл index.js)")}catch(e){}
+  try{const g=await (navigator.serviceWorker&&navigator.serviceWorker.getRegistration());if(!g)diag.push("не запущен service worker (файл sw.js)")}catch(e){}
   if(location.protocol!=="https:")diag.push("сайт открыт не по https");
   const ua=navigator.userAgent;
   const inApp=/Telegram|FBAN|FBAV|Instagram|VKClient|; wv\)/i.test(ua);
