@@ -1050,11 +1050,12 @@ details::details-content { transition: none !important; }
       <div id="modeSwitch" class="modeSw hidden" role="group" aria-label="Режим"><button type="button" data-m="head">👑 Староста</button><button type="button" data-m="user">🎓 Учащийся</button></div>
     </div>
     <div class="sheet-grid">
-      <button type="button" class="tile inst hidden" aria-label="Установить приложение"><span>⬇️</span>Установить</button>
+      <button type="button" class="tile inst" aria-label="Установить приложение"><span>⬇️</span>Установить</button>
       <button type="button" id="infoBtn" class="tile"><span>ℹ️</span>Инфо и лог</button>
       <button type="button" id="glassToggle" class="tile" title="Включить/выключить стекло"><span>✨</span>Стекло</button>
       <button type="button" id="schedBtn" class="tile" aria-pressed="false" title="Дневник группы 4501"><span>📅</span><em id="schedLbl" style="font-style:normal">Дневник</em></button>
       <button type="button" id="legendBtn" class="tile" aria-expanded="false"><span>❓</span>Обозначения</button>
+      <button type="button" id="guestTile" class="tile" title="Только просмотр"><span>👁</span>Режим гостя</button>
       <button type="button" id="logout" class="tile out"><span>🚪</span>Выйти</button>
     </div>
   </aside>
@@ -1072,12 +1073,9 @@ details::details-content { transition: none !important; }
 
   <!-- ОКНО ИНФО (ЛОГИ / ЧТО НОВОГО) -->
   <div id="infoModal" class="floatBox hidden" role="dialog" aria-label="Информация">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-      <div class="tabs" style="margin-bottom:0;flex:1;">
-        <button type="button" id="tabLog" class="main">Лог</button>
-        <button type="button" id="tabNew">Что нового</button>
-      </div>
-      <button type="button" id="infoClose" aria-label="Закрыть" title="Закрыть" style="flex:0 0 auto;width:40px;height:40px;min-height:40px;padding:0;border-radius:50%;font-size:18px;line-height:1;">✕</button>
+    <div class="tabs" style="margin-bottom:12px;">
+      <button type="button" id="tabLog" class="main">Лог</button>
+      <button type="button" id="tabNew">Что нового</button>
     </div>
     <div id="infoContent" class="scroll" style="flex:1; overflow-y:auto; font-size:13px; padding-right:8px;"></div>
     <button type="button" id="infoClose2" class="main" style="flex:0 0 auto;width:100%;margin-top:12px;">Закрыть</button>
@@ -1610,7 +1608,14 @@ $("loginForm").onsubmit=async e=>{
   await start(v,r);
   logAct("вошёл как "+(r==="head"?"староста":"студент"));
 };
-$("logout").onclick=()=>{isGuest=false;document.documentElement.classList.remove("guest");rememberClear();setSched(false,true);me=null;tab=null;$("code").value="";$("gcode").value="";fillWho();show()};
+$("logout").onclick=()=>{
+  if(isGuest){
+    isGuest=false;document.documentElement.classList.remove("guest");
+    const sv=savedLogin();
+    if(sv&&sv.n){me=null;tab=null;start(sv.n,sv.r);return}
+    setSched(false,true);me=null;tab=null;fillWho();show();return;
+  }
+  rememberClear();setSched(false,true);me=null;tab=null;$("code").value="";$("gcode").value="";fillWho();show()};
 
 async function start(name,r){
   me=name;dirty=false;isGuest=false;document.documentElement.classList.remove("guest");await pull();
@@ -1635,6 +1640,7 @@ async function start(name,r){
 }
 
 async function startGuest(){
+  setSched(false,true);
   me="Гость";isGuest=true;isHead=false;isTempHead=false;dirty=false;
   await pull();
   if(db.cfg&&db.cfg.randAlert)lastRandTime=db.cfg.randAlert.t;
@@ -1643,12 +1649,15 @@ async function startGuest(){
   show();
 }
 $("guestBtn").onclick=startGuest;
+$("guestTile").onclick=startGuest;
 
 function show(){
   $("login").classList.toggle("hidden",!!me);
   $("app").classList.toggle("hidden",!me);
   if(!me){applyLoginMode();if(typeof mountTg==="function")mountTg();}
   if(!me){navKey=null;$("bnav").innerHTML="";$("streak").classList.add("hidden");return}
+  $("guestTile").classList.toggle("hidden",isGuest);
+  $("logout").lastChild.textContent=isGuest?"Выйти из гостя":"Выйти";
   $("user").textContent=isGuest?"Гость · только просмотр":me+(isHead?" · староста":" · студент");
   const sup=norm(me)===norm(SUPER_ADMIN);
   $("modeSwitch").classList.toggle("hidden",!sup);
@@ -2393,7 +2402,7 @@ $("rbaseBtn").onclick=()=>{
 if("serviceWorker" in navigator){
   let swReloaded=false;
   navigator.serviceWorker.addEventListener("controllerchange",()=>{if(swReloaded||!navigator.serviceWorker.controller)return;swReloaded=true;location.reload()});
-  addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
+  addEventListener("load",()=>navigator.serviceWorker.register("index.js",{updateViaCache:"none"}).catch(()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"})).then(r=>r.update()).catch(()=>{}));
 }
 
 /* ===== календарь пропусков ===== */
@@ -2578,7 +2587,7 @@ $("infoBtn").onclick = (e) => {
    $("infoModal").classList.toggle("hidden", !isHidden);
    if(isHidden) renderInfoModal();
 };
-$("infoClose").onclick = $("infoClose2").onclick = () => $("infoModal").classList.add("hidden");
+$("infoClose2").onclick = () => $("infoModal").classList.add("hidden");
 $("tabLog").onclick = () => { infoTab = "log"; renderInfoModal(); };
 $("tabNew").onclick = () => { infoTab = "new"; renderInfoModal(); };
 
@@ -2737,7 +2746,7 @@ $("modeSwitch").addEventListener("click",e=>{
   };
   fab.onclick=e=>{e.stopPropagation();setSheet(!sheet.classList.contains("open"))};
   scrim.onclick=()=>setSheet(false);
-  sheet.addEventListener("click",e=>{ if(e.target.closest("#infoBtn,#legendBtn,#logout,.inst,#modeSwitch button,#schedBtn")) setSheet(false); },true);
+  sheet.addEventListener("click",e=>{ if(e.target.closest("#infoBtn,#legendBtn,#logout,.inst,#modeSwitch button,#schedBtn,#guestTile")) setSheet(false); },true);
   document.addEventListener("keydown",e=>{ if(e.key==="Escape") setSheet(false); });
   let y0=null;
   sheet.addEventListener("touchstart",e=>{y0=e.touches[0].clientY},{passive:true});
@@ -2834,11 +2843,13 @@ const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigat
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 function paintInstall(){
     const btns = document.querySelectorAll(".inst");
-    btns.forEach(b=>b.classList.toggle("hidden",isStandalone()));
+    const inst=isStandalone();
+    btns.forEach(b=>{b.classList.remove("hidden");b.innerHTML=inst?'<span>✅</span>Установлено':'<span>⬇️</span>Установить'});
 }
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEv=e;window.__ip=e;paintInstall()});
-addEventListener("appinstalled",()=>{installEv=null;window.__ip=null;document.querySelectorAll(".inst").forEach(b=>b.classList.add("hidden"))});
+addEventListener("appinstalled",()=>{installEv=null;window.__ip=null;paintInstall()});
 document.querySelectorAll(".inst").forEach(b=>b.onclick=async()=>{
+  if(isStandalone()){alert("Приложение уже установлено и открыто как приложение.");return}
   const ev=installEv||window.__ip;
   if(ev){
     try{ev.prompt();await ev.userChoice.catch(()=>{})}catch(e){}
