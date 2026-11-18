@@ -236,6 +236,22 @@ html{scroll-behavior:smooth;overscroll-behavior-y:contain}
 .bk-row2{display:flex;justify-content:space-between}
 #bulkMsg:empty{display:none}
 </style>
+<style id="test2">
+#testMini{position:fixed;right:20px;bottom:calc(158px + env(safe-area-inset-bottom));z-index:85;width:34px;height:34px;min-height:34px;padding:0;border-radius:50%;background:var(--card);font-size:17px;line-height:1;box-shadow:0 4px 16px #14192829;transition:opacity .2s,transform .4s var(--spring,ease),background .2s!important;will-change:transform,opacity}
+#testMini[aria-pressed=true]{background:var(--acc)}
+#testMini.bk-hide{opacity:0;transform:scale(.4);pointer-events:none;visibility:hidden;transition:opacity .2s,transform .3s,visibility 0s .3s!important}
+.fab.open~#testMini,html.bk-open #testMini,html.tt-open #testMini,html.tt-open #diaryMini,html.tt-open #bulkMini{opacity:0;pointer-events:none}
+@media(min-width:800px){#testMini{right:30px;bottom:178px}}
+#testScrim{position:fixed;inset:0;z-index:70;background:#0a0e184d;opacity:0;pointer-events:none;transition:opacity .25s}
+#testScrim.open{opacity:1;pointer-events:auto}
+.tt-body{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:2px 2px 4px}
+#ttText{min-height:170px;font-size:14px;line-height:1.45;border-radius:14px;resize:vertical;white-space:pre-wrap}
+.tt-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tt-btns button{flex:1 1 auto}
+#ttNetDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-left:4px;vertical-align:middle}
+#ttNetDot.bad{background:#d08a12}
+</style>
+<style id="fixbadge">html body #diaryMini,html body #bulkMini{overflow:visible!important}html body #bulkMini .bk-badge{top:-6px;right:-6px;box-shadow:0 0 0 2px var(--page)}</style>
 </head>
 <body>
 <script>(function(){try{if(localStorage.getItem("absence:hello"))return}catch{}var W=["Hello","Hola","Bonjour","こんにちは","Ciao","Привет"],i=0,tm,h=document.createElement("div");h.id="hello",h.innerHTML='<div id="helloT"></div><div id="helloS">Коснитесь, чтобы пропустить</div>',document.body.appendChild(h);var t=h.firstChild;function done(){clearTimeout(tm),h.classList.add("out");try{localStorage.setItem("absence:hello","1")}catch{}setTimeout(function(){h.remove()},700)}function step(){if(i>=W.length)return done();t.className="",t.textContent=W[i],t.offsetWidth,t.className="w",i++,i===W.length?tm=setTimeout(done,2800):tm=setTimeout(function(){t.classList.add("f"),tm=setTimeout(step,450)},2200)}h.onclick=done,window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches?(t.textContent=W[0],tm=setTimeout(done,900)):step()})();
@@ -295,6 +311,35 @@ html{scroll-behavior:smooth;overscroll-behavior-y:contain}
       <div class="mute" id="bulkMsg"></div>
     </div>
   </aside>
+  <div id="testScrim"></div>
+  <aside id="testSheet" class="sheet bsheet" role="dialog" aria-hidden="true" aria-label="Тест">
+    <div class="bk-head"><div><h1>🧪 Тест</h1><div class="mute">Новые функции · только для вас</div></div><button type="button" id="testClose" class="quiet" aria-label="Закрыть" style="font-size:20px;min-width:40px">✕</button></div>
+    <div class="tabs" id="ttTabs"><button type="button" data-p="sum" class="main">Сводка</button><button type="button" data-p="per">Период</button><button type="button" data-p="net">Сеть <span id="ttNetDot"></span></button></div>
+    <div class="tt-body">
+      <div data-pp="sum">
+        <div class="mute" id="ttSumHint" style="margin-bottom:6px"></div>
+        <textarea id="ttText" rows="9" aria-label="Сводка"></textarea>
+        <label class="chk"><input type="checkbox" id="ttReason"> Показывать причину у ПН</label>
+        <div class="tt-btns"><button type="button" class="main" id="ttCopy">Скопировать</button><button type="button" id="ttShare">Поделиться</button><button type="button" id="ttRefresh">Обновить</button></div>
+      </div>
+      <div data-pp="per" class="hidden">
+        <p class="mute" style="margin:0 0 8px">Отметка студенту на несколько дней сразу (воскресенья пропускаются).</p>
+        <label class="mute" for="ttWho">Студент</label><select id="ttWho"></select>
+        <label class="mute" for="ttCode" style="display:block;margin-top:8px">Причина</label>
+        <select id="ttCode"><option>Б</option><option>УП</option><option>СБ</option><option>ОМ</option><option>Ц</option></select>
+        <div class="row" style="margin-top:8px"><div><label class="mute" for="ttFrom">С</label><input type="date" id="ttFrom"></div><div><label class="mute" for="ttTo">По</label><input type="date" id="ttTo"></div></div>
+        <label class="chk"><input type="checkbox" id="ttKeep" checked> Не трогать дни, где уже есть отметка</label>
+        <button type="button" class="main" id="ttApply" style="width:100%;margin-top:6px">Поставить на период</button>
+        <p class="mute" id="ttPMsg" style="margin:8px 0 0"></p>
+      </div>
+      <div data-pp="net" class="hidden">
+        <div class="warn" style="margin-top:0" id="ttNetState"></div>
+        <p class="mute" style="margin:10px 0">Ваши изменения сначала попадают в очередь на этом устройстве и отправляются на сервер по одному. Если сети нет, они дождутся её и уйдут сами.</p>
+        <div class="tt-btns"><button type="button" class="main" id="ttSync">Отправить сейчас</button><button type="button" class="danger" id="ttDrop">Очистить очередь</button></div>
+      </div>
+    </div>
+  </aside>
+
 
   <aside id="sheet" class="sheet" aria-hidden="true" aria-label="Меню">
     <div class="sheet-head"><div class="sheet-title"><h1>Журнал пропусков</h1><div id="streak" class="hidden" title="Дней подряд без прогулов (ПН)" aria-label="Серия дней без прогулов"><span class="fl">🔥</span><span id="streakN">0</span></div></div><div class="mute" id="user"></div>
@@ -309,6 +354,7 @@ html{scroll-behavior:smooth;overscroll-behavior-y:contain}
       <button type="button" id="legendBtn" class="tile" aria-expanded="false"><span>❓</span>Обозначения</button>
       <button type="button" id="guestTile" class="tile" title="Только просмотр"><span>👁</span>Режим гостя</button>
       <button type="button" id="libTile" class="tile" title="Лекции на Google Диске" onclick="window.open('https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM','_blank','noopener')"><span>📚</span>Лекции</button>
+      <button type="button" id="testTile" class="tile hidden" aria-pressed="false" title="Новые функции (тест)"><span>🧪</span><em id="testLbl" style="font-style:normal">Тест</em></button>
       <button type="button" id="logout" class="tile out"><span>🚪</span>Выйти</button>
     </div>
   </aside>
@@ -1122,6 +1168,172 @@ window.hzCount=function(el,to,ms){
   const from=parseFloat(el.textContent)||0,t0=performance.now();
   (function s(t){const k=Math.min(1,(t-t0)/(ms||500)),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(s)})(t0);
 };
+})();
+</script>
+<script id="testJs">
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const testOn=()=>!!(me&&!isGuest&&isHead&&norm(me)===norm(SUPER_ADMIN));
+const toast=m=>{try{window.hzToast?hzToast(m):0}catch(e){}};
+
+/* ===== Очередь отправки (работает без сети) ===== */
+const QK="absence:q";
+const qLoad=()=>{try{return JSON.parse(lsGet(QK)||"[]")}catch(e){return[]}};
+const qSave=a=>lsSet(QK,JSON.stringify(a));
+let flushing=false,failed=false,lastOk=0;
+async function send(it){
+  const r=await fetch(it.u,{method:it.v===null?"DELETE":"PUT",body:it.v===null?undefined:JSON.stringify(it.v)});
+  if(!r.ok)throw new Error("http "+r.status);
+}
+async function flush(){
+  if(flushing)return;flushing=true;
+  try{
+    while(qLoad().length){
+      if(!navigator.onLine){failed=true;break}
+      try{await send(qLoad()[0])}catch(e){failed=true;break}
+      const q=qLoad();q.shift();qSave(q);failed=false;lastOk=Date.now();
+    }
+  }finally{flushing=false;ttPaint()}
+}
+const _net=window.net;
+window.net=function(path,val){
+  if(!DB_URL||!testOn())return _net.apply(this,arguments);
+  const it={u:base()+path+".json",v:val===undefined?null:val};
+  const q=qLoad().filter((x,i)=>x.u!==it.u||(i===0&&flushing));
+  q.push(it);qSave(q);ttPaint();
+  return flush();
+};
+const _pull=window.pull;
+window.pull=async function(){
+  if(testOn()&&qLoad().length){await flush();if(qLoad().length)return}
+  return _pull.apply(this,arguments);
+};
+addEventListener("online",flush);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)flush()});
+setInterval(()=>{if(!document.hidden&&qLoad().length)flush()},8000);
+addEventListener("beforeunload",e=>{if(qLoad().length&&testOn()){e.preventDefault();e.returnValue=""}});
+
+function ttPaint(){
+  const n=qLoad().length,lb=$("testLbl");
+  if(lb)lb.textContent=n?"Тест · "+n:"Тест";
+  const dot=$("ttNetDot");if(dot)dot.classList.toggle("bad",!!n);
+  const st=$("ttNetState");
+  if(st){
+    const t=lastOk?" · последняя отправка "+new Date(lastOk).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}):"";
+    st.innerHTML=n?("⏳ Ждут отправки: <b>"+n+"</b>"+(navigator.onLine?(failed?" · сервер не отвечает":" · отправляю…"):" · нет сети")):("✅ Всё сохранено на сервере"+t);
+  }
+}
+
+/* ===== Шторка ===== */
+const sheet=$("testSheet"),scrim=$("testScrim"),tile=$("testTile");
+let panel="sum",edited=false;
+function setPanel(p){
+  panel=p;
+  document.querySelectorAll("#ttTabs button").forEach(b=>b.classList.toggle("main",b.dataset.p===p));
+  document.querySelectorAll("#testSheet [data-pp]").forEach(e=>e.classList.toggle("hidden",e.dataset.pp!==p));
+  if(p==="sum")fillSummary(true);
+  if(p==="per")fillPeriod();
+  ttPaint();
+}
+function ttSet(o){
+  sheet.classList.toggle("open",o);scrim.classList.toggle("open",o);
+  sheet.setAttribute("aria-hidden",o?"false":"true");tile.setAttribute("aria-pressed",o?"true":"false");
+  document.documentElement.classList.toggle("tt-open",o);
+  if(o){edited=false;setPanel(panel);flush()}
+}
+function ttClose(){if(sheet.classList.contains("open"))ttSet(false)}
+function ttVis(){
+  const on=testOn();
+  tile.classList.toggle("hidden",!on);
+  if(!on)ttClose();
+  ttPaint();
+}
+tile.onclick=()=>{if($("sheet")&&$("sheet").classList.contains("open"))$("menuFab").click();ttSet(!sheet.classList.contains("open"))};
+scrim.onclick=ttClose;$("testClose").onclick=ttClose;
+$("menuFab").addEventListener("click",ttClose);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")ttClose()});
+$("ttTabs").onclick=e=>{const b=e.target.closest("button[data-p]");if(b)setPanel(b.dataset.p)};
+(function(){let y0=null;const h=sheet.querySelector(".bk-head");
+  h.addEventListener("touchstart",e=>{y0=e.touches[0].clientY},{passive:true});
+  h.addEventListener("touchend",e=>{if(y0!==null&&e.changedTouches[0].clientY-y0>60)ttClose();y0=null},{passive:true});
+})();
+
+/* ===== 1. Сводка отсутствующих ===== */
+function buildSummary(){
+  const d=$("date").value||workDate(),rsn=$("ttReason").checked;
+  const wd=new Date(d+"T12:00").toLocaleDateString("ru-RU",{weekday:"short"});
+  const rows=[];
+  db.students.slice().sort((a,b)=>a.localeCompare(b,"ru")).forEach(n=>{
+    const m=getMark(d,n);if(!m)return;
+    if(!pairsOf(m).some(c=>c&&c!=="ПР"))return;
+    rows.push("• "+n+" — "+describe(m,rsn));
+  });
+  if(!rows.length)return"На "+fmt(d)+" отсутствующих нет ✅";
+  return"Отсутствуют "+fmt(d).slice(0,5)+" ("+wd+"):\n"+rows.join("\n")+"\n\nВсего: "+rows.length+" из "+db.students.length;
+}
+function fillSummary(force){
+  if(edited&&!force)return;
+  $("ttText").value=buildSummary();edited=false;
+  $("ttSumHint").textContent="Дата: "+fmt($("date").value||workDate())+" (меняется на главном экране)";
+}
+$("ttText").oninput=()=>{edited=true};
+$("ttReason").onchange=()=>fillSummary(true);
+$("ttRefresh").onclick=()=>fillSummary(true);
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);return true}catch(e){
+    const a=document.createElement("textarea");a.value=t;a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();
+    let ok=false;try{ok=document.execCommand("copy")}catch(x){}a.remove();return ok;
+  }
+}
+$("ttCopy").onclick=async()=>{toast(await copyText($("ttText").value)?"Сводка скопирована ✓":"Не удалось скопировать")};
+$("ttShare").onclick=()=>{const t=$("ttText").value;navigator.share?navigator.share({text:t}).catch(()=>{}):$("ttCopy").click()};
+
+/* ===== 4. Период от старосты ===== */
+function fillPeriod(){
+  const w=$("ttWho"),cur=w.value;
+  w.innerHTML=db.students.map(n=>"<option>"+esc(n)+"</option>").join("");
+  if(cur)w.value=cur;
+  const d=$("date").value||workDate();
+  if(!$("ttFrom").value)$("ttFrom").value=d;
+  if(!$("ttTo").value)$("ttTo").value=d;
+}
+$("ttApply").onclick=()=>{
+  const n=$("ttWho").value,code=$("ttCode").value,f=$("ttFrom").value,t=$("ttTo").value,keep=$("ttKeep").checked;
+  const msg=x=>{$("ttPMsg").textContent=x};
+  if(!testOn())return;
+  if(!n||!f||!t){msg("Выберите студента и даты.");return}
+  const d1=new Date(f+"T12:00"),d2=new Date(t+"T12:00");
+  if(d1>d2){msg("Дата «с» позже даты «по».");return}
+  if((d2-d1)/864e5>62){msg("Слишком длинный период (максимум 62 дня).");return}
+  snap();let c=0,sk=0;
+  for(const dt=new Date(d1);dt<=d2;dt.setDate(dt.getDate()+1)){
+    if(dt.getDay()===0)continue;
+    const ds=ymd(dt),old=getMark(ds,n);
+    if(keep&&old&&pairsOf(old).some(Boolean)){sk++;continue}
+    writeMark(ds,n,Array(4).fill(code),"h","");c++;
+  }
+  if(c)logAct("период "+code+" с "+fmt(f)+" по "+fmt(t)+" ("+c+" дн.)",n);
+  msg(n+": "+code+" на "+c+" дн."+(sk?" Пропущено с отметками: "+sk+".":"")+" Можно отменить кнопкой ↶ на главном экране.");
+  toast("Период поставлен ✓");
+  render();
+};
+
+/* ===== Сеть ===== */
+$("ttSync").onclick=async()=>{toast("Отправляю…");await flush();toast(qLoad().length?"Не вышло, попробуем позже":"Всё отправлено ✓")};
+$("ttDrop").onclick=()=>{
+  const n=qLoad().length;if(!n)return;
+  if(confirm("Удалить из очереди "+n+" неотправленных записей? Они пропадут безвозвратно."))  {qSave([]);ttPaint()}
+};
+
+/* ===== Хуки ===== */
+const _render=window.render;
+window.render=function(){const r=_render.apply(this,arguments);try{ttVis();if(sheet.classList.contains("open")&&panel==="sum")fillSummary(false)}catch(e){}return r};
+const _applyTab=window.applyTab;
+window.applyTab=function(){const r=_applyTab.apply(this,arguments);try{ttVis()}catch(e){}return r};
+const _syncSched=window.syncSched;
+window.syncSched=function(){const r=_syncSched.apply(this,arguments);try{ttVis()}catch(e){}return r};
+setInterval(()=>{try{ttPaint()}catch(e){}},2000);
 })();
 </script>
 </body>
