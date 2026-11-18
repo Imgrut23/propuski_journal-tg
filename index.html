@@ -2460,9 +2460,9 @@ function renderHead(){
   $("empty").textContent=marked.length?"":"Пока никого.";
   $("empty").classList.toggle("hidden",marked.length>0);
 
-  const unm=db.students.filter(n=>!hasCode(n));
+  const unm=db.students.filter(n=>!getMark(d,n));
   $("unm").classList.toggle("hidden",!unm.length);$("unm").open=$("unm").open;
-  $("unmS").textContent=`На паре: ${unm.length} из ${db.students.length}`;
+  $("unmS").textContent=`Без отметок: ${unm.length} из ${db.students.length}`;
   const ul=$("unmL");ul.innerHTML="";
   unm.forEach(n=>{
     const row=document.createElement("div");row.className="urow";
