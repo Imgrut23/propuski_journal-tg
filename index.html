@@ -81,6 +81,36 @@ html body #head .set-content button{min-height:40px}
 #sheet .tile.out{min-height:40px;gap:8px;font-size:13px}
 #sheet .tile.out span{font-size:15px}
 </style>
+<style id="fix5">
+html body .wrap{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:84px}
+html body #user-view .card{padding:10px 12px;margin-bottom:8px;border-radius:16px}
+html body #user-view h2{margin:0 0 6px;font-size:12.5px}
+html body #user-view #mstate{margin-bottom:8px}
+html body #user-view .fold{margin-top:6px}
+html body #user-view #msave{margin-top:10px!important}
+html body #user-view input,html body #user-view select{min-height:40px}
+html body .chips{gap:5px;margin-top:6px}html body .chip{min-height:38px;border-radius:12px}
+html body .day-toggle{margin-bottom:8px;padding:3px}html body .day-toggle button{min-height:30px}
+html body #user-view td,html body #user-view th{padding:5px 6px}
+html body #user-view .tag{margin:1px 3px 1px 0;padding:2px 9px}
+html body #user-view #stu-group>div{padding:5px 0!important}
+html body #head .s1{height:clamp(24px,calc((100dvh - 260px) / var(--n,30)),32px)}
+html body #head .sname,html body #head .c{font-size:13.5px}
+html body #head .datebar{gap:6px}
+html body #schedView .lesson-card{padding:8px 10px;gap:8px}
+html body #schedView .lessons{gap:6px}
+html body #schedView .status-bar.show{padding:8px 12px}
+html body #schedView .sb-line2{font-size:14px}
+html body #schedView .seminar-q{margin-top:6px;padding-top:4px}
+html body #schedView .lesson-body .subject{font-size:14.5px}
+html body #schedView .lesson-meta{margin:2px 0}
+html body #schedView .period-card{padding:12px 14px}
+html body #schedView .no-data{padding:24px 16px}
+.pay-card{margin-bottom:8px}
+html.cal-page #diaryMini{display:none}
+html.cal-page #calMini{width:32px;height:32px;min-height:32px;bottom:calc(70px + env(safe-area-inset-bottom))}
+@media(min-width:800px){html.cal-page #calMini{bottom:90px}}
+</style>
 </head>
 <body>
 <script>(function(){try{if(localStorage.getItem("absence:hello"))return}catch{}var W=["Hello","Hola","Bonjour","こんにちは","Ciao","Привет"],i=0,tm,h=document.createElement("div");h.id="hello",h.innerHTML='<div id="helloT"></div><div id="helloS">Коснитесь, чтобы пропустить</div>',document.body.appendChild(h);var t=h.firstChild;function done(){clearTimeout(tm),h.classList.add("out");try{localStorage.setItem("absence:hello","1")}catch{}setTimeout(function(){h.remove()},700)}function step(){if(i>=W.length)return done();t.className="",t.textContent=W[i],t.offsetWidth,t.className="w",i++,i===W.length?tm=setTimeout(done,2800):tm=setTimeout(function(){t.classList.add("f"),tm=setTimeout(step,450)},2200)}h.onclick=done,window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches?(t.textContent=W[0],tm=setTimeout(done,900)):step()})();
@@ -1309,6 +1339,13 @@ $("pdfBtn").onclick=function(){
   setTimeout(function(){URL.revokeObjectURL(url)},120000);
   try{logAct("сформировал PDF-отчёт по пропускам")}catch(e){}
 };
+})();
+</script>
+<script id="calPageJs">
+(function(){
+function sync(){var on=!!(typeof me!=="undefined"&&me&&!isGuest&&(tab==="me"||tab==="self")&&!schedOn);document.documentElement.classList.toggle("cal-page",on)}
+var a=window.applyTab;window.applyTab=function(){var r=a.apply(this,arguments);try{sync()}catch(e){}return r};
+var b=window.syncSched;window.syncSched=function(){var r=b.apply(this,arguments);try{sync()}catch(e){}return r};
 })();
 </script>
 </body>
