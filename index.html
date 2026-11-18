@@ -252,6 +252,28 @@ html{scroll-behavior:smooth;overscroll-behavior-y:contain}
 #ttNetDot.bad{background:#d08a12}
 </style>
 <style id="fixbadge">html body #diaryMini,html body #bulkMini{overflow:visible!important}html body #bulkMini .bk-badge{top:-6px;right:-6px;box-shadow:0 0 0 2px var(--page)}</style>
+<style id="girl">
+html.girl.girl:root[data-theme=light]{--page:#fff4f8;--card:#fff;--bg:#fff;--soft:#fdecf3;--ink:#3b2233;--mute:#a4849a;--line:#f6dce8;--acc:#d6457f;--acc-ink:#fff;--bad:#d62839;--ok:#1f9d7a;--c-pn:#fbd0d8;--g1:#ff8fb8;--g2:#d6457f;--shadow:0 8px 28px rgba(214,69,127,.11);--o1:rgba(255,143,184,.42);--o2:rgba(190,150,255,.36);--o3:rgba(255,200,170,.34);--o4:rgba(150,210,255,.30)}
+html.girl.girl:root[data-theme=dark]{--page:#1b1019;--card:#26171f;--bg:#26171f;--soft:#32202b;--ink:#fde9f2;--mute:#b48fa5;--line:#3b2431;--acc:#ff8fb8;--acc-ink:#3a0d20;--bad:#ff9aa4;--ok:#7fe0c0;--c-pn:#5a2030;--g1:#ffb3d0;--g2:#ff7aa8;--shadow:0 8px 28px rgba(0,0,0,.25);--o1:rgba(255,100,160,.30);--o2:rgba(150,100,255,.28);--o3:rgba(255,150,120,.18);--o4:rgba(100,150,255,.18)}
+html.girl body{background:var(--page) linear-gradient(165deg,color-mix(in srgb,var(--g1) 20%,transparent),transparent 38%,color-mix(in srgb,#b79bff 16%,transparent)) fixed}
+html.girl h1,html.girl .h-head h1{font-family:ui-serif,"Iowan Old Style","Palatino Linotype",Georgia,serif;font-style:italic;font-weight:600;letter-spacing:-.01em}
+html.girl .sheet-title h1:after,html.girl .h-head h1:after,html.girl .dv-head h1:after{content:" \1F338";font-style:normal;font-size:.8em}
+html.girl body :is(#head,#user-view,#schedView) .card:not(.dv-head):not([data-t=set]){border-radius:26px;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important}
+html.girl body :is(#head,#user-view,#schedView) h2{color:var(--acc);text-transform:none;letter-spacing:0;font-size:15px;font-weight:650}
+html.girl button.main,html.girl body .rc .rc-btns button.rc-yes{background:linear-gradient(135deg,var(--g1),var(--g2));color:var(--acc-ink);box-shadow:0 6px 16px color-mix(in srgb,var(--g2) 35%,transparent)}
+html.girl button.main:disabled{opacity:.45;box-shadow:none}
+html.girl.girl button,html.girl .chip,html.girl .tile,html.girl input,html.girl select,html.girl textarea{border-radius:16px}
+html.girl .chip.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:var(--acc-ink)}
+html.girl .tile{background:color-mix(in srgb,var(--g1) 14%,var(--card));border-radius:22px}
+html.girl #bnav{border-radius:26px;box-shadow:0 10px 32px color-mix(in srgb,var(--g2) 24%,transparent);border:1px solid var(--line)}
+html.girl .nav-ind{background:color-mix(in srgb,var(--g1) 30%,transparent)}
+html.girl .fab,html.girl #diaryMini,html.girl #bulkMini,html.girl #testMini{box-shadow:0 8px 22px color-mix(in srgb,var(--g2) 28%,transparent)}
+html.girl .lg-hero{background:linear-gradient(150deg,#ff9fc4,#e0518a 55%,#a64bd1)}
+html.girl .day-tab.active,html.girl #schedView input:checked+*{border-radius:18px}
+html.girl body #schedView .lesson-card{border-radius:20px}
+html.girl #hzToast{background:linear-gradient(135deg,var(--g1),var(--g2));color:var(--acc-ink)}
+</style>
+<script>try{var __g=localStorage.getItem("absence:girl");if(__g==="1")document.documentElement.classList.add("girl")}catch(e){}</script>
 </head>
 <body>
 <script>(function(){try{if(localStorage.getItem("absence:hello"))return}catch{}var W=["Hello","Hola","Bonjour","こんにちは","Ciao","Привет"],i=0,tm,h=document.createElement("div");h.id="hello",h.innerHTML='<div id="helloT"></div><div id="helloS">Коснитесь, чтобы пропустить</div>',document.body.appendChild(h);var t=h.firstChild;function done(){clearTimeout(tm),h.classList.add("out");try{localStorage.setItem("absence:hello","1")}catch{}setTimeout(function(){h.remove()},700)}function step(){if(i>=W.length)return done();t.className="",t.textContent=W[i],t.offsetWidth,t.className="w",i++,i===W.length?tm=setTimeout(done,2800):tm=setTimeout(function(){t.classList.add("f"),tm=setTimeout(step,450)},2200)}h.onclick=done,window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches?(t.textContent=W[0],tm=setTimeout(done,900)):step()})();
@@ -718,7 +740,7 @@ html{scroll-behavior:smooth;overscroll-behavior-y:contain}
         <h1>Дневник</h1>
         <span class="group-pill" id="grpPill">4501</span>
       </div>
-      <span class="dv-acts"><a class="lib-pill" href="https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM" target="_blank" rel="noopener" title="Лекции на Google Диске">📚 Лекции</a><button type="button" id="icsBtn" class="lib-pill" title="Расписание в календарь телефона (.ics)">📆 .ics</button><button type="button" id="dvBackBtn" class="dv-back">К журналу</button></span>
+      <span class="dv-acts"><a class="lib-pill" href="https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM" target="_blank" rel="noopener" title="Лекции на Google Диске">📚 Лекции</a><button type="button" id="icsBtn" class="lib-pill" title="Расписание в календарь телефона" aria-label="Добавить расписание в календарь">📆</button><button type="button" id="dvBackBtn" class="dv-back">К журналу</button></span>
     </div>
 
     <div class="card sticky-bar">
@@ -1358,5 +1380,20 @@ setTimeout(check,3000);
 document.addEventListener("visibilitychange",function(){if(!document.hidden)check()});
 })();
 </script>
+<script id="girlJs">(function(){
+var R=document.documentElement,K="absence:girl";
+var MALE=/^(никита|илья|фома|лука|кузьма|савва|данила|данила|гоша|миша|саша|женя|валя)$/i;
+function guess(n){var p=String(n||"").trim().split(/\s+/);var f=(p[1]||"").toLowerCase();return !!f&&/[ая]$/.test(f)&&!MALE.test(f)&&!/(ович|евич)$/.test(f)}
+function st(){try{return localStorage.getItem(K)}catch(e){return null}}
+function meta(){var m=document.getElementById("theme-color-meta");if(m&&R.classList.contains("girl"))m.setAttribute("content",R.getAttribute("data-theme")==="dark"?"#1b1019":"#fff4f8")}
+function say(t){var e=document.getElementById("hzToast");if(!e){e=document.createElement("div");e.id="hzToast";document.body.appendChild(e)}e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove("on")},2600)}
+function lbl(){var e=document.getElementById("girlLbl");if(e)e.textContent=R.classList.contains("girl")?"Обычная":"Для девушек"}
+function set(on,save){R.classList.toggle("girl",on);if(save){try{localStorage.setItem(K,on?"1":"0")}catch(e){}}meta();lbl()}
+var g=document.querySelector("#sheet .sheet-grid");
+if(g){var b=document.createElement("button");b.type="button";b.className="tile";b.id="girlTile";b.innerHTML='<span>\u{1F338}</span><em id="girlLbl" style="font-style:normal"></em>';b.onclick=function(){var on=!R.classList.contains("girl");set(on,true);say(on?"\u{1F338} Тема для девушек включена":"Обычная тема")};g.insertBefore(b,g.firstChild)}
+var mo=document.getElementById("theme-color-meta");if(mo)new MutationObserver(meta).observe(mo,{attributes:true,attributeFilter:["content"]});
+set(R.classList.contains("girl"),false);
+if(st()===null){var n=0,iv=setInterval(function(){var nm="";try{nm=typeof me!=="undefined"?me:""}catch(e){}if(nm){clearInterval(iv);if(guess(nm)){set(true,false);say("\u{1F338} Включена тема для девушек. Сменить можно в меню")}}else if(++n>40)clearInterval(iv)},1500)}
+})();</script>
 </body>
 </html>
