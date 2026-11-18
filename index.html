@@ -1337,5 +1337,26 @@ window.syncSched=function(){const r=_syncSched.apply(this,arguments);try{ttVis()
 setInterval(()=>{try{ttPaint()}catch(e){}},2000);
 })();
 </script>
+<script id="selfUpdate">
+(function(){
+var APP_VER="2.24";
+window.APP_VER=APP_VER;
+async function check(){
+  if(!navigator.onLine||location.protocol==="file:")return;
+  try{
+    var t=await(await fetch(location.pathname+"?_v="+Date.now(),{cache:"no-store"})).text();
+    var m=/APP_VER\s*=\s*"(\d[\d.]*)"/.exec(t);
+    if(!m||m[1]===APP_VER)return;
+    if(sessionStorage.getItem("absence:reloaded")===m[1])return;
+    sessionStorage.setItem("absence:reloaded",m[1]);
+    if(navigator.serviceWorker){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(r){return r.unregister()}))}
+    if(window.caches){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}
+    location.reload();
+  }catch(e){}
+}
+setTimeout(check,3000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden)check()});
+})();
+</script>
 </body>
 </html>
