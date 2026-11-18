@@ -126,6 +126,116 @@ html body .rc .rc-no{background:color-mix(in srgb,var(--bad) 20%,transparent);co
 .rc-end{text-align:center}
 .rc-end b{font-size:22px;display:block;margin-bottom:8px}
 </style>
+<style id="fix1">
+#schedView .dv-head{flex-wrap:wrap;row-gap:6px}
+#schedView .brand-wrap{flex:1 1 auto;min-width:0}
+#schedView .group-pill{flex:0 0 auto;white-space:nowrap}
+#schedView .dv-acts{flex:0 1 auto;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-left:auto}
+#schedView .dv-acts>*{flex:0 0 auto;white-space:nowrap}
+#hCap{max-width:none;opacity:0;transform:translate(-50%,-14px) scale(.92);transition:transform .35s cubic-bezier(.2,.9,.3,1.1),opacity .25s ease;-webkit-backdrop-filter:none;backdrop-filter:none;background:#0a0e1cf2;will-change:transform,opacity;box-shadow:0 4px 12px #1a6bff40,inset 0 0 0 1px #ffffff2e;pointer-events:none}
+#hCap.open{opacity:1;transform:translate(-50%,0) scale(1)}
+#hCap i{animation:none}
+html.honor.honor .card,html.honor.honor .dv{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+</style>
+<style id="hz120">
+/* ===== 120 Гц: только transform/opacity (композитор), без анимации width/height/top/left ===== */
+:root{
+  --spring:linear(0,.009,.035 2.1%,.141 4.4%,.723 12.9%,.938 16.7%,1.017 19.1%,1.077 21.6%,1.121 24.2%,1.149 27.2%,1.157 30.3%,1.127 36%,1.04 44%,.99 51%,.985 56%,1.001 66%,1);
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --t-fast:.14s;--t-mid:.3s;--t-slow:.5s;
+}
+html.hz120{--t-fast:.12s;--t-mid:.26s;--t-slow:.44s}
+@supports not (transition-timing-function:linear(0,1)){:root{--spring:cubic-bezier(.34,1.56,.64,1)}}
+
+/* Прогресс пары: scaleX вместо width (раньше шла перерисовка каждый кадр) */
+html #schedView .sb-progress-fill{width:100%!important;transform:scaleX(0);transform-origin:0 50%;transition:transform 1s linear!important;will-change:transform}
+
+/* Нажатия: пружина на transform */
+html button{transition:transform var(--t-mid) var(--spring),opacity .15s,background-color .2s,color .2s,box-shadow .2s!important;touch-action:manipulation}
+html button:active:not(:disabled){transform:scale(.95)!important;transition-duration:.06s!important}
+html:not(.glass-theme) button:active:not(:disabled){transform:scale(.97)!important}
+.chip,.tile,.pill,.lib-pill,.day-tab,.cal button.d{will-change:transform}
+.chip:active,.tile:active{transform:scale(.93)!important}
+.day-tab{transition:transform var(--t-mid) var(--spring),background-color .2s!important}
+.day-tab:active{transform:scale(.92)}
+
+/* Шторка меню и FAB */
+.sheet{transition:transform var(--t-slow) var(--spring),opacity .2s,visibility 0s .3s!important;will-change:transform,opacity}
+.sheet.open{transition:transform var(--t-slow) var(--spring),opacity .2s,visibility 0s!important}
+.fab{transition:transform var(--t-mid) var(--spring)!important}
+.fab:active{transform:scale(.9)!important}
+.fab i{transition:transform var(--t-mid) var(--spring),opacity .15s,top var(--t-mid) var(--spring)!important}
+
+/* Нижняя навигация: линза ездит с пружиной */
+.nav-ind{transition:transform .5s var(--spring),width .25s var(--ease-out),height .25s var(--ease-out),box-shadow .3s,background .3s!important}
+.nav-ind.drag{transition:transform .06s linear,width .15s,height .15s,box-shadow .2s,background .2s!important}
+
+/* Появление карточек (были отключены ради 60 Гц — только transform+opacity) */
+@keyframes hzIn{from{opacity:0;transform:translate3d(0,14px,0) scale(.985)}to{opacity:1;transform:none}}
+@keyframes hzFade{from{opacity:0}to{opacity:1}}
+html body #schedView:not(.hidden) .lesson-card{animation:hzIn var(--t-slow) var(--ease-out) backwards!important;animation-delay:calc(var(--i,0)*28ms)!important}
+html body #schedView:not(.hidden) .panel.active{animation:hzFade .2s ease!important}
+html body #head:not(.hidden) .card:not(.tabhide),html body #user-view:not(.hidden) .card:not(.tabhide){animation:hzIn var(--t-slow) var(--ease-out) backwards!important}
+html body .floatBox:not(.hidden){animation:hzIn var(--t-mid) var(--spring) backwards!important}
+html body .srow.open .sdet{animation:hzFade .2s ease!important}
+
+/* Прогресс-бары статистики и «Здесь/Нет» в перекличке */
+.rc-bar i{width:100%!important;transform:scaleX(var(--p,0));transform-origin:0 50%;transition:transform var(--t-mid) var(--ease-out)!important}
+.rc-name{animation:hzIn .22s var(--ease-out)}
+
+/* Плавные переходы между вкладками (View Transitions) */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.22s;animation-timing-function:var(--ease-out)}
+::view-transition-group(root){animation-duration:.22s}
+
+/* Тосты */
+#hzToast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));z-index:400;transform:translate(-50%,24px) scale(.92);opacity:0;pointer-events:none;padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--page);font-size:13.5px;font-weight:600;max-width:90vw;text-align:center;transition:transform .4s var(--spring),opacity .2s;will-change:transform,opacity}
+#hzToast.on{transform:translate(-50%,0) scale(1);opacity:1}
+
+/* Pull-to-refresh */
+#hzPtr{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;z-index:300;width:36px;height:36px;margin-left:-18px;border-radius:50%;background:var(--card);box-shadow:0 4px 16px #1419282e;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--acc);transform:translate3d(0,-70px,0);opacity:0;pointer-events:none;will-change:transform,opacity}
+#hzPtr.spin span{display:inline-block;animation:hzSpin .7s linear infinite}
+@keyframes hzSpin{to{transform:rotate(360deg)}}
+
+/* Прокрутка и экономия */
+html{scroll-behavior:smooth;overscroll-behavior-y:contain}
+@media(prefers-reduced-motion:reduce){
+  html body *{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+</style>
+<style id="bulk2">
+#bulkMini{position:fixed;right:20px;bottom:calc(114px + env(safe-area-inset-bottom));z-index:85;width:34px;height:34px;min-height:34px;padding:0;border-radius:50%;background:var(--card);color:var(--ink);box-shadow:0 4px 16px #14192829;transition:opacity .2s,transform .4s var(--spring,ease),background .2s!important;will-change:transform,opacity}
+#bulkMini svg{width:18px;height:18px;display:block}
+#bulkMini[aria-pressed=true]{background:var(--acc);color:var(--acc-ink)}
+#bulkMini.bk-hide{opacity:0;transform:scale(.4);pointer-events:none;visibility:hidden;transition:opacity .2s,transform .3s,visibility 0s .3s!important}
+.fab.open~#bulkMini,html.bk-open #diaryMini{opacity:0;pointer-events:none}
+.bk-badge{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--bad);color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;font-variant-numeric:tabular-nums}
+@media(min-width:800px){#bulkMini{right:30px;bottom:134px}}
+#bulkScrim{position:fixed;inset:0;z-index:70;background:#0a0e184d;opacity:0;pointer-events:none;transition:opacity .25s}
+#bulkScrim.open{opacity:1;pointer-events:auto}
+.bsheet{z-index:90;display:flex;flex-direction:column;gap:10px;padding:14px 14px 12px;max-height:calc(100dvh - 100px - env(safe-area-inset-bottom))}
+.bk-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:0 4px;touch-action:pan-x}
+.bk-head h1{font-size:17px}
+.bk-head .mute{text-transform:capitalize}
+#bulkQ{min-height:42px;font-size:16px;border-radius:14px}
+.bk-tools2{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.bk-tools2 button{min-height:36px;padding:0 8px;font-size:13px;font-weight:600;border-radius:12px}
+#bulkList{flex:1 1 auto;min-height:120px;max-height:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:flex;flex-direction:column;gap:2px;border:0;margin:0 -4px;padding:0 4px}
+.bk-row{position:relative;display:flex;align-items:center;gap:12px;min-height:46px;padding:0 10px;border-radius:14px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:background-color .15s}
+.bk-row input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.bk-row.on{background:color-mix(in srgb,var(--acc) 13%,transparent)}
+.bk-ck{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid var(--mute);position:relative;transition:transform .35s var(--spring,ease),background-color .15s,border-color .15s}
+.bk-ck:after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid var(--acc-ink);border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);transition:transform .3s var(--spring,ease)}
+.bk-row.on .bk-ck{background:var(--acc);border-color:var(--acc);transform:scale(1.06)}
+.bk-row.on .bk-ck:after{transform:rotate(45deg) scale(1)}
+.bk-nm{flex:1;min-width:0;font-size:15px;overflow-wrap:anywhere}
+.bk-m{font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;background:var(--soft);color:var(--mute)}
+.bk-m.pn{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.bk-foot{display:flex;flex-direction:column;gap:8px;padding-top:6px;border-top:1px solid var(--line)}
+.bk-acts2{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.bk-acts2 button{min-height:46px;font-weight:650}
+.bk-row2{display:flex;justify-content:space-between}
+#bulkMsg:empty{display:none}
+</style>
 </head>
 <body>
 <script>(function(){try{if(localStorage.getItem("absence:hello"))return}catch{}var W=["Hello","Hola","Bonjour","こんにちは","Ciao","Привет"],i=0,tm,h=document.createElement("div");h.id="hello",h.innerHTML='<div id="helloT"></div><div id="helloS">Коснитесь, чтобы пропустить</div>',document.body.appendChild(h);var t=h.firstChild;function done(){clearTimeout(tm),h.classList.add("out");try{localStorage.setItem("absence:hello","1")}catch{}setTimeout(function(){h.remove()},700)}function step(){if(i>=W.length)return done();t.className="",t.textContent=W[i],t.offsetWidth,t.className="w",i++,i===W.length?tm=setTimeout(done,2800):tm=setTimeout(function(){t.classList.add("f"),tm=setTimeout(step,450)},2200)}h.onclick=done,window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches?(t.textContent=W[0],tm=setTimeout(done,900)):step()})();
@@ -171,6 +281,21 @@ html body .rc .rc-no{background:color-mix(in srgb,var(--bad) 20%,transparent);co
   <button type="button" id="menuFab" class="fab" aria-label="Меню" aria-expanded="false" aria-controls="sheet"><i></i><i></i><i></i></button>
   <button type="button" id="diaryMini" aria-label="Дневник" aria-pressed="false" title="Дневник"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></button>
   <div id="sheetScrim"></div>
+  <button type="button" id="bulkMini" class="bk-hide" aria-label="Массовая отметка" aria-pressed="false" title="Массовая отметка"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6.5l1.8 1.8 3.2-3.4M3.5 13l1.8 1.8 3.2-3.4M3.5 19.5l1.8 1.8M11 7h9.5M11 13.5H20.5M11 20H17"/></svg><span id="bulkBadge" class="bk-badge hidden"></span></button>
+  <div id="bulkScrim"></div>
+  <aside id="bulkCard" class="sheet bsheet" role="dialog" aria-hidden="true" aria-label="Массовая отметка">
+    <div class="bk-head"><div><h1>Массовая отметка</h1><div class="mute" id="bulkDate"></div></div><button type="button" id="bulkClose" class="quiet" aria-label="Закрыть" style="font-size:20px;min-width:40px">✕</button></div>
+    <input id="bulkQ" type="search" placeholder="Поиск по фамилии" autocomplete="off" aria-label="Поиск">
+    <div class="bk-tools2"><button type="button" id="bkAll">Все</button><button type="button" id="bkFree">Без отметок</button><button type="button" id="bkNone">Сбросить</button></div>
+    <div id="bulkList"></div>
+    <div class="bk-foot">
+      <div class="mute" id="bulkCnt">Отметьте студентов</div>
+      <div class="bk-acts2"><button type="button" class="main" data-bk="ОМ" disabled>ОМ</button><button type="button" class="main" data-bk="СБ" disabled>СБ</button><button type="button" class="main" data-bk="Б" disabled>Б</button><button type="button" class="main" data-bk="УП" disabled>УП</button></div>
+      <div class="bk-row2"><button type="button" id="bkClear" class="quiet" disabled>Снять отметки</button><button type="button" id="bkUndo" class="quiet">↶ Отменить</button></div>
+      <div class="mute" id="bulkMsg"></div>
+    </div>
+  </aside>
+
   <aside id="sheet" class="sheet" aria-hidden="true" aria-label="Меню">
     <div class="sheet-head"><div class="sheet-title"><h1>Журнал пропусков</h1><div id="streak" class="hidden" title="Дней подряд без прогулов (ПН)" aria-label="Серия дней без прогулов"><span class="fl">🔥</span><span id="streakN">0</span></div></div><div class="mute" id="user"></div>
       <div id="modeSwitch" class="modeSw hidden" role="group" aria-label="Режим"><button type="button" data-m="head">👑 Староста</button><button type="button" data-m="user">🎓 Учащийся</button></div>
@@ -258,16 +383,7 @@ html body .rc .rc-no{background:color-mix(in srgb,var(--bad) 20%,transparent);co
       <details id="unm" class="fold" data-keep="1"><summary id="unmS"></summary><div id="unmL"></div></details>
     </div>
 
-    <div data-t="today" class="card" id="bulkCard">
-      <details id="bulkDet" class="fold" data-keep="1" style="margin-top:0"><summary>☑️ Массовая отметка</summary>
-        <div class="bk-tools"><button type="button" id="bkAll">Все</button><button type="button" id="bkFree">Без отметок</button><button type="button" id="bkNone">Сбросить</button></div>
-        <div id="bulkList"></div>
-        <div class="bk-sel mute" id="bulkCnt">Отметьте студентов галочками</div>
-        <div class="bk-acts"><button type="button" class="main" data-bk="ОМ" disabled>ОМ</button><button type="button" class="main" data-bk="СБ" disabled>СБ</button><button type="button" class="main" data-bk="Б" disabled>Б</button></div>
-        <div class="row" style="margin-top:8px"><button type="button" id="bkClear" class="quiet" disabled>Снять отметки у выбранных</button></div>
-        <div class="mute" id="bulkMsg" style="margin-top:6px"></div>
-      </details>
-    </div>
+    
 
     <div data-t="stats" class="card">
       <div class="day-toggle" id="statMode"><button type="button" id="stAbs" class="active">Прогулы</button><button type="button" id="stPerf">Успеваемость</button></div>
@@ -679,7 +795,7 @@ function mountTg(){if(!(tgMounted||me)){if(TWA){tgMounted=!0;try{TWA.ready(),TWA
       <span class="q-num">${i+1}.</span>
       <div class="q-text">${escapeHtml(q)}</div>
       <div class="q-slot"></div>
-    </li>`).join(""),title=type==="Практика"?"Подготовка к практическому занятию":"Вопросы к семинару",label=topic?`${title} (т. ${escapeHtml(topic)})`:title,source=verified!=null&&verified.pages?`учебная программа, с. ${escapeHtml(verified.pages)}`:"учебно-методическая карта",control=verified?`<p class="seminar-q-note"><strong>Форма контроля:</strong> ${escapeHtml(verified.control||"в этой строке программы не указана")} <span>(${source})</span></p>`:"";return`<details class="seminar-q"><summary>${label}</summary>${control}<ol>${items}</ol><div class="seminar-q-actions"><button class="ask-deepseek" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3"/></svg>Скопировать вопросы для ИИ</button><span class="ask-deepseek-status" role="status" aria-live="polite"></span></div></details>`}function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c])}function escapeAttr(s){return escapeHtml(s)}function subjectHue(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h}function absInfo(w,d,num){try{if(typeof isGuest!="undefined"&&isGuest)return"";const who=myName();if(!who)return"";const key=dateKey(w,d),m=getMark(key,who),code=m?pairsOf(m)[parseInt(num)-1]:"";return code?`<span class="abs-chip abs-${code}">${code}</span>`:""}catch{return""}}function render(){const g=state.group,d=checked("day"),w=+checked("week"),root=$("#schedule");(()=>{var _a2;root.innerHTML="";const row=DATA.find(x=>x[0]===g&&x[1]===d&&x[2]===w);updateDayGlance(row);const p=document.createElement("div");p.className=`panel panel-${g}-${d}-${w} active`;const pKey=dateKey(w,d),per=periodOf(pKey,g);if((_a2=row==null?void 0:row[3])!=null&&_a2.length){const l=document.createElement("div");l.className="lessons";let prevN=0,prevEnd=null;const topicTotal={};row[3].forEach(([type,,,subject,details])=>{const parts=splitSubject(subject,details);if(detectLessonType(type,parts[1])!=="Семинар")return;const{name,topic}=parseSubjectForQuestions(parts[0],parts[1]);if(!topic)return;const k=name+"|"+topic;topicTotal[k]=(topicTotal[k]||0)+1});const topicSeen={};row[3].forEach(([type,num,time,subject,details])=>{const _n=parseInt(num),_t=TIMES[num];if(prevN&&_t&&prevEnd!=null&&_n>prevN+1){const gap=_t[0]-prevEnd;if(gap>=30){const gd=document.createElement("div");gd.className="dv-gap";const h=Math.floor(gap/60),mi=gap%60;gd.textContent="Окно · "+(h?h+" ч":"")+(h&&mi?" ":"")+(mi?mi+" мин":""),l.append(gd)}}const c=document.createElement("div"),parts=splitSubject(subject,details),effType=detectLessonType(type,parts[1]);c.className="card lesson-card"+(effType?" type-"+effType:"");let questionsHtml="";if(qctx={pk:dateKey(w,d)+"_"+parseInt(num)},effType==="Семинар"||effType==="Практика"){const{name,topic}=parseSubjectForQuestions(parts[0],parts[1]),verified=verifiedLesson(name,effType,topic,g,d,w,num);if(verified)questionsHtml=renderQuestionList(name,topic,verified.questions,verified,effType);else if(verified===null)questionsHtml='<p class="seminar-q-note">Вопросы и форма контроля не подтверждены: тема в расписании не совпадает со строкой учебной программы.</p>';else if(effType==="Семинар"){let effTopic=topic;if(topic){const k=name+"|"+topic;(topicTotal[k]||0)>1&&(topicSeen[k]=(topicSeen[k]||0)+1,effTopic=topic+"/"+topicSeen[k])}questionsHtml=renderQuestions(parts[0],parts[1],effTopic)}}const content=splitLocation(parts[0],parts[1]);const tm=String(time).replace(/<br\s*\/?>/gi,"|").replace(/\./g,":").replace(/–/g,"").split("|"),ds=String(content.details||"").split(/<br\s*\/?>/i).map(x=>x.trim()).filter(Boolean).join(" · ");c.innerHTML=`<div class="lesson-time"><span class="num">${num}</span><b>${tm[0]||""}</b><i>${tm[1]||""}</i></div><div class="lesson-body"><p class="subject">${content.subject}</p><div class="lesson-meta">${effType?`<span class="badge type-${effType}">${effType}</span>`:""}${content.locations.length?`<span class="lesson-location">${content.locations.map(escapeHtml).join(" · ")}</span>`:""}${absInfo(w,d,num)}</div>${ds?`<div class="details">${ds}</div>`:""}${questionsHtml}</div>`,l.append(c),_t&&(prevN=_n,prevEnd=_t[1])}),p.append(l),per&&p.insertAdjacentHTML("afterbegin",periodHtml(per,pKey))}else{const lastW=Math.max(-1,...DATA.filter(x=>x[0]===g).map(x=>x[2]));p.innerHTML=per?periodHtml(per,pKey):DATA.some(x=>x[0]===g)?w>lastW?'<div class="card no-data"><div class="big">Расписание ещё не загружено</div>занятия этого периода пока не добавлены</div>':'<div class="card no-data"><div class="big">Занятий нет</div>на этой неделе</div>':'<div class="card no-data"><div class="big">Расписание не загружено</div>для этой группы пока нет данных</div>'}root.append(p),paintPicks(root),applyActive(),updateActive()})()}function applyActive(){var _a2,_b2;$$(".panel.active,.day-tab.active").forEach(x=>x.classList.remove("active"));const g=state.group,d=checked("day"),w=+checked("week");(_a2=$(`.panel-${g}-${d}-${w}`))==null||_a2.classList.add("active"),(_b2=$(`label[for="day-${d}"]`))==null||_b2.classList.add("active");const todayWeek=week(new Date);rootEl.classList.toggle("is-current-week",w===todayWeek),updateWeekInfo()}function updateWeekInfo(){const monthEl=document.getElementById("week-month"),rangeEl=document.getElementById("week-range"),relEl=document.getElementById("week-rel");if(!monthEl)return;const w=+checked("week"),monday=new Date(START.getFullYear(),START.getMonth(),START.getDate()+w*7),sat=new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+5),MON=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"],MON_NOM=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],sameMonth=monday.getMonth()===sat.getMonth();monthEl.textContent=sameMonth?MON_NOM[monday.getMonth()]+" "+monday.getFullYear():MON_NOM[monday.getMonth()]+" – "+MON_NOM[sat.getMonth()].toLowerCase(),rangeEl&&(rangeEl.textContent=sameMonth?monday.getDate()+"–"+sat.getDate()+" "+MON[monday.getMonth()]:monday.getDate()+" "+MON[monday.getMonth()]+" – "+sat.getDate()+" "+MON[sat.getMonth()]);const now=new Date,isCurrentWeek=w===week(now),wper=periodOf(dateKey(w,checked("day")||"mon"),state.group);relEl&&(relEl.textContent=[isCurrentWeek?"Текущая неделя":"",wper?wper.label:""].filter(Boolean).join(" · "));const todayButton=document.getElementById("today-jump");todayButton&&(todayButton.disabled=isCurrentWeek&&checked("day")===day(now));const prev=document.getElementById("week-prev"),next=document.getElementById("week-next");prev&&(prev.disabled=w<=0),next&&(next.disabled=w>=MAX)}(_a=document.getElementById("week-prev"))==null||_a.addEventListener("click",()=>{const w=+checked("week");w<=0||(slideDir="right",set("week-"+(w-1)),set("day-mon"),updateDayNumbers(),render())}),(_b=document.getElementById("week-next"))==null||_b.addEventListener("click",()=>{const w=+checked("week");w>=MAX||(slideDir="left",set("week-"+(w+1)),set("day-mon"),updateDayNumbers(),render())}),(_c=document.getElementById("today-jump"))==null||_c.addEventListener("click",()=>{const now=new Date;set("week-"+week(now)),set("day-"+day(now)),updateDayNumbers(),render()});function updateDayNumbers(){const w=+checked("week"),m=new Date(START.getFullYear(),START.getMonth(),START.getDate()+w*7),today=new Date().toDateString();DAYS.forEach((d,i)=>{const e=$("#daynum-"+d),x=new Date(m.getFullYear(),m.getMonth(),m.getDate()+i);e&&(e.textContent=x.getDate(),e.classList.toggle("is-today",x.toDateString()===today));const lb=$('label[for="day-'+d+'"]'),rw=DATA.find(r=>r[0]===state.group&&r[1]===d&&r[2]===w);lb&&lb.classList.toggle("has-exam",!!(rw&&rw[3].some(L=>/зач[её]т|экзамен/i.test(L.join(" ")))))})}function updateDayGlance(row){var _a2;const out=document.getElementById("day-glance");if(!out)return;const w=+checked("week"),d=checked("day"),dayIndex=DAYS.indexOf(d),date=new Date(START.getFullYear(),START.getMonth(),START.getDate()+w*7+Math.max(0,dayIndex)),weekDay=["вс","пн","вт","ср","чт","пт","сб"][date.getDay()],lessons=(row==null?void 0:row[3])||[],last2=lessons.map(([,num])=>TIMES[num]).filter(Boolean).sort((a,b)=>a[1]-b[1]).at(-1),first2=lessons.map(([,num])=>TIMES[num]).filter(Boolean).sort((a,b)=>a[0]-b[0])[0],hm=x=>String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60).padStart(2,"0");out.textContent=lessons.length?`${weekDay} · ${lessons.length} ${lessons.length===1?"пара":lessons.length<5?"пары":"пар"} · ${hm(first2[0])}–${hm(last2[1])}`:`${weekDay} · ${((_a2=periodOf(dateKey(w,d),state.group))==null?void 0:_a2.label.toLowerCase())||"занятий нет"}`;const now=new Date;out.classList.toggle("is-today",date.toDateString()===now.toDateString())}function updateActive(){const panel=$(".panel.active");if(!panel){renderStatus();return}const n2=new Date,live=n2.getDay()&&day(n2)===checked("day")&&week(n2)===+checked("week"),nowMinutes=n2.getHours()*60+n2.getMinutes();$$(".lesson-card",panel).forEach(c=>{var _a2;let on=!1;if(live){const lesson=TIMES[(_a2=c.querySelector(".num"))==null?void 0:_a2.textContent.trim()];on=!!(lesson&&nowMinutes>=lesson[0]&&nowMinutes<lesson[1])}c.classList.contains("is-now")!==on&&c.classList.toggle("is-now",on)}),renderStatus()}function fmtSecs(totalSec){totalSec=Math.max(0,Math.round(totalSec));const h=Math.floor(totalSec/3600),mm=Math.floor(totalSec%3600/60),ss=totalSec%60,p2=n2=>String(n2).padStart(2,"0");return h>0?h+":"+p2(mm)+":"+p2(ss):mm+":"+p2(ss)}let lastStatusKey="";function renderStatus(){const bar=document.getElementById("status-bar");if(!bar)return;const hide=()=>{bar.classList.contains("show")&&(bar.className="status-bar",bar.innerHTML=""),lastStatusKey=""},now=new Date;if(!now.getDay()||checked("day")!==day(now)||week(now)!==+checked("week"))return hide();const panel=document.querySelector(".panel.active");if(!panel)return hide();const lessons=[...panel.querySelectorAll(".lesson-card")].map(c=>{var _a2,_b2;const num=(_a2=c.querySelector(".num"))==null?void 0:_a2.textContent.trim(),subject=((_b2=c.querySelector(".subject"))==null?void 0:_b2.textContent.trim())||"",r=TIMES[num];return r?{start:r[0],end:r[1],subject}:null}).filter(Boolean).sort((a,b)=>a.start-b.start);if(!lessons.length)return hide();const mSec=(now.getHours()*60+now.getMinutes())*60+now.getSeconds(),current=lessons.find(l=>mSec>=l.start*60&&mSec<l.end*60),next=lessons.find(l=>l.start*60>mSec),prev=[...lessons].reverse().find(l=>l.end*60<=mSec);let key;if(current)key="now|"+current.subject+"|"+current.start+"|"+current.end;else if(next){const soon=next.start*60-mSec<=600;key="next|"+next.subject+"|"+next.start+"|"+(prev?"p":"s")+"|"+(soon?"soon":"brk")}else key="done";if(key!==lastStatusKey)if(lastStatusKey=key,current)bar.className="status-bar show",bar.innerHTML='<div class="sb-main"><div class="sb-line1">Сейчас идёт</div><div class="sb-line2">'+escapeHtml(current.subject)+'</div></div><div class="sb-countdown"><div class="sb-countdown-time">--:--</div><div class="sb-countdown-label">до конца</div></div><div class="sb-progress"><div class="sb-progress-fill"></div></div>';else if(next){const soon=next.start*60-mSec<=600;bar.className="status-bar show "+(soon?"sb-soon":"sb-break"),bar.innerHTML='<div class="sb-main"><div class="sb-line1">'+(prev?"Перемена":"До начала")+'</div><div class="sb-line2">'+escapeHtml(next.subject)+'</div></div><div class="sb-countdown"><div class="sb-countdown-time">--:--</div><div class="sb-countdown-label">до пары</div></div>'}else{bar.className="status-bar show sb-free",bar.innerHTML='<div class="sb-main"><div class="sb-line1">Занятия окончены</div><div class="sb-line2">На сегодня всё</div></div>';return}const timeEl=bar.querySelector(".sb-countdown-time"),fillEl=bar.querySelector(".sb-progress-fill");if(current){const totalSec=(current.end-current.start)*60,passedSec=Math.max(0,mSec-current.start*60),leftSec=Math.max(0,totalSec-passedSec),pct=Math.max(0,Math.min(100,passedSec/totalSec*100));timeEl&&(timeEl.textContent=fmtSecs(leftSec)),fillEl&&(fillEl.style.width=pct+"%")}else if(next){const untilSec=Math.max(0,next.start*60-mSec);timeEl&&(timeEl.textContent=fmtSecs(untilSec))}}$$('input[name="day"]').forEach(r=>r.onchange=()=>{updateDayNumbers(),render()}),$$('input[name="week"]').forEach(r=>r.onchange=()=>{set("day-mon"),updateDayNumbers(),render()}),(_d=document.getElementById("schedule"))==null||_d.addEventListener("click",e=>{var _a2,_b2;const link=e.target.closest(".ask-deepseek");if(!link)return;const block=link.closest(".seminar-q"),lesson=link.closest(".lesson-card"),status=link.parentElement.querySelector(".ask-deepseek-status"),subject=((_a2=lesson==null?void 0:lesson.querySelector(".subject"))==null?void 0:_a2.textContent.trim())||"",lessonKind=lesson!=null&&lesson.classList.contains("type-Практика")?"практическому занятию":"семинару",questions=[...block.querySelectorAll(".q-text")].map((item,index)=>`${index+1}. ${item.textContent.trim()}`).join(`
+    </li>`).join(""),title=type==="Практика"?"Подготовка к практическому занятию":"Вопросы к семинару",label=topic?`${title} (т. ${escapeHtml(topic)})`:title,source=verified!=null&&verified.pages?`учебная программа, с. ${escapeHtml(verified.pages)}`:"учебно-методическая карта",control=verified?`<p class="seminar-q-note"><strong>Форма контроля:</strong> ${escapeHtml(verified.control||"в этой строке программы не указана")} <span>(${source})</span></p>`:"";return`<details class="seminar-q"><summary>${label}</summary>${control}<ol>${items}</ol><div class="seminar-q-actions"><button class="ask-deepseek" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3"/></svg>Скопировать вопросы для ИИ</button><span class="ask-deepseek-status" role="status" aria-live="polite"></span></div></details>`}function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c])}function escapeAttr(s){return escapeHtml(s)}function subjectHue(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h}function absInfo(w,d,num){try{if(typeof isGuest!="undefined"&&isGuest)return"";const who=myName();if(!who)return"";const key=dateKey(w,d),m=getMark(key,who),code=m?pairsOf(m)[parseInt(num)-1]:"";return code?`<span class="abs-chip abs-${code}">${code}</span>`:""}catch{return""}}function render(){const g=state.group,d=checked("day"),w=+checked("week"),root=$("#schedule");(()=>{var _a2;root.innerHTML="";const row=DATA.find(x=>x[0]===g&&x[1]===d&&x[2]===w);updateDayGlance(row);const p=document.createElement("div");p.className=`panel panel-${g}-${d}-${w} active`;const pKey=dateKey(w,d),per=periodOf(pKey,g);if((_a2=row==null?void 0:row[3])!=null&&_a2.length){const l=document.createElement("div");l.className="lessons";let prevN=0,prevEnd=null;const topicTotal={};row[3].forEach(([type,,,subject,details])=>{const parts=splitSubject(subject,details);if(detectLessonType(type,parts[1])!=="Семинар")return;const{name,topic}=parseSubjectForQuestions(parts[0],parts[1]);if(!topic)return;const k=name+"|"+topic;topicTotal[k]=(topicTotal[k]||0)+1});const topicSeen={};row[3].forEach(([type,num,time,subject,details])=>{const _n=parseInt(num),_t=TIMES[num];if(prevN&&_t&&prevEnd!=null&&_n>prevN+1){const gap=_t[0]-prevEnd;if(gap>=30){const gd=document.createElement("div");gd.className="dv-gap";const h=Math.floor(gap/60),mi=gap%60;gd.textContent="Окно · "+(h?h+" ч":"")+(h&&mi?" ":"")+(mi?mi+" мин":""),l.append(gd)}}const c=document.createElement("div"),parts=splitSubject(subject,details),effType=detectLessonType(type,parts[1]);c.className="card lesson-card"+(effType?" type-"+effType:"");let questionsHtml="";if(qctx={pk:dateKey(w,d)+"_"+parseInt(num)},effType==="Семинар"||effType==="Практика"){const{name,topic}=parseSubjectForQuestions(parts[0],parts[1]),verified=verifiedLesson(name,effType,topic,g,d,w,num);if(verified)questionsHtml=renderQuestionList(name,topic,verified.questions,verified,effType);else if(verified===null)questionsHtml='<p class="seminar-q-note">Вопросы и форма контроля не подтверждены: тема в расписании не совпадает со строкой учебной программы.</p>';else if(effType==="Семинар"){let effTopic=topic;if(topic){const k=name+"|"+topic;(topicTotal[k]||0)>1&&(topicSeen[k]=(topicSeen[k]||0)+1,effTopic=topic+"/"+topicSeen[k])}questionsHtml=renderQuestions(parts[0],parts[1],effTopic)}}const content=splitLocation(parts[0],parts[1]);const tm=String(time).replace(/<br\s*\/?>/gi,"|").replace(/\./g,":").replace(/–/g,"").split("|"),ds=String(content.details||"").split(/<br\s*\/?>/i).map(x=>x.trim()).filter(Boolean).join(" · ");c.innerHTML=`<div class="lesson-time"><span class="num">${num}</span><b>${tm[0]||""}</b><i>${tm[1]||""}</i></div><div class="lesson-body"><p class="subject">${content.subject}</p><div class="lesson-meta">${effType?`<span class="badge type-${effType}">${effType}</span>`:""}${content.locations.length?`<span class="lesson-location">${content.locations.map(escapeHtml).join(" · ")}</span>`:""}${absInfo(w,d,num)}</div>${ds?`<div class="details">${ds}</div>`:""}${questionsHtml}</div>`,l.append(c),_t&&(prevN=_n,prevEnd=_t[1])}),p.append(l),per&&p.insertAdjacentHTML("afterbegin",periodHtml(per,pKey))}else{const lastW=Math.max(-1,...DATA.filter(x=>x[0]===g).map(x=>x[2]));p.innerHTML=per?periodHtml(per,pKey):DATA.some(x=>x[0]===g)?w>lastW?'<div class="card no-data"><div class="big">Расписание ещё не загружено</div>занятия этого периода пока не добавлены</div>':'<div class="card no-data"><div class="big">Занятий нет</div>на этой неделе</div>':'<div class="card no-data"><div class="big">Расписание не загружено</div>для этой группы пока нет данных</div>'}root.append(p),paintPicks(root),applyActive(),updateActive()})()}function applyActive(){var _a2,_b2;$$(".panel.active,.day-tab.active").forEach(x=>x.classList.remove("active"));const g=state.group,d=checked("day"),w=+checked("week");(_a2=$(`.panel-${g}-${d}-${w}`))==null||_a2.classList.add("active"),(_b2=$(`label[for="day-${d}"]`))==null||_b2.classList.add("active");const todayWeek=week(new Date);rootEl.classList.toggle("is-current-week",w===todayWeek),updateWeekInfo()}function updateWeekInfo(){const monthEl=document.getElementById("week-month"),rangeEl=document.getElementById("week-range"),relEl=document.getElementById("week-rel");if(!monthEl)return;const w=+checked("week"),monday=new Date(START.getFullYear(),START.getMonth(),START.getDate()+w*7),sat=new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+5),MON=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"],MON_NOM=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],sameMonth=monday.getMonth()===sat.getMonth();monthEl.textContent=sameMonth?MON_NOM[monday.getMonth()]+" "+monday.getFullYear():MON_NOM[monday.getMonth()]+" – "+MON_NOM[sat.getMonth()].toLowerCase(),rangeEl&&(rangeEl.textContent=sameMonth?monday.getDate()+"–"+sat.getDate()+" "+MON[monday.getMonth()]:monday.getDate()+" "+MON[monday.getMonth()]+" – "+sat.getDate()+" "+MON[sat.getMonth()]);const now=new Date,isCurrentWeek=w===week(now),wper=periodOf(dateKey(w,checked("day")||"mon"),state.group);relEl&&(relEl.textContent=[isCurrentWeek?"Текущая неделя":"",wper?wper.label:""].filter(Boolean).join(" · "));const todayButton=document.getElementById("today-jump");todayButton&&(todayButton.disabled=isCurrentWeek&&checked("day")===day(now));const prev=document.getElementById("week-prev"),next=document.getElementById("week-next");prev&&(prev.disabled=w<=0),next&&(next.disabled=w>=MAX)}(_a=document.getElementById("week-prev"))==null||_a.addEventListener("click",()=>{const w=+checked("week");w<=0||(slideDir="right",set("week-"+(w-1)),set("day-mon"),updateDayNumbers(),render())}),(_b=document.getElementById("week-next"))==null||_b.addEventListener("click",()=>{const w=+checked("week");w>=MAX||(slideDir="left",set("week-"+(w+1)),set("day-mon"),updateDayNumbers(),render())}),(_c=document.getElementById("today-jump"))==null||_c.addEventListener("click",()=>{const now=new Date;set("week-"+week(now)),set("day-"+day(now)),updateDayNumbers(),render()});function updateDayNumbers(){const w=+checked("week"),m=new Date(START.getFullYear(),START.getMonth(),START.getDate()+w*7),today=new Date().toDateString();DAYS.forEach((d,i)=>{const e=$("#daynum-"+d),x=new Date(m.getFullYear(),m.getMonth(),m.getDate()+i);e&&(e.textContent=x.getDate(),e.classList.toggle("is-today",x.toDateString()===today));const lb=$('label[for="day-'+d+'"]'),rw=DATA.find(r=>r[0]===state.group&&r[1]===d&&r[2]===w);lb&&lb.classList.toggle("has-exam",!!(rw&&rw[3].some(L=>/зач[её]т|экзамен/i.test(L.join(" ")))))})}function updateDayGlance(row){var _a2;const out=document.getElementById("day-glance");if(!out)return;const w=+checked("week"),d=checked("day"),dayIndex=DAYS.indexOf(d),date=new Date(START.getFullYear(),START.getMonth(),START.getDate()+w*7+Math.max(0,dayIndex)),weekDay=["вс","пн","вт","ср","чт","пт","сб"][date.getDay()],lessons=(row==null?void 0:row[3])||[],last2=lessons.map(([,num])=>TIMES[num]).filter(Boolean).sort((a,b)=>a[1]-b[1]).at(-1),first2=lessons.map(([,num])=>TIMES[num]).filter(Boolean).sort((a,b)=>a[0]-b[0])[0],hm=x=>String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60).padStart(2,"0");out.textContent=lessons.length?`${weekDay} · ${lessons.length} ${lessons.length===1?"пара":lessons.length<5?"пары":"пар"} · ${hm(first2[0])}–${hm(last2[1])}`:`${weekDay} · ${((_a2=periodOf(dateKey(w,d),state.group))==null?void 0:_a2.label.toLowerCase())||"занятий нет"}`;const now=new Date;out.classList.toggle("is-today",date.toDateString()===now.toDateString())}function updateActive(){const panel=$(".panel.active");if(!panel){renderStatus();return}const n2=new Date,live=n2.getDay()&&day(n2)===checked("day")&&week(n2)===+checked("week"),nowMinutes=n2.getHours()*60+n2.getMinutes();$$(".lesson-card",panel).forEach(c=>{var _a2;let on=!1;if(live){const lesson=TIMES[(_a2=c.querySelector(".num"))==null?void 0:_a2.textContent.trim()];on=!!(lesson&&nowMinutes>=lesson[0]&&nowMinutes<lesson[1])}c.classList.contains("is-now")!==on&&c.classList.toggle("is-now",on)}),renderStatus()}function fmtSecs(totalSec){totalSec=Math.max(0,Math.round(totalSec));const h=Math.floor(totalSec/3600),mm=Math.floor(totalSec%3600/60),ss=totalSec%60,p2=n2=>String(n2).padStart(2,"0");return h>0?h+":"+p2(mm)+":"+p2(ss):mm+":"+p2(ss)}let lastStatusKey="";function renderStatus(){const bar=document.getElementById("status-bar");if(!bar)return;const hide=()=>{bar.classList.contains("show")&&(bar.className="status-bar",bar.innerHTML=""),lastStatusKey=""},now=new Date;if(!now.getDay()||checked("day")!==day(now)||week(now)!==+checked("week"))return hide();const panel=document.querySelector(".panel.active");if(!panel)return hide();const lessons=[...panel.querySelectorAll(".lesson-card")].map(c=>{var _a2,_b2;const num=(_a2=c.querySelector(".num"))==null?void 0:_a2.textContent.trim(),subject=((_b2=c.querySelector(".subject"))==null?void 0:_b2.textContent.trim())||"",r=TIMES[num];return r?{start:r[0],end:r[1],subject}:null}).filter(Boolean).sort((a,b)=>a.start-b.start);if(!lessons.length)return hide();const mSec=(now.getHours()*60+now.getMinutes())*60+now.getSeconds(),current=lessons.find(l=>mSec>=l.start*60&&mSec<l.end*60),next=lessons.find(l=>l.start*60>mSec),prev=[...lessons].reverse().find(l=>l.end*60<=mSec);let key;if(current)key="now|"+current.subject+"|"+current.start+"|"+current.end;else if(next){const soon=next.start*60-mSec<=600;key="next|"+next.subject+"|"+next.start+"|"+(prev?"p":"s")+"|"+(soon?"soon":"brk")}else key="done";if(key!==lastStatusKey)if(lastStatusKey=key,current)bar.className="status-bar show",bar.innerHTML='<div class="sb-main"><div class="sb-line1">Сейчас идёт</div><div class="sb-line2">'+escapeHtml(current.subject)+'</div></div><div class="sb-countdown"><div class="sb-countdown-time">--:--</div><div class="sb-countdown-label">до конца</div></div><div class="sb-progress"><div class="sb-progress-fill"></div></div>';else if(next){const soon=next.start*60-mSec<=600;bar.className="status-bar show "+(soon?"sb-soon":"sb-break"),bar.innerHTML='<div class="sb-main"><div class="sb-line1">'+(prev?"Перемена":"До начала")+'</div><div class="sb-line2">'+escapeHtml(next.subject)+'</div></div><div class="sb-countdown"><div class="sb-countdown-time">--:--</div><div class="sb-countdown-label">до пары</div></div>'}else{bar.className="status-bar show sb-free",bar.innerHTML='<div class="sb-main"><div class="sb-line1">Занятия окончены</div><div class="sb-line2">На сегодня всё</div></div>';return}const timeEl=bar.querySelector(".sb-countdown-time"),fillEl=bar.querySelector(".sb-progress-fill");if(current){const totalSec=(current.end-current.start)*60,passedSec=Math.max(0,mSec-current.start*60),leftSec=Math.max(0,totalSec-passedSec),pct=Math.max(0,Math.min(100,passedSec/totalSec*100));timeEl&&(timeEl.textContent=fmtSecs(leftSec)),fillEl&&(fillEl.style.transform="scaleX("+pct/100+")")}else if(next){const untilSec=Math.max(0,next.start*60-mSec);timeEl&&(timeEl.textContent=fmtSecs(untilSec))}}$$('input[name="day"]').forEach(r=>r.onchange=()=>{updateDayNumbers(),render()}),$$('input[name="week"]').forEach(r=>r.onchange=()=>{set("day-mon"),updateDayNumbers(),render()}),(_d=document.getElementById("schedule"))==null||_d.addEventListener("click",e=>{var _a2,_b2;const link=e.target.closest(".ask-deepseek");if(!link)return;const block=link.closest(".seminar-q"),lesson=link.closest(".lesson-card"),status=link.parentElement.querySelector(".ask-deepseek-status"),subject=((_a2=lesson==null?void 0:lesson.querySelector(".subject"))==null?void 0:_a2.textContent.trim())||"",lessonKind=lesson!=null&&lesson.classList.contains("type-Практика")?"практическому занятию":"семинару",questions=[...block.querySelectorAll(".q-text")].map((item,index)=>`${index+1}. ${item.textContent.trim()}`).join(`
 `),topic=((_b2=block.querySelector("summary"))==null?void 0:_b2.textContent.trim())||"Вопросы к семинару",prompt=`Помоги подготовиться к ${lessonKind}${subject?` по дисциплине «${subject}»`:""} (${topic}).
 Ответь на каждый вопрос отдельно и структурированно, понятными словами. Выдели ключевые понятия и приведи короткие примеры. Если вопрос юридический, опирайся на действующее законодательство Республики Беларусь на дату ответа: указывай нормативные правовые акты и конкретные статьи, не подменяй их нормами других стран. Если не можешь проверить актуальность нормы или источник, прямо сообщи об этом и не выдумывай ссылки.
 
@@ -703,19 +819,25 @@ function bulkSync(){
   $("bulkCnt").textContent=c?"Выбрано: "+c:"Отметьте студентов галочками";
   document.querySelectorAll("#bulkCard [data-bk], #bkClear").forEach(b=>b.disabled=!c);
 }
+let bulkQ="";
+function bkVisible(){const q=norm(bulkQ||"");return q?db.students.filter(n=>norm(n).includes(q)):db.students.slice()}
 function renderBulk(){
   const box=$("bulkList");
   if(!box||!canHead()||tab!=="today")return;
-  const d=$("date").value,names=db.students.slice();
-  [...bulkSel].forEach(n=>{if(!names.includes(n))bulkSel.delete(n)});
-  const sig=d+"|"+names.map(n=>n+":"+markLabel(n,d)).join("|");
+  const d=$("date").value,all=db.students.slice();
+  [...bulkSel].forEach(n=>{if(!all.includes(n))bulkSel.delete(n)});
+  const names=bkVisible();
+  const free=all.filter(n=>{const l=markLabel(n,d);return !l||l==="✓"}).length,bd=$("bulkBadge");
+  if(bd){bd.textContent=free;bd.classList.toggle("hidden",!free)}
+  $("bulkDate").textContent=new Date(d+"T12:00").toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"});
+  const sig=d+"|"+(bulkQ||"")+"|"+names.map(n=>n+":"+markLabel(n,d)).join("|");
   if(sig!==bulkSig){
     bulkSig=sig;const st=box.scrollTop;
-    box.innerHTML=names.map(n=>{const l=markLabel(n,d);
-      return '<label class="chk"><input type="checkbox" data-n="'+esc(n)+'"><span style="flex:1;min-width:0;overflow-wrap:anywhere">'+esc(n)+'</span>'+(l?'<span class="'+(l.includes("ПН")?"pn":"mute")+'">'+esc(l)+'</span>':"")+'</label>'}).join("");
+    box.innerHTML=names.length?names.map(n=>{const l=markLabel(n,d);
+      return '<label class="bk-row"><input type="checkbox" data-n="'+esc(n)+'"><span class="bk-ck"></span><span class="bk-nm">'+esc(n)+'</span>'+(l&&l!=="✓"?'<span class="bk-m'+(l.includes("ПН")?" pn":"")+'">'+esc(l)+'</span>':(l?'<span class="bk-m">✓</span>':""))+'</label>'}).join(""):'<p class="mute" style="text-align:center;padding:18px 0">Никого не найдено</p>';
     box.scrollTop=st;
   }
-  box.querySelectorAll("input").forEach(c=>{c.checked=bulkSel.has(c.dataset.n)});
+  box.querySelectorAll("input").forEach(c=>{c.checked=bulkSel.has(c.dataset.n);c.parentElement.classList.toggle("on",c.checked)});
   bulkSync();
 }
 function bulkApply(code){
@@ -728,17 +850,17 @@ function bulkApply(code){
     const m={p:Array(4).fill(code),msg:""},h=code?hoursOf(m):0;
     logAct(code?"за "+fmt(d)+": "+describe(m,true)+(h?" ("+h+" ч)":"")+" · массово":"за "+fmt(d)+": снял отметку · массово",n);
   });
-  $("bulkMsg").textContent=(code||"Отметки сняты")+(code?" поставлено":"")+": "+list.length+" чел. Можно отменить кнопкой ↶.";
+  $("bulkMsg").textContent=(code||"Отметки сняты")+(code?" поставлено":"")+": "+list.length+" чел. Можно отменить.";
   bulkSel.clear();bulkSig="";
   render();
 }
 $("bulkList").addEventListener("change",e=>{
   const c=e.target.closest("input[data-n]");if(!c)return;
-  c.checked?bulkSel.add(c.dataset.n):bulkSel.delete(c.dataset.n);bulkSync();
+  c.checked?bulkSel.add(c.dataset.n):bulkSel.delete(c.dataset.n);c.parentElement.classList.toggle("on",c.checked);bulkSync();
 });
-$("bkAll").onclick=()=>{db.students.forEach(n=>bulkSel.add(n));renderBulk()};
+$("bkAll").onclick=()=>{const v=bkVisible();const all=v.every(n=>bulkSel.has(n));v.forEach(n=>all?bulkSel.delete(n):bulkSel.add(n));renderBulk()};
 $("bkNone").onclick=()=>{bulkSel.clear();renderBulk()};
-$("bkFree").onclick=()=>{bulkSel.clear();const d=$("date").value;db.students.forEach(n=>{const l=markLabel(n,d);if(!l||l==="✓")bulkSel.add(n)});renderBulk()};
+$("bkFree").onclick=()=>{bulkSel.clear();const d=$("date").value;bkVisible().forEach(n=>{const l=markLabel(n,d);if(!l||l==="✓")bulkSel.add(n)});renderBulk()};
 $("bkClear").onclick=()=>bulkApply("");
 document.querySelectorAll("#bulkCard [data-bk]").forEach(b=>b.onclick=()=>bulkApply(b.dataset.bk));
 
@@ -869,10 +991,137 @@ $("icsBtn").onclick=()=>{
   b.textContent="✓ "+r.count+" пар";setTimeout(()=>b.textContent=old,2500);
 };
 
+/* ---------- Массовая отметка: кружок и шторка ---------- */
+const bkSheet=$("bulkCard"),bkScrim=$("bulkScrim"),bkMini=$("bulkMini");
+function bkSet(o){
+  bkSheet.classList.toggle("open",o);bkScrim.classList.toggle("open",o);
+  bkSheet.setAttribute("aria-hidden",o?"false":"true");bkMini.setAttribute("aria-pressed",o?"true":"false");
+  document.documentElement.classList.toggle("bk-open",o);
+  if(o){bulkSig="";renderBulk()}
+}
+function bkClose(){if(bkSheet.classList.contains("open"))bkSet(false)}
+function bkVis(){
+  const on=!!(canHead()&&tab==="today"&&!schedOn);
+  bkMini.classList.toggle("bk-hide",!on);
+  if(!on)bkClose();
+}
+bkMini.onclick=()=>{if($("sheet")&&$("sheet").classList.contains("open"))$("menuFab").click();bkSet(!bkSheet.classList.contains("open"))};
+bkScrim.onclick=bkClose;$("bulkClose").onclick=bkClose;
+$("menuFab").addEventListener("click",bkClose);
+$("bulkQ").oninput=e=>{bulkQ=e.target.value;renderBulk()};
+$("bkUndo").onclick=()=>{$("undo").click();bulkSig="";renderBulk()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")bkClose()});
+(function(){let y0=null;const h=bkSheet.querySelector(".bk-head");
+  h.addEventListener("touchstart",e=>{y0=e.touches[0].clientY},{passive:true});
+  h.addEventListener("touchend",e=>{if(y0!==null&&e.changedTouches[0].clientY-y0>60)bkClose();y0=null},{passive:true});
+})();
+const _applyTab=window.applyTab;window.applyTab=function(){const r=_applyTab.apply(this,arguments);try{bkVis()}catch(e){}return r};
+const _syncSched=window.syncSched;window.syncSched=function(){const r=_syncSched.apply(this,arguments);try{bkVis()}catch(e){}return r};
+
 /* ---------- обновление списка ---------- */
 const _render=window.render;
-window.render=function(){const r=_render.apply(this,arguments);try{renderBulk()}catch(e){}return r};
+window.render=function(){const r=_render.apply(this,arguments);try{renderBulk();bkVis()}catch(e){}return r};
 setInterval(()=>{if(!document.hidden)try{renderBulk()}catch(e){}},1000);
+})();
+</script>
+<script id="hz120Js">
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+/* 1. Замер частоты экрана: ставим класс hz120, если >=90 Гц */
+(function(){
+  let n=0,last=0,sum=0;
+  function f(t){
+    if(last){sum+=t-last;n++}
+    last=t;
+    if(n<45)return requestAnimationFrame(f);
+    const hz=Math.round(1000/(sum/n));
+    document.documentElement.classList.toggle("hz120",hz>=90);
+    document.documentElement.dataset.hz=hz;
+  }
+  requestAnimationFrame(f);
+})();
+
+/* 2. Тосты + лёгкая вибрация */
+const toastEl=document.createElement("div");toastEl.id="hzToast";toastEl.setAttribute("role","status");document.body.appendChild(toastEl);
+let tt;
+window.hzToast=function(msg){toastEl.textContent=msg;toastEl.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove("on"),2200)};
+const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("button");
+  if(!b||b.disabled)return;
+  if(b.matches(".chip,.tile,.day-tab,#bnav button,.q-vote"))buzz(6);
+  if(b.id==="msave"||b.matches(".main[data-bk]")||b.id==="rcYes"||b.id==="rcNo")buzz(12);
+},true);
+/* тост после сохранения отметки */
+const ms=$("msave");
+if(ms)ms.addEventListener("click",()=>setTimeout(()=>hzToast("Отметка сохранена ✓"),150));
+
+/* 3. Плавная смена вкладок через View Transitions */
+const _goTab=window.goTab;
+if(typeof _goTab==="function"&&document.startViewTransition&&!reduce){
+  window.goTab=function(t){
+    try{document.startViewTransition(()=>{_goTab(t)})}catch(e){_goTab(t)}
+  };
+}
+
+/* 4. Каскадное появление пар дневника */
+const sched=$("schedule");
+if(sched){
+  new MutationObserver(()=>{
+    sched.querySelectorAll(".lesson-card").forEach((c,i)=>c.style.setProperty("--i",Math.min(i,8)));
+  }).observe(sched,{childList:true,subtree:true});
+}
+
+/* 5. Прогресс переклички через scaleX */
+const rb=$("rcBar");
+if(rb){
+  new MutationObserver(()=>{
+    const w=parseFloat(rb.style.width);
+    if(!isNaN(w))rb.style.setProperty("--p",w/100);
+  }).observe(rb,{attributes:true,attributeFilter:["style"]});
+}
+
+/* 6. Pull-to-refresh (обновить данные с сервера) */
+(function(){
+  if(reduce)return;
+  const el=document.createElement("div");el.id="hzPtr";el.innerHTML="<span>↻</span>";document.body.appendChild(el);
+  let y0=0,dy=0,on=false,busy=false;
+  const TH=70;
+  addEventListener("touchstart",e=>{
+    if(busy||scrollY>0||e.touches.length!==1||e.target.closest("input,select,textarea,#bnav,.sheet,.floatBox,.rc,.scroll"))return;
+    y0=e.touches[0].clientY;on=true;dy=0;
+  },{passive:true});
+  addEventListener("touchmove",e=>{
+    if(!on)return;
+    dy=Math.max(0,e.touches[0].clientY-y0);
+    if(dy<=0&&scrollY>0){on=false;return}
+    const k=Math.min(1,dy/TH),off=-70+Math.min(dy*.55,TH+10);
+    el.style.transform="translate3d(0,"+off+"px,0) rotate("+(dy*3)+"deg)";
+    el.style.opacity=k;
+  },{passive:true});
+  addEventListener("touchend",async()=>{
+    if(!on)return;on=false;
+    el.style.transition="transform .4s var(--spring),opacity .2s";
+    if(dy>=TH&&typeof pull==="function"&&me){
+      busy=true;el.classList.add("spin");
+      el.style.transform="translate3d(0,"+(TH-30)+"px,0)";el.style.opacity=1;buzz(10);
+      try{await pull();render();window._dvPaint&&window._dvPaint();hzToast("Обновлено ✓")}catch(e){hzToast("Нет связи")}
+      busy=false;el.classList.remove("spin");
+    }
+    el.style.transform="translate3d(0,-70px,0)";el.style.opacity=0;
+    setTimeout(()=>{el.style.transition=""},450);
+  },{passive:true});
+})();
+
+/* 7. Плавный счётчик чисел в сводке (rAF, подстраивается под любой Гц) */
+window.hzCount=function(el,to,ms){
+  if(reduce){el.textContent=to;return}
+  const from=parseFloat(el.textContent)||0,t0=performance.now();
+  (function s(t){const k=Math.min(1,(t-t0)/(ms||500)),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(s)})(t0);
+};
 })();
 </script>
 </body>
