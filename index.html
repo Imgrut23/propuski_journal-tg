@@ -91,6 +91,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html.sched #secTip,html.guest #secTip{display:none!important}
 #secTip.hidden{display:none!important}
 </style>
+<style id="featCss">
+.hf-off{display:none!important}
+html.hf-logclr #clearLogsBtn{display:none!important}
+#saFeat label.chk{min-height:36px;border-bottom:1px solid var(--line);margin:0}
+#saFeat label.chk input{width:20px;height:20px;min-height:20px;flex:0 0 20px}
+#mine td.mx,#mine th.mx{width:34px;padding-left:2px;padding-right:2px;text-align:center}
+#mine button.mineX{min-height:28px;min-width:28px;padding:0;border-radius:50%;font-size:13px;color:var(--bad);background:none}
+</style>
 </head>
 <body>
 <script>(function(){try{if(localStorage.getItem("absence:hello"))return}catch{}var W=["Hello","Hola","Bonjour","こんにちは","Ciao","Привет"],i=0,tm,h=document.createElement("div");h.id="hello",h.innerHTML='<div id="helloT"></div><div id="helloS">Коснитесь, чтобы пропустить</div>',document.body.appendChild(h);var t=h.firstChild;function done(){clearTimeout(tm),h.classList.add("out");try{localStorage.setItem("absence:hello","1")}catch{}setTimeout(function(){h.remove()},700)}function step(){if(i>=W.length)return done();t.className="",t.textContent=W[i],t.offsetWidth,t.className="w",i++,i===W.length?tm=setTimeout(done,2800):tm=setTimeout(function(){t.classList.add("f"),tm=setTimeout(step,450)},2200)}h.onclick=done,window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches?(t.textContent=W[0],tm=setTimeout(done,900)):step()})();</script>
@@ -267,6 +275,10 @@ Telegram
 <div class="presets"><button type="button" data-p="week">Неделя</button><button type="button" data-p="month">Месяц</button><button type="button" data-p="all">Всё время</button></div>
 </div>
 <div id="stat"></div>
+<div id="statClr" class="hidden" style="margin-top:12px">
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="danger" id="statClrBtn" style="flex:1 1 auto"></button><button type="button" id="statClrUndo" class="hidden"></button></div>
+<p class="mute" id="statClrMsg" style="margin:6px 0 0;font-size:12.5px"></p>
+</div>
 </div>
 <div data-t="set" class="card" style="padding:0; overflow:hidden; background:transparent; border:none; box-shadow:none;">
 <details class="set-group card hidden" id="grpRoles" data-keep="1" style="border-radius:20px; margin-bottom:14px; padding:0; overflow:hidden;">
@@ -412,6 +424,9 @@ Telegram
 <p class="mute" id="saInfo" style="margin:8px 0 10px"></p>
 <div class="row"><div><label class="mute" for="saH">Часы ПН</label><input type="number" id="saH" min="1" step="1" value="2" inputmode="numeric"></div><button type="button" class="main" id="saAdd">+ Добавить ПН</button><button type="button" id="saSub">− Убрать ПН</button></div>
 <div class="row" style="margin-top:10px"><button type="button" id="saResetBase">Сброс стартовых часов</button><button type="button" class="danger" id="saResetAll">Сброс ВСЕХ часов</button></div>
+<details class="fold" id="saFeatDet" style="margin-top:12px"><summary>Функции старост</summary>
+<p class="mute" style="margin:6px 0 8px;font-size:12.5px">Снятая галочка — функция отключена у старост. У тебя всё остаётся.</p>
+<div id="saFeat"></div></details>
 <div class="set-divider" style="margin:14px 0 10px"></div>
 <div class="row"><button type="button" id="saLock" style="flex:1 1 100%;justify-content:flex-start;text-align:left"></button></div>
 <p class="mute" id="saLockInfo" style="margin:6px 0 0;font-size:12.5px"></p>
@@ -452,6 +467,10 @@ Telegram
 <button class="main" id="msave" style="width:100%;margin-top:14px">Сохранить</button>
 </div>
 <div data-t="me" class="card" id="mineCard"><h2>Мои пропуски</h2><div id="mine"></div>
+<div id="mineSA" class="hidden" style="margin-top:12px">
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="mineClrPn" style="flex:1 1 auto">Снять ПН</button><button type="button" class="danger" id="mineClrAll" style="flex:1 1 auto">Снять все часы</button><button type="button" id="mineUndo" class="hidden"></button></div>
+<p class="mute" id="mineMsg" style="margin:6px 0 0;font-size:12.5px"></p>
+</div>
 <details class="fold"><summary>Внести старые часы до журнала</summary><div style="margin-top:10px">
 <p class="mute" id="baseHint" style="margin:0 0 10px">Часы вносятся 1 раз. Исправить — через старосту.</p>
 <div class="row">
@@ -784,5 +803,118 @@ else if(k==="lock"){if(typeof goTab==="function"){try{setSched(!1,!0)}catch(x){}
 var _r=window.render;if(typeof _r==="function")window.render=function(){var r=_r.apply(this,arguments);try{paint()}catch(e){}return r};
 setInterval(function(){try{paint()}catch(e){}},15000);
 try{paint()}catch(e){}})();</script>
+<script id="clrJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
+var LS=function(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}};
+var SK="absence:lastClear";
+function isSA(){return !!me&&!isGuest&&isHead&&norm(me)===norm(SUPER_ADMIN)}
+function rng(){return{f:$("from").value,t:$("to").value}}
+function inR(d,r){return !(r.f&&d<r.f||r.t&&d>r.t)}
+function fm(x){return x?x.slice(8)+"."+x.slice(5,7):""}
+function lab(r){return r.f||r.t?(r.f?fm(r.f):"…")+" – "+(r.t?fm(r.t):"сегодня"):"всё время"}
+function nameOf(key){var s=db.students.filter(function(n){return k(n)===key})[0];return s||key}
+function msg(t,bad){var m=$("statClrMsg");if(m){m.textContent=t||"";m.style.color=bad?"var(--bad)":""}}
+function snapGet(){try{return JSON.parse(LS(SK)||"null")}catch(e){return null}}
+function plan(kind,r){var P={kind:kind,r:r,marks:[],base:[],picks:[]};
+if(kind==="abs"){Object.keys(db.marks).forEach(function(d){if(!inR(d,r))return;var day=db.marks[d]||{};Object.keys(day).forEach(function(key){var m=day[key];if(m&&pairsOf(m).indexOf("ПН")>=0)P.marks.push({d:d,key:key,m:m})})});
+if(!r.f&&!r.t)Object.keys(db.base||{}).forEach(function(key){var b=db.base[key];if(b&&(parseInt(b.pn)||0)>0)P.base.push({key:key,b:b})})}
+else Object.keys(db.picks||{}).forEach(function(pk){if(!inR(pk.slice(0,10),r))return;var o=db.picks[pk]||{},c=Object.keys(o).length;if(c)P.picks.push({pk:pk,o:o,c:c})});
+var who={};P.marks.forEach(function(x){who[x.key]=1});P.base.forEach(function(x){who[x.key]=1});P.picks.forEach(function(x){Object.keys(x.o).forEach(function(kk){who[kk]=1})});
+P.who=Object.keys(who).length;P.cnt=P.marks.length+P.base.length+P.picks.reduce(function(a,x){return a+x.c},0);return P}
+function apply(P){var snap={kind:P.kind,t:Date.now(),r:P.r,marks:[],base:[],picks:[]};
+P.marks.forEach(function(x){snap.marks.push({d:x.d,key:x.key,m:JSON.parse(JSON.stringify(x.m))});var np=pairsOf(x.m).map(function(c){return c==="ПН"?"":c}),ek=encodeURIComponent(x.key);
+if(np.every(function(c){return !c})){delete db.marks[x.d][x.key];if(!Object.keys(db.marks[x.d]).length)delete db.marks[x.d];net("/marks/"+x.d+"/"+ek,null)}
+else{var nm=Object.assign({},x.m,{p:np,msg:""});if(typeof nm.c==="string")delete nm.c;db.marks[x.d][x.key]=nm;net("/marks/"+x.d+"/"+ek,nm)}});
+P.base.forEach(function(x){snap.base.push({key:x.key,b:{tot:x.b.tot,pn:x.b.pn}});var nb={tot:Math.max(0,(parseInt(x.b.tot)||0)-(parseInt(x.b.pn)||0)),pn:0};db.base[x.key]=nb;net("/base/"+encodeURIComponent(x.key),nb)});
+P.picks.forEach(function(x){snap.picks.push({pk:x.pk,o:x.o});delete db.picks[x.pk];net("/picks/"+x.pk,null)});
+save();if(!LS(SK,JSON.stringify(snap)))try{localStorage.getItem(SK)}catch(e){}}
+function restore(){var s=snapGet();if(!s)return;var n=0;
+(s.marks||[]).forEach(function(x){db.marks[x.d]=db.marks[x.d]||{};db.marks[x.d][x.key]=x.m;net("/marks/"+x.d+"/"+encodeURIComponent(x.key),x.m);n++});
+(s.base||[]).forEach(function(x){db.base[x.key]=x.b;net("/base/"+encodeURIComponent(x.key),x.b);n++});
+(s.picks||[]).forEach(function(x){db.picks=db.picks||{};db.picks[x.pk]=x.o;net("/picks/"+x.pk,x.o);n+=Object.keys(x.o).length});
+save();LS(SK,null);logAct("вернул очистку ("+(s.kind==="perf"?"вопросы":"ПН")+", записей: "+n+")");msg("Возвращено записей: "+n);render()}
+function paint(){var box=$("statClr");if(!box)return;var on=isSA();box.classList.toggle("hidden",!on);if(!on)return;
+var perf=typeof statMode!=="undefined"&&statMode==="perf",r=rng(),b=$("statClrBtn");
+b.textContent=(perf?"🧹 Очистить отметки на вопросы":"🧹 Очистить ПН")+" · "+lab(r);
+var s=snapGet(),u=$("statClrUndo");u.classList.toggle("hidden",!s);if(s)u.textContent="↶ Вернуть ("+(s.kind==="perf"?"вопросы":"ПН")+")"}
+function clear(){if(!isSA())return;var perf=statMode==="perf",kind=perf?"perf":"abs",r=rng(),P=plan(kind,r);
+if(!P.cnt){msg("За период «"+lab(r)+"» очищать нечего.",1);return}
+var t=perf?"Очистить отметки на вопросы за период «"+lab(r)+"»?\nБудет снято выборов: "+P.picks.reduce(function(a,x){return a+x.c},0)+" у студентов: "+P.who+".":
+"Очистить ПН за период «"+lab(r)+"»?\nОтметок с ПН: "+P.marks.length+(P.base.length?", стартовых ПН у студентов: "+P.base.length:"")+" (студентов: "+P.who+").\nПары с ПН станут «на паре», остальные отметки не тронем.";
+if(!confirm(t+"\n\nПоследнюю очистку можно вернуть кнопкой «Вернуть»."))return;
+apply(P);logAct("очистил "+(perf?"отметки на вопросы":"ПН")+" за период «"+lab(r)+"» (записей: "+P.cnt+", студентов: "+P.who+")");msg("Очищено записей: "+P.cnt+" · студентов: "+P.who);render()}
+$("statClrBtn").onclick=clear;$("statClrUndo").onclick=function(){if(confirm("Вернуть последнюю очистку?"))restore()};
+["from","to"].forEach(function(id){var e=$(id);e&&e.addEventListener("change",paint)});
+document.addEventListener("click",function(e){if(e.target.closest&&e.target.closest("#stAbs,#stPerf,#rngPanel .presets"))setTimeout(paint,0)});
+var _p=window.paintStatMode;if(typeof _p==="function")window.paintStatMode=function(){var r=_p.apply(this,arguments);try{paint()}catch(e){}return r};
+window.__clrPlan=plan;try{paint()}catch(e){}})();</script>
+<script id="featJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
+var LS=function(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}};
+function saAny(){return !!me&&!isGuest&&norm(me)===norm(SUPER_ADMIN)}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function msg(t,bad){var m=$("mineMsg");if(m){m.textContent=t||"";m.style.color=bad?"var(--bad)":""}}
+function toast(t){window.hzToast&&hzToast(t)}
+/* ===== Функции старост ===== */
+function cl(id,sel){var e=$(id);return e&&e.closest(sel)}
+var FEATS=[
+["roles","Роли и доступ (врем. староста, ЦКВР, пароли, «выйти всем»)",function(){return[$("grpRoles")]},["thBtn","thCancelBtn","ckvrAdd","ckvrDel","pwToggle","pwSetBtn","pwResetAll","logoutAll"]],
+["qr","Личный QR-вход",function(){return[cl("qrWho",".sect")]},["qrMake","qrCopy","qrShare"]],
+["random","Случайный выбор и рандом из списка",function(){return[cl("randCount",".sect"),cl("rlCount",".sect")]},["btnRand","btnRl","randCopy","rlCopy"]],
+["santa","Тайный Санта",function(){return[cl("santaToggle",".sect")]},["santaToggle"]],
+["limit","Лимит отметок в день",function(){return[cl("limitIn",".sect")]},["limitBtn"]],
+["delstu","Удаление студента из группы",function(){return[cl("delStu",".row"),$("delStuMsg")]},["delStuBtn"]],
+["rpw","Сброс пароля и отвязка Telegram",function(){return[cl("rpw",".row"),$("rpwMsg")]},["rpwBtn","tgUnbindBtn"]],
+["rbase","Сброс часов студента",function(){return[cl("rbase",".row"),$("rbaseMsg")]},["rbaseBtn"]],
+["csv","Выгрузка CSV и PDF",function(){return[$("csv"),$("pdfBtn")]},["csv","pdfBtn"]],
+["logclr","Очистка лога",function(){return[]},["clearLogsBtn"]]];
+function off(key){return !saAny()&&!!(db.cfg&&db.cfg.headOff&&db.cfg.headOff[key])}
+window.__featOff=off;
+function applyFeat(){FEATS.forEach(function(f){var o=off(f[0]);document.documentElement.classList.toggle("hf-"+f[0],o);f[2]().forEach(function(e){e&&e.classList.toggle("hf-off",o)})})}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("button");if(!b||!b.id)return;
+for(var i=0;i<FEATS.length;i++){if(FEATS[i][3].indexOf(b.id)>=0&&off(FEATS[i][0])){e.preventDefault();e.stopImmediatePropagation();toast("Функция отключена администратором");return}}},true);
+function buildFeat(){var box=$("saFeat");if(!box)return;if(!box.dataset.built){box.dataset.built="1";
+box.innerHTML=FEATS.map(function(f){return'<label class="chk"><input type="checkbox" data-f="'+f[0]+'"> '+f[1]+"</label>"}).join("");
+box.addEventListener("change",function(e){var c=e.target;if(!c.dataset||!c.dataset.f||!saAny())return;var key=c.dataset.f,lbl=FEATS.filter(function(f){return f[0]===key})[0][1];
+db.cfg=db.cfg||{};db.cfg.headOff=db.cfg.headOff||{};if(c.checked){delete db.cfg.headOff[key];net("/cfg/headOff/"+key,null)}else{db.cfg.headOff[key]=true;net("/cfg/headOff/"+key,true)}
+save();logAct((c.checked?"включил":"отключил")+" старостам: "+lbl);applyFeat()})}
+box.querySelectorAll("input[data-f]").forEach(function(c){c.checked=!(db.cfg&&db.cfg.headOff&&db.cfg.headOff[c.dataset.f])})}
+/* ===== Мои пропуски: снять часы (только админ) ===== */
+var MK="absence:lastMine";
+function nm(){return(typeof myName==="function"&&myName())||me}
+function planMine(kind){var key=k(nm()),P={kind:kind,key:key,marks:[],base:null};
+Object.keys(db.marks).forEach(function(d){var m=(db.marks[d]||{})[key];if(!m)return;var p=pairsOf(m);if(kind==="pn"?p.indexOf("ПН")>=0:true)P.marks.push({d:d,m:m})});
+var b=db.base[key];if(b&&(kind==="pn"?(parseInt(b.pn)||0)>0:true))P.base=b;return P}
+function snapGet(){try{return JSON.parse(LS(MK)||"null")}catch(e){return null}}
+function mineApply(P){var snap={t:Date.now(),kind:P.kind,key:P.key,marks:[],base:P.base?clone(P.base):null},ek=encodeURIComponent(P.key);
+P.marks.forEach(function(x){snap.marks.push({d:x.d,m:clone(x.m)});
+if(P.kind==="pn"){var np=pairsOf(x.m).map(function(c){return c==="ПН"?"":c});if(np.every(function(c){return !c})){delete db.marks[x.d][P.key];net("/marks/"+x.d+"/"+ek,null)}else{var n2=Object.assign({},x.m,{p:np,msg:""});if(typeof n2.c==="string")delete n2.c;db.marks[x.d][P.key]=n2;net("/marks/"+x.d+"/"+ek,n2)}}
+else{delete db.marks[x.d][P.key];net("/marks/"+x.d+"/"+ek,null)}
+if(db.marks[x.d]&&!Object.keys(db.marks[x.d]).length)delete db.marks[x.d]});
+if(P.base){if(P.kind==="pn"){var nb={tot:Math.max(0,(parseInt(P.base.tot)||0)-(parseInt(P.base.pn)||0)),pn:0};db.base[P.key]=nb;net("/base/"+ek,nb)}else{delete db.base[P.key];net("/base/"+ek,null)}}
+save();LS(MK,JSON.stringify(snap))}
+function mineRestore(){var s=snapGet();if(!s)return;var ek=encodeURIComponent(s.key),n=0;
+s.marks.forEach(function(x){db.marks[x.d]=db.marks[x.d]||{};db.marks[x.d][s.key]=x.m;net("/marks/"+x.d+"/"+ek,x.m);n++});
+if(s.base){db.base[s.key]=s.base;net("/base/"+ek,s.base);n++}
+save();LS(MK,null);logAct("вернул свои часы (записей: "+n+")");msg("Возвращено записей: "+n);render()}
+function mineClear(kind){if(!saAny())return;var P=planMine(kind),cnt=P.marks.length+(P.base?1:0);if(!cnt){msg(kind==="pn"?"ПН у тебя нет.":"Снимать нечего.",1);return}
+var hrs=P.marks.reduce(function(a,x){return a+(typeof hoursOf==="function"?hoursOf(x.m):0)},0);
+if(!confirm((kind==="pn"?"Снять только ПН":"Снять ВСЕ часы")+" у «"+nm()+"»?\nОтметок: "+P.marks.length+(P.base?", стартовые часы будут "+(kind==="pn"?"уменьшены на ПН":"сброшены"):"")+(hrs?" (около "+hrs+" ч)":"")+".\n\nПоследнее снятие можно вернуть кнопкой «Вернуть».")))return;
+mineApply(P);logAct((kind==="pn"?"снял свои ПН":"снял все свои часы")+" (записей: "+cnt+")",nm());msg("Снято записей: "+cnt);render()}
+function dayClear(iso){if(!saAny())return;var key=k(nm()),m=(db.marks[iso]||{})[key];if(!m)return;
+if(!confirm("Снять часы за "+iso.split("-").reverse().join(".")+"?"))return;
+LS(MK,JSON.stringify({t:Date.now(),kind:"day",key:key,marks:[{d:iso,m:clone(m)}],base:null}));
+delete db.marks[iso][key];if(!Object.keys(db.marks[iso]).length)delete db.marks[iso];net("/marks/"+iso+"/"+encodeURIComponent(key),null);save();logAct("снял свои часы за "+iso.split("-").reverse().join("."),nm());render()}
+function paintMine(){var box=$("mineSA");if(!box)return;var on=saAny()&&!!nm();box.classList.toggle("hidden",!on);if(!on)return;
+var s=snapGet(),u=$("mineUndo");u.classList.toggle("hidden",!s);if(s)u.textContent="↶ Вернуть ("+(s.kind==="pn"?"ПН":s.kind==="day"?"день":"все")+")";
+var tbl=$("mine")&&$("mine").querySelector("table");if(tbl&&!tbl.dataset.sa){tbl.dataset.sa="1";var hr=tbl.querySelector("thead tr");hr&&hr.insertAdjacentHTML("beforeend",'<th class="mx"></th>');
+tbl.querySelectorAll("tbody tr").forEach(function(tr){var t=tr.cells[0]&&tr.cells[0].textContent.trim().split(".");if(t&&t.length===3)tr.insertAdjacentHTML("beforeend",'<td class="mx"><button type="button" class="mineX" data-d="'+t[2]+"-"+t[1]+"-"+t[0]+'" title="Снять часы за этот день" aria-label="Снять часы за день">✕</button></td>')})}}
+document.addEventListener("click",function(e){var t=e.target;if(!t.closest)return;
+if(t.closest("#mineClrPn"))mineClear("pn");else if(t.closest("#mineClrAll"))mineClear("all");else if(t.closest("#mineUndo")){if(confirm("Вернуть последнее снятие?"))mineRestore()}
+else{var x=t.closest("button.mineX");x&&dayClear(x.dataset.d)}});
+window.__mine={plan:planMine,clear:mineClear,restore:mineRestore};
+/* хуки */
+var _r=window.render;if(typeof _r==="function")window.render=function(){var r=_r.apply(this,arguments);try{applyFeat();paintMine()}catch(e){}return r};
+var _s=window.renderSA;if(typeof _s==="function")window.renderSA=function(){var r=_s.apply(this,arguments);try{buildFeat()}catch(e){}return r};
+setInterval(function(){try{applyFeat()}catch(e){}},10000);
+try{applyFeat();buildFeat();paintMine()}catch(e){}})();</script>
 </body>
 </html>
