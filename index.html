@@ -66,6 +66,31 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #saCard .row>button{min-height:44px}
 #saCard #saH{max-width:110px}
 </style>
+<style id="lecCss">
+#lecFold{margin:2px 0 0;padding:0}
+#lecFold>summary{list-style:none;text-align:center;font-size:11.5px;color:var(--mute);opacity:.55;padding:10px 0 4px;letter-spacing:.04em;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#lecFold>summary::-webkit-details-marker{display:none}
+#lecFold[open]>summary{opacity:.8}
+#lecFold .lec-list{padding:2px 2px 6px}
+#lecFold .lec-day{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin:10px 0 3px}
+#lecFold .lec-day.today{color:var(--acc)}
+#lecFold .lec-row{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:4px 0;font-size:12.5px;line-height:1.3;border-top:1px solid var(--line)}
+#lecFold .lec-t{color:var(--mute);font-variant-numeric:tabular-nums}
+#lecFold .lec-s{font-weight:600;color:var(--ink)}
+#lecFold .lec-m{color:var(--mute);font-size:11.5px;margin-top:1px}
+#lecFold .lec-btn{display:block;margin:8px auto 0;min-height:30px;padding:0 14px;font-size:12px;background:none;color:var(--mute);opacity:.8}
+</style>
+<style id="secCss">
+#secTip{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:0 0 10px;border-left:4px solid var(--acc)}
+#secTip .st-ico{font-size:20px;flex:0 0 auto}
+#secTip .st-main{flex:1;min-width:0}
+#secTip .st-t{font-weight:650;font-size:13.5px}
+#secTip .st-s{font-size:12px;color:var(--mute);margin-top:2px;line-height:1.35}
+#secTip .st-acts{display:flex;flex-direction:column;gap:4px;flex:0 0 auto}
+#secTip .st-acts button{min-height:32px;padding:0 12px;font-size:12.5px}
+html.sched #secTip,html.guest #secTip{display:none!important}
+#secTip.hidden{display:none!important}
+</style>
 </head>
 <body>
 <script>(function(){try{if(localStorage.getItem("absence:hello"))return}catch{}var W=["Hello","Hola","Bonjour","こんにちは","Ciao","Привет"],i=0,tm,h=document.createElement("div");h.id="hello",h.innerHTML='<div id="helloT"></div><div id="helloS">Коснитесь, чтобы пропустить</div>',document.body.appendChild(h);var t=h.firstChild;function done(){clearTimeout(tm),h.classList.add("out");try{localStorage.setItem("absence:hello","1")}catch{}setTimeout(function(){h.remove()},700)}function step(){if(i>=W.length)return done();t.className="",t.textContent=W[i],t.offsetWidth,t.className="w",i++,i===W.length?tm=setTimeout(done,2800):tm=setTimeout(function(){t.classList.add("f"),tm=setTimeout(step,450)},2200)}h.onclick=done,window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches?(t.textContent=W[0],tm=setTimeout(done,900)):step()})();</script>
@@ -387,6 +412,9 @@ Telegram
 <p class="mute" id="saInfo" style="margin:8px 0 10px"></p>
 <div class="row"><div><label class="mute" for="saH">Часы ПН</label><input type="number" id="saH" min="1" step="1" value="2" inputmode="numeric"></div><button type="button" class="main" id="saAdd">+ Добавить ПН</button><button type="button" id="saSub">− Убрать ПН</button></div>
 <div class="row" style="margin-top:10px"><button type="button" id="saResetBase">Сброс стартовых часов</button><button type="button" class="danger" id="saResetAll">Сброс ВСЕХ часов</button></div>
+<div class="set-divider" style="margin:14px 0 10px"></div>
+<div class="row"><button type="button" id="saLock" style="flex:1 1 100%;justify-content:flex-start;text-align:left"></button></div>
+<p class="mute" id="saLockInfo" style="margin:6px 0 0;font-size:12.5px"></p>
 <p class="mute" id="saMsg" style="margin:8px 0 0"></p>
 </div>
 </div>
@@ -659,5 +687,102 @@ Object.keys(db.marks).forEach(function(d){var day=db.marks[d];if(day&&day[key]!=
 delete db.base[key];net("/base/"+encodeURIComponent(key),null);save();logAct("сбросил ВСЕ часы (отметок удалено: "+cnt+")",n);msg("Все часы сброшены · "+n+" (отметок: "+cnt+")");render()}
 $("saAdd").onclick=function(){adj(1)};$("saSub").onclick=function(){adj(-1)};$("saResetBase").onclick=resetBase;$("saResetAll").onclick=resetAll;$("saStu").onchange=function(){msg("");info()};
 try{renderSA()}catch(e){}})();</script>
+<script id="loginJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
+var LS=function(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+function isSAname(n){return !!n&&norm(n)===norm(SUPER_ADMIN)}
+function bound(n){var m=(db.cfg&&db.cfg.tgId)||{};return Object.keys(m).filter(function(i){return m[i]===n})}
+function lockOn(){return !!(db.cfg&&db.cfg.adminLock)||LS("absence:adminLock")==="1"}
+function tgFresh(n){var t=window.__tgU;return !!(t&&Date.now()-t.t<12e4&&t.u&&bound(n).indexOf(String(t.u.id))>=0)}
+function dev(){var u=navigator.userAgent||"";return /iPhone/.test(u)?"iPhone":/iPad/.test(u)?"iPad":/Android/.test(u)?"Android":/Windows/.test(u)?"Windows":/Mac/.test(u)?"Mac":"устройство"}
+/* запоминаем, кто пришёл из Telegram (id, username) */
+var _tg=window.onTgAuth;if(typeof _tg==="function")window.onTgAuth=function(u){window.__tgU={u:u,t:Date.now()};return _tg.apply(this,arguments)};
+/* запись входа */
+function recLogin(name){if(isGuest||!name)return;var sk="absence:loginRec";try{if(sessionStorage.getItem(sk)===norm(name))return;sessionStorage.setItem(sk,norm(name))}catch(e){}
+var t=Date.now(),tg=window.__tgU&&t-window.__tgU.t<12e4?window.__tgU.u:null,ids=bound(name),un=((tg&&tg.username)||(typeof tgOf==="function"?tgOf(name):"")||"").replace(/^@/,""),
+key=t+"_"+Math.random().toString(36).slice(2,6),e={t:t,w:name,n:"",a:"вошёл",m:tg?"tg":"ses",tg:{id:tg&&tg.id!=null?String(tg.id):(ids[0]||""),u:un,b:ids.length>0},d:dev()};
+db.log[key]=e;save();net("/log/"+key,e)}
+/* обёртка входа: блокировка админа + запись входа */
+var _start=window.start;if(typeof _start==="function")window.start=async function(name,r){
+if(isSAname(name)&&lockOn()&&bound(name).length){if(tgFresh(name))LS("absence:saOK","1");else if(LS("absence:saOK")!=="1"){try{rememberClear()}catch(e){}me=null;try{show()}catch(e){}alert("Вход для этого аккаунта разрешён только через привязанный Telegram.");return}}
+var res=await _start.apply(this,arguments);try{recLogin(name)}catch(e){}return res};
+/* вкладка «Входы» в окне Лог / Что нового */
+function rowsIn(){return Object.values(db.log||{}).filter(function(x){return /^вошёл/i.test(String(x.a||"").trim())}).sort(function(a,b){return b.t-a.t})}
+var q="";
+function paintIn(){var box=$("infoContent");if(!box)return;var all=rowsIn(),ql=q.toLowerCase(),list=all.filter(function(x){return !ql||((x.w||"")+" "+((x.tg&&x.tg.u)||"")).toLowerCase().indexOf(ql)>=0}).slice(0,300),
+cnt=new Set(Object.values((db.cfg&&db.cfg.tgId)||{})).size,html="",day="";
+if(!list.length)html='<p class="mute">Входов пока нет.</p>';
+list.forEach(function(x){var lab=logDayLabel(x.t);if(lab!==day){day=lab;html+='<div class="lg-day">'+esc(lab)+"</div>"}var d=new Date(x.t),g=x.tg||{},
+tgTxt=g.u?'<a href="https://t.me/'+esc(g.u)+'" target="_blank" rel="noopener">@'+esc(g.u)+"</a>":(g.id?"id "+esc(g.id):""),
+st=g.b?"Telegram привязан"+(tgTxt?" · "+tgTxt:""):(tgTxt?"Telegram: "+tgTxt:"Telegram не привязан");
+html+='<div class="lg-row"><span class="lg-t">'+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+'</span><div class="lg-b"><b>'+esc(x.w||"?")+"</b> · "+(x.m==="tg"?"через Telegram":"сохранённый вход")+'<br><span class="mute">'+st+(g.id&&g.u?" · id "+esc(g.id):"")+(x.d?" · "+esc(x.d):"")+"</span></div></div>"});
+box.innerHTML='<p class="mute" style="margin:0 0 8px">Telegram привязан: <b>'+cnt+"/"+db.students.length+'</b> · входов в журнале: <b>'+all.length+'</b></p><div class="lg-bar"><input id="inQ" type="search" placeholder="Поиск: имя или @ник" autocomplete="off" value="'+esc(q)+'"></div><div id="inList">'+html+"</div>";
+var i=$("inQ");i.oninput=function(e){q=e.target.value.trim();var p=i.selectionStart;paintIn();var n=$("inQ");n.focus();try{n.setSelectionRange(p,p)}catch(e){}}}
+function ensureTab(){var tabs=document.querySelector("#infoModal .tabs");if(!tabs)return null;var b=$("tabIn");if(!b){b=document.createElement("button");b.type="button";b.id="tabIn";b.textContent="Входы";b.onclick=function(){infoTab="in";q="";renderInfoModal()};tabs.appendChild(b)}return b}
+var _ri=window.renderInfoModal;if(typeof _ri==="function")window.renderInfoModal=function(){var sa=isSAname(me)&&!isGuest;if(!sa&&infoTab==="in")infoTab="new";_ri.apply(this,arguments);var b=ensureTab();if(!b)return;b.classList.toggle("hidden",!sa);b.classList.toggle("main",sa&&infoTab==="in");if(sa&&infoTab==="in")paintIn()};
+/* переключатель блокировки в админ-карточке */
+function paintLock(){var b=$("saLock"),i=$("saLockInfo");if(!b)return;var on=lockOn(),ids=bound(SUPER_ADMIN);b.textContent=(on?"🔒 Вход админа только через мой Telegram: ВКЛ":"🔓 Вход админа только через мой Telegram: выкл");b.className=on?"danger":"";
+i.textContent=ids.length?"Привязан Telegram id: "+ids.join(", ")+(on?". Другие способы входа (QR, сохранённая сессия на новом устройстве) заблокированы.":". Включи, чтобы под твоим именем нельзя было войти иначе."):"Telegram не привязан к твоему имени — сначала войди через Telegram, иначе блокировка не включится."}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("#saLock");if(!b||!isSAname(me))return;var ids=bound(SUPER_ADMIN),on=lockOn();
+if(!on&&!ids.length){window.hzToast&&hzToast("Сначала привяжи Telegram");return}
+var v=!on;db.cfg=db.cfg||{};db.cfg.adminLock=v;LS("absence:adminLock",v?"1":"0");if(v)LS("absence:saOK","1");save();net("/cfg/adminLock",v);logAct(v?"включил блокировку входа админа (только Telegram)":"выключил блокировку входа админа");paintLock()});
+var _rsa=window.renderSA;if(typeof _rsa==="function")window.renderSA=function(){_rsa.apply(this,arguments);paintLock()};
+/* уведомления админу о новых входах */
+setInterval(function(){if(!isSAname(me)||isGuest||!db||!db.log)return;var seen=parseInt(LS("absence:loginSeen"),10);if(!seen){LS("absence:loginSeen",String(Date.now()));return}
+var fresh=rowsIn().filter(function(x){return x.t>seen&&norm(x.w||"")!==norm(me)}).sort(function(a,b){return a.t-b.t});if(!fresh.length)return;
+LS("absence:loginSeen",String(fresh[fresh.length-1].t));var x=fresh[fresh.length-1],g=x.tg||{};
+if(window.hzToast)hzToast("🔔 "+x.w+" вошёл"+(g.u?" · @"+g.u:g.b?" · TG привязан":" · TG не привязан")+(fresh.length>1?" (+ещё "+(fresh.length-1)+")":""))},5000);
+try{renderSA&&renderSA()}catch(e){}})();</script>
+<script id="lecJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
+var DAYS=["mon","tue","wed","thu","fri","sat"],WD=["вс","пн","вт","ср","чт","пт","сб"];
+function loadData(){if(window.__lecData)return window.__lecData;var needle="const DATA"+"=[",src="",sc=document.querySelectorAll("script:not([src])");
+for(var i=0;i<sc.length;i++){if(sc[i].id!=="lecJs"&&sc[i].textContent.indexOf(needle)>=0){src=sc[i].textContent;break}}
+var a=src.indexOf(needle);if(a<0)return null;var k=a+needle.length-1,depth=0,instr=false,esc=false,end=-1;
+for(var p=k;p<src.length;p++){var c=src.charAt(p);if(instr){if(esc)esc=false;else if(c==="\\")esc=true;else if(c==='"')instr=false}else{if(c==='"')instr=true;else if(c==="[")depth++;else if(c==="]"){depth--;if(!depth){end=p+1;break}}}}
+if(end<0)return null;var m=src.match(/START=new Date\((\d+),\s*(\d+),\s*(\d+)\)/);if(!m)return null;
+try{window.__lecData={rows:JSON.parse(src.slice(k,end)),start:new Date(+m[1],+m[2],+m[3])}}catch(e){return null}return window.__lecData}
+function pad(n){return("0"+n).slice(-2)}
+function ymd(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function build(){var D=loadData();if(!D)return[];var g=typeof GROUP!=="undefined"?GROUP:"4501",out=[];
+D.rows.forEach(function(r){if(r[0]!==g)return;var di=DAYS.indexOf(r[1]);if(di<0)return;var dt=new Date(D.start.getFullYear(),D.start.getMonth(),D.start.getDate()+r[2]*7+di);
+(r[3]||[]).forEach(function(l){var type=String(l[0]||""),det=String(l[4]||"");if(!(type==="Лекция"||/Лекция/i.test(det)))return;
+var txt=det.replace(/<br\s*\/?>/gi,"|"),top=(txt.match(/т\.\s*([\d.,\-\/\s]*\d)/i)||[])[1]||"",
+teach=(txt.match(/[А-ЯЁ][а-яё-]+\s+[А-ЯЁ]\.\s?[А-ЯЁ]\./)||[])[0]||"",room=(txt.match(/Л\/з\s*№?\s*[\d-]+|ауд\.?\s*[\d-]+/i)||[])[0]||"",
+tm=String(l[2]||"").replace(/<br\s*\/?>/gi,"").replace(/\./g,":"),num=parseInt(l[1],10)||0;
+out.push({d:ymd(dt),dt:dt,num:num,time:tm.split("–")[0],subj:String(l[3]||"").replace(/\s+т\.\s*[\d.,\-\/\s]*\d.*$/i,"").trim(),top:top.replace(/\s+/g,""),teach:teach,room:room.replace(/\s+/g," ")})})});
+out.sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:a.num-b.num});return out}
+window.__lecBuild=build;
+var shown=14;
+function paint(){var box=$("lecBody");if(!box)return;var all=build(),today=ymd(new Date()),up=all.filter(function(x){return x.d>=today});
+if(!up.length){box.innerHTML='<p class="mute" style="text-align:center;margin:8px 0;font-size:12px">Лекций впереди нет.</p>';return}
+var list=up.slice(0,shown),html="",day="";
+list.forEach(function(x){if(x.d!==day){day=x.d;html+='<div class="lec-day'+(x.d===today?" today":"")+'">'+WD[x.dt.getDay()]+", "+x.dt.getDate()+"."+pad(x.dt.getMonth()+1)+(x.d===today?" · сегодня":"")+"</div>"}
+html+='<div class="lec-row"><span class="lec-t">'+esc(x.time)+'</span><div><div class="lec-s">'+esc(x.subj)+'</div><div class="lec-m">'+[x.num?x.num+" пара":"",x.top?"т. "+x.top:"",x.teach,x.room].filter(Boolean).map(esc).join(" · ")+"</div></div></div>"});
+if(up.length>list.length)html+='<button type="button" class="lec-btn" id="lecMore">ещё ('+(up.length-list.length)+")</button>";
+box.innerHTML=html;var mb=$("lecMore");if(mb)mb.onclick=function(){shown+=14;paint()}}
+function mount(){var sv=$("schedView");if(!sv||$("lecFold"))return;var d=document.createElement("details");d.id="lecFold";
+d.innerHTML='<summary>лекции</summary><div class="lec-list" id="lecBody"></div>';sv.appendChild(d);d.addEventListener("toggle",function(){if(d.open){shown=14;paint()}})}
+mount()})();</script>
+<script id="secJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
+var LS=function(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+var DAY=864e5*7;
+function bound(n){var m=(db.cfg&&db.cfg.tgId)||{};return Object.keys(m).filter(function(i){return m[i]===n})}
+function tip(){if(!me||isGuest)return null;var n=(typeof myName==="function"&&myName())||me,sa=norm(me)===norm(SUPER_ADMIN),ids=bound(n);
+if(!ids.length)return{k:"bind",t:"Защити вход в аккаунт",s:isHead?"Привяжи Telegram: у старосты доступ ко всей группе, и под твоим именем не должен войти никто другой.":"Привяжи Telegram — и под твоим именем не сможет войти никто другой.",b:"Привязать"};
+if(sa&&!(db.cfg&&db.cfg.adminLock))return{k:"lock",t:"Включи блокировку входа админа",s:"Telegram привязан. В Настройках можно разрешить вход только через него.",b:"Открыть"};
+return null}
+function mount(){var el=$("secTip");if(el)return el;var pay=$("payBox");if(!pay||!pay.parentNode)return null;el=document.createElement("div");el.id="secTip";el.className="card hidden";el.setAttribute("role","note");pay.parentNode.insertBefore(el,pay);return el}
+function paint(){var el=mount();if(!el)return;var t=null;try{t=tip()}catch(e){}
+if(t){var z=parseInt(LS("absence:secTip:"+t.k+":"+norm(me)),10);if(z&&Date.now()-z<DAY)t=null}
+if(!t){el.classList.add("hidden");el.removeAttribute("data-k");return}
+if(el.dataset.k===t.k&&!el.classList.contains("hidden"))return;el.dataset.k=t.k;
+el.innerHTML='<span class="st-ico">🔐</span><div class="st-main"><div class="st-t">'+t.t+'</div><div class="st-s">'+t.s+'</div></div><div class="st-acts"><button type="button" class="main" data-a="go">'+t.b+'</button><button type="button" data-a="later">Позже</button></div>';
+el.classList.remove("hidden")}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("#secTip button");if(!b)return;var el=$("secTip"),k=el.dataset.k;
+if(b.dataset.a==="later"){LS("absence:secTip:"+k+":"+norm(me),String(Date.now()));paint();return}
+if(k==="bind"){if(confirm("Чтобы привязать Telegram, нужно выйти и войти через кнопку Telegram. Выйти сейчас?")){var lo=$("logout");lo&&lo.click()}}
+else if(k==="lock"){if(typeof goTab==="function"){try{setSched(!1,!0)}catch(x){}goTab("set");setTimeout(function(){var l=$("saLock");l&&l.scrollIntoView({behavior:"smooth",block:"center"})},250)}}});
+var _r=window.render;if(typeof _r==="function")window.render=function(){var r=_r.apply(this,arguments);try{paint()}catch(e){}return r};
+setInterval(function(){try{paint()}catch(e){}},15000);
+try{paint()}catch(e){}})();</script>
 </body>
 </html>
