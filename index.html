@@ -38,6 +38,22 @@
 <style id="markStructCss">#markSum{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:2px 0 6px}.ms{min-height:30px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:650;background:color-mix(in srgb,hsl(var(--gh) 70% 50%) 15%,transparent);color:color-mix(in srgb,hsl(var(--gh) 65% 48%) 70%,var(--ink));gap:5px}.ms b{font-weight:800}.ms.on{background:hsl(var(--gh) 65% 48%);color:#fff}.ms-free{font-size:12.5px;color:var(--mute);margin-left:auto}.ms-free b{color:var(--ink)}#tbl tr.grp-h{padding:8px 0 4px!important;border-bottom:0!important;border-left:0!important}#tbl tr.grp-h td{display:flex!important;align-items:center;gap:8px}.gp{font-size:11.5px;font-weight:800;padding:2px 9px;border-radius:8px;background:hsl(var(--gh) 65% 48%);color:#fff}.gn{font-size:12.5px;color:var(--mute)}.gc{margin-left:auto;font-size:13px}.pr{display:flex;gap:4px;margin:0 0 3px}.pc{display:inline-flex;align-items:center;gap:3px;min-width:44px;justify-content:center;padding:2px 7px;border-radius:8px;font-size:12px;font-weight:750;background:color-mix(in srgb,hsl(var(--gh) 70% 50%) 17%,transparent);color:color-mix(in srgb,hsl(var(--gh) 65% 48%) 70%,var(--ink))}.pc i{font-style:normal;font-weight:500;opacity:.6;font-size:10.5px}.pc-0{background:var(--soft);color:var(--mute);font-weight:500}.ms-off{display:none!important}.ms-ПН,.gp-ПН,.pc-ПН,#tbl tr[data-g=ПН],#tbl tr.grp-h[data-g=ПН]{--gh:4}.ms-Б,.gp-Б,.pc-Б,#tbl tr[data-g=Б],#tbl tr.grp-h[data-g=Б]{--gh:212}.ms-УП,.gp-УП,.pc-УП,#tbl tr[data-g=УП],#tbl tr.grp-h[data-g=УП]{--gh:168}.ms-Н,.gp-Н,.pc-Н,#tbl tr[data-g=Н],#tbl tr.grp-h[data-g=Н]{--gh:40}.ms-СБ,.gp-СБ,.pc-СБ,#tbl tr[data-g=СБ],#tbl tr.grp-h[data-g=СБ]{--gh:275}.ms-ОМ,.gp-ОМ,.pc-ОМ,#tbl tr[data-g=ОМ],#tbl tr.grp-h[data-g=ОМ]{--gh:322}.ms-Ц,.gp-Ц,.pc-Ц,#tbl tr[data-g=Ц],#tbl tr.grp-h[data-g=Ц]{--gh:95}.ms-ПР,.gp-ПР,.pc-ПР,#tbl tr[data-g=ПР],#tbl tr.grp-h[data-g=ПР]{--gh:150}html body #head #tbl tr[data-g]:not(.grp-h){border-left-color:hsl(var(--gh) 65% 52%)}.ms-note{font-size:12.5px;color:var(--mute);margin:0 0 3px}html body #head #tbl .subj{display:flex!important;flex-wrap:wrap;gap:0 12px;font-size:11.5px!important;color:var(--mute);margin:2px 0 4px!important;padding:0!important}html body #head #tbl .subj>div{white-space:nowrap;font-size:11.5px!important;margin:0!important}#tbl .ed{margin-top:4px}#tbl tr:not(.grp-h){padding:7px 0 7px 12px!important}</style>
 <style id="authCss">#tabH{display:none!important}</style>
 <style id="noPwCss">#loginForm,#login .tabs,.sect:has(#pwToggle),.set-divider:has(+.sect #pwToggle){display:none!important}</style>
+<style id="iosfix">
+/* бейдж «СЕЙЧАС»: glass-правило .card:after (inset:0) растягивало его на всю карточку */
+html body #schedView .lesson-card.is-now:after{inset:auto!important;top:10px!important;right:10px!important;left:auto!important;bottom:auto!important;width:auto!important;height:auto!important;z-index:1!important;opacity:1!important;background:var(--acc)!important;color:var(--acc-ink)!important;border-radius:999px!important;line-height:1.3;pointer-events:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+/* окно «Лог / Что нового»: не сжимать список из-за карточек авторов, учитывать динамическую высоту Safari */
+#infoModal.floatBox{max-height:calc(100vh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));max-height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:hidden}
+#infoModal #infoContent{flex:1 1 auto;min-height:140px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#infoModal .tabs,#infoModal #infoClose2{flex:0 0 auto}
+#infoModal .info-author{margin-top:6px;padding:8px 10px;gap:8px;flex-wrap:nowrap}
+#infoModal .info-author .author-name{font-size:13px}
+#infoModal .info-author .author-link-btn{min-height:30px;padding:0 10px;font-size:12px;flex:0 0 auto}
+.lg-day{z-index:2;background:var(--card)}
+.floatBox{overscroll-behavior:contain}
+/* iOS: поля <16px вызывают авто-зум при фокусе */
+@supports (-webkit-touch-callout:none){input,select,textarea,html body #head input,html body #head select,html body #head textarea,td select{font-size:16px!important}body{min-height:100dvh}}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+</style>
 </head>
 <body>
 <script>(function(){try{if(localStorage.getItem("absence:hello"))return}catch{}var W=["Hello","Hola","Bonjour","こんにちは","Ciao","Привет"],i=0,tm,h=document.createElement("div");h.id="hello",h.innerHTML='<div id="helloT"></div><div id="helloS">Коснитесь, чтобы пропустить</div>',document.body.appendChild(h);var t=h.firstChild;function done(){clearTimeout(tm),h.classList.add("out");try{localStorage.setItem("absence:hello","1")}catch{}setTimeout(function(){h.remove()},700)}function step(){if(i>=W.length)return done();t.className="",t.textContent=W[i],t.offsetWidth,t.className="w",i++,i===W.length?tm=setTimeout(done,2800):tm=setTimeout(function(){t.classList.add("f"),tm=setTimeout(step,450)},2200)}h.onclick=done,window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches?(t.textContent=W[0],tm=setTimeout(done,900)):step()})();</script>
@@ -168,12 +184,6 @@ Telegram
 </svg>
 Telegram
 </a>
-</div>
-<div class="dv-foot-card info-author info-author2">
-<div class="author-info">
-<div class="author-name">Ваня</div>
-<div class="author-role">Позаимствовал</div>
-</div>
 </div>
 </div>
 <div id="histBox" class="floatBox hidden" role="dialog" aria-label="История отметки">
