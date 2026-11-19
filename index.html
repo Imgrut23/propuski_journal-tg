@@ -427,16 +427,14 @@ Telegram
 </div>
 </details>
 </div>
-<div data-t="set" class="card hidden" id="saCard">
-<h2>🛠 Админ · Сарычев Арсений</h2>
-<div class="row"><div><label class="mute" for="saStu">Студент</label><select id="saStu" aria-label="Студент"></select></div></div>
-<p class="mute" id="saInfo" style="margin:8px 0 10px"></p>
-<div class="row"><div><label class="mute" for="saH">Часы ПН</label><input type="number" id="saH" min="1" step="1" value="2" inputmode="numeric"></div><button type="button" class="main" id="saAdd">+ Добавить ПН</button><button type="button" id="saSub">− Убрать ПН</button></div>
-<div class="row" style="margin-top:10px"><button type="button" id="saResetBase">Сброс стартовых часов</button><button type="button" class="danger" id="saResetAll">Сброс ВСЕХ часов</button></div>
+<details class="set-group card hidden" id="saCard" data-t="set" data-keep="1" style="border-radius:20px; margin-bottom:14px; padding:0; overflow:hidden;">
+<summary class="set-summary"><span>🛠 Админ · Сарычев Арсений<small>Обнулить пропуски у всех, часы, функции старост</small></span></summary>
+<div class="set-content">
+<p class="mute" id="saMsg" style="margin:0"></p>
 <div class="saZone" id="saTbl">
-<div class="saZHead"><span class="saZIc" aria-hidden="true">🗑</span><div class="saZTx"><b>Сброс таблицы пропусков</b><small id="saTblInfo">Подсчёт…</small></div></div>
-<div class="saZBtns"><button type="button" id="saTblMarks">Очистить отметки</button><button type="button" class="danger" id="saTblAll">Сбросить всё</button></div>
-<p class="saZHint">«Очистить отметки» удаляет все пропуски у всей группы. «Сбросить всё» — ещё и стартовые часы.</p>
+<div class="saZHead"><span class="saZIc" aria-hidden="true">🗑</span><div class="saZTx"><b>Обнулить пропуски у всех</b><small id="saTblInfo">Подсчёт…</small></div></div>
+<div class="saZBtns"><button type="button" id="saTblMarks">Обнулить пропуски</button><button type="button" class="danger" id="saTblAll">Обнулить всё + часы</button></div>
+<p class="saZHint">«Обнулить пропуски» — у всей группы пропусков станет 0 (стартовые часы останутся). «Обнулить всё + часы» — ещё и стартовые часы. Сброс можно вернуть кнопкой «Вернуть таблицу».</p>
 <div class="saZCfm hidden" id="saTblCfm" role="alertdialog" aria-live="polite">
 <p id="saTblCfmTx"></p>
 <label class="mute" for="saTblWord">Для подтверждения введи слово <b>СБРОС</b></label>
@@ -445,14 +443,25 @@ Telegram
 </div>
 <div class="saZRow saZTools"><button type="button" id="saTblDl">⬇ Скачать копию</button><button type="button" id="saTblUndo" class="hidden">↶ Вернуть таблицу</button></div>
 </div>
-<details class="fold" id="saFeatDet" style="margin-top:12px"><summary>Функции старост</summary>
+<div class="set-divider"></div>
+<div class="sect">
+<h2>Пропуски одного студента</h2>
+<div class="row"><div><label class="mute" for="saStu">Студент</label><select id="saStu" aria-label="Студент"></select></div></div>
+<p class="mute" id="saInfo" style="margin:8px 0 10px"></p>
+<div class="row"><div><label class="mute" for="saH">Часы ПН</label><input type="number" id="saH" min="1" step="1" value="2" inputmode="numeric"></div><button type="button" class="main" id="saAdd">+ Добавить ПН</button><button type="button" id="saSub">− Убрать ПН</button></div>
+<div class="row" style="margin-top:10px"><button type="button" id="saResetBase">Сброс стартовых часов</button><button type="button" class="danger" id="saResetAll">Сброс ВСЕХ часов</button></div>
+</div>
+<div class="set-divider"></div>
+<details class="fold" id="saFeatDet"><summary>Функции старост</summary>
 <p class="mute" style="margin:6px 0 8px;font-size:12.5px">Снятая галочка — функция отключена у старост. У тебя всё остаётся.</p>
 <div id="saFeat"></div></details>
-<div class="set-divider" style="margin:14px 0 10px"></div>
+<div class="set-divider"></div>
+<div class="sect">
 <div class="row"><button type="button" id="saLock" style="flex:1 1 100%;justify-content:flex-start;text-align:left"></button></div>
 <p class="mute" id="saLockInfo" style="margin:6px 0 0;font-size:12.5px"></p>
-<p class="mute" id="saMsg" style="margin:8px 0 0"></p>
 </div>
+</div>
+</details>
 </div>
 <div id="user-view" class="hidden">
 <div data-t="me" class="card hidden" id="santaCard" style="border: 2px dashed var(--acc); text-align: center;">
@@ -724,6 +733,7 @@ if(b)b.onclick=function(){
   });
 };
 })();</script>
+<style id="saDrawerCss">#saCard #saTbl{margin-top:0}#saCard #saMsg:empty{display:none}#saCard .set-summary small{display:block;font-weight:400;font-size:12px;color:var(--mute);margin-top:2px}#saCard .sect>h2{margin-bottom:10px}</style>
 <script id="saJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
 function isSA(){return !!me&&!isGuest&&isHead&&norm(me)===norm(SUPER_ADMIN)}
 function msg(t,bad){var m=$("saMsg");if(m){m.textContent=t||"";m.style.color=bad?"var(--bad)":""}}
