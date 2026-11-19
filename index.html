@@ -424,6 +424,18 @@ Telegram
 <p class="mute" id="saInfo" style="margin:8px 0 10px"></p>
 <div class="row"><div><label class="mute" for="saH">Часы ПН</label><input type="number" id="saH" min="1" step="1" value="2" inputmode="numeric"></div><button type="button" class="main" id="saAdd">+ Добавить ПН</button><button type="button" id="saSub">− Убрать ПН</button></div>
 <div class="row" style="margin-top:10px"><button type="button" id="saResetBase">Сброс стартовых часов</button><button type="button" class="danger" id="saResetAll">Сброс ВСЕХ часов</button></div>
+<div class="saZone" id="saTbl">
+<div class="saZHead"><span class="saZIc" aria-hidden="true">🗑</span><div class="saZTx"><b>Сброс таблицы пропусков</b><small id="saTblInfo">Подсчёт…</small></div></div>
+<div class="saZBtns"><button type="button" id="saTblMarks">Очистить отметки</button><button type="button" class="danger" id="saTblAll">Сбросить всё</button></div>
+<p class="saZHint">«Очистить отметки» удаляет все пропуски у всей группы. «Сбросить всё» — ещё и стартовые часы.</p>
+<div class="saZCfm hidden" id="saTblCfm" role="alertdialog" aria-live="polite">
+<p id="saTblCfmTx"></p>
+<label class="mute" for="saTblWord">Для подтверждения введи слово <b>СБРОС</b></label>
+<input type="text" id="saTblWord" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="СБРОС">
+<div class="saZRow"><button type="button" id="saTblCancel">Отмена</button><button type="button" class="danger" id="saTblGo" disabled>Сбросить</button></div>
+</div>
+<div class="saZRow saZTools"><button type="button" id="saTblDl">⬇ Скачать копию</button><button type="button" id="saTblUndo" class="hidden">↶ Вернуть таблицу</button></div>
+</div>
 <details class="fold" id="saFeatDet" style="margin-top:12px"><summary>Функции старост</summary>
 <p class="mute" style="margin:6px 0 8px;font-size:12.5px">Снятая галочка — функция отключена у старост. У тебя всё остаётся.</p>
 <div id="saFeat"></div></details>
@@ -706,6 +718,64 @@ Object.keys(db.marks).forEach(function(d){var day=db.marks[d];if(day&&day[key]!=
 delete db.base[key];net("/base/"+encodeURIComponent(key),null);save();logAct("сбросил ВСЕ часы (отметок удалено: "+cnt+")",n);msg("Все часы сброшены · "+n+" (отметок: "+cnt+")");render()}
 $("saAdd").onclick=function(){adj(1)};$("saSub").onclick=function(){adj(-1)};$("saResetBase").onclick=resetBase;$("saResetAll").onclick=resetAll;$("saStu").onchange=function(){msg("");info()};
 try{renderSA()}catch(e){}})();</script>
+<style id="saTblCss">
+#saTbl{margin-top:14px;padding:14px;border-radius:18px;border:1px solid color-mix(in srgb,var(--bad) 35%,var(--line));background:color-mix(in srgb,var(--bad) 6%,var(--soft))}
+#saTbl .saZHead{display:flex;gap:12px;align-items:center}
+#saTbl .saZIc{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:color-mix(in srgb,var(--bad) 16%,transparent)}
+#saTbl .saZTx{display:flex;flex-direction:column;gap:2px;min-width:0}
+#saTbl .saZTx b{font-size:15px;font-weight:650;color:var(--ink)}
+#saTbl .saZTx small{font-size:12.5px;color:var(--mute);line-height:1.35}
+#saTbl .saZBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+#saTbl .saZBtns button{min-height:44px;font-weight:650;border-radius:14px}
+#saTbl .saZHint{margin:8px 2px 0;font-size:12px;color:var(--mute);line-height:1.4}
+#saTbl .saZCfm{margin-top:12px;padding:12px;border-radius:14px;background:var(--card);border:1px solid color-mix(in srgb,var(--bad) 45%,transparent);animation:saZIn .22s ease-out}
+#saTbl .saZCfm p{margin:0 0 10px;font-size:13.5px;line-height:1.45;color:var(--ink)}
+#saTbl .saZCfm label{display:block;margin-bottom:6px;font-size:12.5px}
+#saTbl .saZCfm input{text-align:center;font-weight:650;letter-spacing:.12em;text-transform:uppercase}
+#saTbl .saZRow{display:flex;gap:8px;margin-top:10px}
+#saTbl .saZRow button{flex:1 1 0;min-height:42px;font-weight:650;border-radius:12px}
+#saTbl .saZRow button:disabled{opacity:.45;pointer-events:none}
+#saTbl .saZTools{margin-top:12px}
+#saTbl .saZTools button{font-size:13.5px}
+@keyframes saZIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#saTbl .saZCfm{animation:none}}
+</style>
+<script id="saTblJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
+var KEY="absence:tblSnap",mode=null;
+function ok(){return typeof isSA==="function"?isSA():(!!me&&!isGuest&&isHead&&norm(me)===norm(SUPER_ADMIN))}
+function toast(t){window.hzToast&&hzToast(t)}
+function clone(o){return JSON.parse(JSON.stringify(o||{}))}
+function msg(t,bad){var m=$("saMsg");if(m){m.textContent=t||"";m.style.color=bad?"var(--bad)":""}}
+function stat(){var d=0,r=0,st={};Object.keys(db.marks||{}).forEach(function(x){var day=db.marks[x]||{},ks=Object.keys(day);if(!ks.length)return;d++;r+=ks.length;ks.forEach(function(q){st[q]=1})});
+return{days:d,recs:r,stu:Object.keys(st).length,base:Object.keys(db.base||{}).length}}
+function snapGet(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}}
+function fmt(t){try{return new Date(t).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
+function paint(){var box=$("saTbl");if(!box)return;var s=stat();
+$("saTblInfo").textContent=s.recs?("Отметок: "+s.recs+" · дней: "+s.days+" · студентов: "+s.stu+" · стартовых часов: "+s.base):("Таблица пуста"+(s.base?" · стартовых часов: "+s.base:""));
+$("saTblMarks").disabled=!s.recs;$("saTblAll").disabled=!(s.recs||s.base);
+var sn=snapGet(),u=$("saTblUndo");u.classList.toggle("hidden",!sn);if(sn)u.textContent="↶ Вернуть таблицу ("+fmt(sn.t)+")"}
+function closeCfm(){mode=null;$("saTblCfm").classList.add("hidden");$("saTblWord").value="";$("saTblGo").disabled=true}
+function openCfm(m){if(!ok())return;var s=stat();mode=m;
+$("saTblCfmTx").innerHTML=(m==="all"?"Будут удалены <b>все отметки</b> ("+s.recs+") и <b>стартовые часы</b> ("+s.base+") у всей группы.":"Будут удалены <b>все отметки</b> ("+s.recs+" за "+s.days+" дн.) у всей группы. Стартовые часы останутся.")+" Последний сброс можно вернуть кнопкой «Вернуть таблицу».";
+$("saTblCfm").classList.remove("hidden");var w=$("saTblWord");w.value="";$("saTblGo").disabled=true;try{w.focus()}catch(e){}}
+function dl(){if(!ok())return;try{var o={exported:new Date().toISOString(),group:typeof GROUP!=="undefined"?GROUP:"",marks:clone(db.marks),base:clone(db.base)};
+var b=new Blob([JSON.stringify(o,null,1)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="propuski-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);toast("Копия сохранена")}catch(e){msg("Не удалось скачать копию",1)}}
+function go(){if(!ok()||!mode)return;if($("saTblWord").value.trim().toUpperCase()!=="СБРОС")return;var all=mode==="all",s=stat();
+try{localStorage.setItem(KEY,JSON.stringify({t:Date.now(),all:all,marks:clone(db.marks),base:clone(db.base)}))}catch(e){msg("Не удалось сохранить резервную копию — сначала нажми «Скачать копию».",1);closeCfm();return}
+db.marks={};net("/marks",null);if(all){db.base={};net("/base",null)}
+save();logAct("сбросил таблицу пропусков"+(all?" вместе со стартовыми часами":"")+" (отметок: "+s.recs+", дней: "+s.days+")");
+closeCfm();msg((all?"Таблица сброшена полностью":"Отметки очищены")+" · удалено: "+s.recs);toast("Таблица сброшена");render()}
+function undo(){var sn=snapGet();if(!sn||!ok())return;
+if(!confirm("Вернуть таблицу, как она была "+fmt(sn.t)+"?\nОтметки, которые появились после сброса, сохранятся."))return;
+var n=0;db.marks=db.marks||{};Object.keys(sn.marks||{}).forEach(function(d){var day=sn.marks[d]||{};db.marks[d]=db.marks[d]||{};Object.keys(day).forEach(function(q){if(db.marks[d][q]===void 0){db.marks[d][q]=day[q];n++}})});
+if(Object.keys(db.marks).length)net("/marks",db.marks);
+var nb=0;if(sn.all){db.base=db.base||{};Object.keys(sn.base||{}).forEach(function(q){if(db.base[q]===void 0){db.base[q]=sn.base[q];nb++}});if(Object.keys(db.base).length)net("/base",db.base)}
+save();try{localStorage.removeItem(KEY)}catch(e){}logAct("вернул таблицу пропусков (отметок: "+n+(sn.all?", стартовых: "+nb:"")+")");msg("Возвращено отметок: "+n);toast("Таблица возвращена");render()}
+$("saTblMarks").onclick=function(){openCfm("marks")};$("saTblAll").onclick=function(){openCfm("all")};
+$("saTblCancel").onclick=closeCfm;$("saTblGo").onclick=go;$("saTblDl").onclick=dl;$("saTblUndo").onclick=undo;
+$("saTblWord").oninput=function(){$("saTblGo").disabled=this.value.trim().toUpperCase()!=="СБРОС"};
+var _rs=window.renderSA;if(typeof _rs==="function")window.renderSA=function(){var r=_rs.apply(this,arguments);try{paint();if(!ok())closeCfm()}catch(e){}return r};
+try{paint()}catch(e){}})();</script>
 <script id="loginJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
 var LS=function(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
 function isSAname(n){return !!n&&norm(n)===norm(SUPER_ADMIN)}
