@@ -1146,7 +1146,7 @@ list.forEach(function(x){if(x.d!==day){day=x.d;html+='<div class="lec-day'+(x.d=
 html+='<div class="lec-row"><span class="lec-t">'+esc(x.time)+'</span><div><div class="lec-s">'+esc(x.subj)+'</div><div class="lec-m">'+[x.num?x.num+" пара":"",x.top?"т. "+x.top:"",x.teach,x.room].filter(Boolean).map(esc).join(" · ")+"</div></div></div>"});
 if(up.length>list.length)html+='<button type="button" class="lec-btn" id="lecMore">ещё ('+(up.length-list.length)+")</button>";
 box.innerHTML=html;var mb=$("lecMore");if(mb)mb.onclick=function(){shown+=14;paint()}}
-function mount(){var sv=$("schedView");if(!sv||$("lecFold"))return;var d=document.createElement("details");d.id="lecFold";
+function mount(){var sv=$("schedView");if(!sv||$("lecFold"))return;try{if(localStorage.getItem("absence:lecFold")!=="1")return}catch(e){return}var d=document.createElement("details");d.id="lecFold";
 d.innerHTML='<summary>лекции</summary><div class="lec-list" id="lecBody"></div>';sv.appendChild(d);d.addEventListener("toggle",function(){if(d.open){shown=14;paint()}})}
 mount()})();</script>
 <script id="secJs">(function(){"use strict";var $=function(id){return document.getElementById(id)};
@@ -1819,7 +1819,7 @@ document.addEventListener("click",function(e){
 },true)})();</script>
 <script id="newsJs">window.newsHtml=function(){
 var V=[
-["2.30","сейчас",["Динамический остров включается только там, где он есть: iPhone 14 Pro и новее, HONOR 400/500/600/700 Pro","Если телефон не определился, остров можно включить вручную: localStorage absence:forceisl = 1","«Осталось пар» — круглая кнопка справа у дневника; внутри отдельно лекции, семинары и практики","Копирование вопроса семинара добавляет просьбу ответить по законодательству РБ (актуальная редакция)","Лог: вход больше не записывается дважды","Мужская тема: строгий вид, компактный дневник"]],
+["2.30","сейчас",["Дневник: убран нижний блок «лекции»","«Осталось пар»: физкультура больше не дублируется, у каждого предмета полоска прогресса («осталось из всего»)","Динамический остров включается только там, где он есть: iPhone 14 Pro и новее, HONOR 400/500/600/700 Pro","Если телефон не определился, остров можно включить вручную: localStorage absence:forceisl = 1","«Осталось пар» — круглая кнопка справа у дневника; внутри отдельно лекции, семинары и практики","Копирование вопроса семинара добавляет просьбу ответить по законодательству РБ (актуальная редакция)","Лог: вход больше не записывается дважды","Мужская тема: строгий вид, компактный дневник"]],
 ["2.29","раньше",[
 "Расписание 4501 пересобрано из 3_fp.xls: у пары №1 со среды по пятницу были сдвинуты дни; «Осталось пар», календарь и часы сверху теперь считают по верным данным"]],
 ["2.28","",[
@@ -1944,7 +1944,7 @@ function remain0(now){
   Object.keys(s.d).forEach(function(d){s.d[d].forEach(function(e){
     var P=s.p[e[1]];if(!P||/зач[её]т|экзамен/i.test(P.kind))return;
     var dk=d+"|"+e[0];if(seen[dk])return;seen[dk]=1;
-    var c=canon(P.title),r=R[c]||(R[c]={n:c,all:0,left:0,k:{}});r.all++;
+    var c=canon(P.title);if(/^физкультура/i.test(c))c="Физкультура";var r=R[c]||(R[c]={n:c,all:0,left:0,k:{},ka:{}});r.all++;var k0=KS[P.kind];if(k0)r.ka[k0]=(r.ka[k0]||0)+1;
     if(d<today)return;
     if(d===today){var t=T[e[0]];if(t&&mn>=t[1])return}
     r.left++;rem++;days[d]=(days[d]||0)+1;var kk=KS[P.kind];if(kk)r.k[kk]=(r.k[kk]||0)+1})});
@@ -1969,7 +1969,7 @@ function paintRem(){
   [["Лекции","лек"],["Семинары","сем"],["Практики","пр"]].forEach(function(K){
     var rows=R.rows.filter(function(r){return r.k[K[1]]}),tot=rows.reduce(function(a,r){return a+r.k[K[1]]},0);
     h+='<div class="rc-sec"><div class="rc-h"><span>'+K[0]+'</span><b>'+tot+'</b></div>';
-    h+=rows.length?'<div class="rc-list">'+rows.map(function(r){return'<div class="rc-row" style="--sh:'+hue(r.n)+'"><span class="rc-name">'+esc(r.n)+'</span><span class="rc-num"><b>'+r.k[K[1]]+'</b></span></div>'}).join("")+'</div>':'<div class="rc-foot">Не осталось</div>';
+    h+=rows.length?'<div class="rc-list">'+rows.map(function(r){var L=r.k[K[1]],A=Math.max(r.ka[K[1]]||L,L),dn=A-L;return'<div class="rc-row" style="--sh:'+hue(r.n)+'"><span class="rc-name">'+esc(r.n)+'</span><span class="rc-num"><b>'+L+'</b> из '+A+'</span><span class="rc-bar"><i style="width:'+Math.round(dn/A*100)+'%"></i></span></div>'}).join("")+'</div>':'<div class="rc-foot">Не осталось</div>';
     h+='</div>'});
   h+='<div class="rc-foot">Сегодняшние завершённые пары, зачёты и экзамены не считаются.</div>';
   $("remPanel").innerHTML=h}
@@ -2076,7 +2076,10 @@ html:has(#app.hidden) #remMini,html:has(#app.hidden) #remPanel{display:none!impo
 #remPanel .rc-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline}
 #remPanel .rc-name{display:flex;align-items:center;gap:7px;min-width:0;font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #remPanel .rc-name:before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:hsl(var(--sh) 65% 55%)}
-#remPanel .rc-num{font-size:12.5px;font-variant-numeric:tabular-nums}
+#remPanel .rc-list{gap:7px}
+#remPanel .rc-num{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}#remPanel .rc-num b{color:var(--ink);font-size:13px}
+#remPanel .rc-bar{grid-column:1/-1;height:5px;border-radius:3px;background:var(--soft);overflow:hidden}
+#remPanel .rc-bar i{display:block;height:100%;border-radius:3px;background:hsl(var(--sh) 65% 55%);transition:width .5s}
 #remPanel .rc-foot{font-size:11px;color:var(--mute)}
 /* --- мужская тема: графит + сталь, строго и компактно --- */
 html.boy:not(#a):not(#b){--page:#e9edf2!important;--card:#fff!important;--soft:#e2e7ee!important;--ink:#11161d!important;--mute:#5a6372!important;--line:#cfd6e0!important;--acc:#1f3b63!important;--acc-ink:#fff!important;--r:8px!important}
