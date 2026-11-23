@@ -265,7 +265,7 @@ window.__clearReport=function(){ls("[]")}})();</script>
 <button type="button" id="stTile" aria-label="Настройки" class="tile" title="Настройки"><span>⚙️</span>Настройки</button>
 <button type="button" id="schedBtn" class="tile" aria-pressed="false" title="Дневник 4501"><span>📅</span><em id="schedLbl" style="font-style:normal">Дневник</em></button>
 <button type="button" id="legendBtn" aria-label="Обозначения" class="tile" aria-expanded="false"><span>❓</span>Обозначения</button>
-<button type="button" id="guestTile" class="tile" title="Только просмотр"><span>👁</span>Режим гостя</button>
+<button type="button" id="guestTile" style="display:none!important" class="tile" title="Только просмотр"><span>👁</span>Режим гостя</button>
 <button type="button" id="libTile" aria-label="Лекции" class="tile" title="Лекции на Google Диске" onclick="window.open('https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM','_blank','noopener')"><span>📚</span>Лекции</button><button type="button" id="codesTile" class="tile" title="Кодексы и практикумы" aria-label="Кодексы и практикумы" onclick="cpPick()"><span>⚖️</span>Кодексы и практикумы</button>
 <button type="button" id="logout" aria-label="Выйти" class="tile out"><span>🚪</span>Выйти</button>
 </div>
@@ -1308,7 +1308,7 @@ var iv=setInterval(function(){var m=document.getElementById("menuFab"),d=documen
  sync();place()},250);
 setTimeout(place,500);setTimeout(place,1600);
 })();</script>
-<script src="mini.js?v=5"></script>
+<script src="mini.js?v=6"></script>
 <script id="cpPickJs">(function(){"use strict";
 var el=null;
 function close(){if(el)el.classList.remove("show")}

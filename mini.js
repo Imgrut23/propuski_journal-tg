@@ -101,7 +101,8 @@
       b.onclick=function(){var t=document.getElementById(p[1]);var s=document.getElementById("menuFab");if(s&&s.getAttribute("aria-expanded")==="true")s.click();if(t)setTimeout(function(){t.click()},120)};
       var ref=document.getElementById("stTile");g.insertBefore(b,ref||null)});
   }
-  setInterval(addTiles,800);
+  /* плитки «Массовая отметка» и «Календарь пропусков» убраны из меню */
+  document.querySelectorAll("#sheet .slim-add").forEach(function(e){e.remove()});
   function enhance(){
     var sh=document.getElementById("stSheet");
     if(!sh||sh.dataset.mini)return;sh.dataset.mini="1";
