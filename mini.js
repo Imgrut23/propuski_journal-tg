@@ -190,3 +190,23 @@
     else if(tries>40)clearInterval(t);
   },250);
 })();
+
+/* Зачёт в шапке дневника: чип после процентов, клик разворачивает плашку */
+(function(){
+  function chip(){
+    try{
+      var bw=document.querySelector("#schedView .dv-head .brand-wrap"),en=document.getElementById("examNext"),c=document.getElementById("exChip");
+      var cs=en&&en.querySelector(".en-cs"),cn=en&&en.querySelector(".en-cn");
+      if(!bw||!cs||!cn||en.classList.contains("hidden")){if(c)c.remove();document.documentElement.classList.remove("ex-chip");return}
+      var parts=cn.textContent.split(" · "),name=parts[0]||"",when=parts.slice(1).join(" · ");
+      if(!c){c=document.createElement("button");c.type="button";c.id="exChip";
+        c.onclick=function(e){e.stopPropagation();var u=document.getElementById("dvUnit");if(u)u.click()};
+        var b=document.getElementById("dvPct");b&&b.nextSibling?bw.insertBefore(c,b.nextSibling):bw.appendChild(c)}
+      var h='<b>'+name.replace(/</g,"&lt;")+'</b><i>'+cs.textContent+' · '+when.replace(/</g,"&lt;")+'</i>';
+      if(c._h!==h){c._h=h;c.innerHTML=h}
+      c.classList.toggle("urgent",en.classList.contains("urgent"));
+      document.documentElement.classList.add("ex-chip");
+    }catch(e){}
+  }
+  setInterval(chip,500);chip();
+})();
