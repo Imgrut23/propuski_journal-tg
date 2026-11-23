@@ -46,7 +46,7 @@
     if(!g||document.getElementById(id))return;
     var b=document.createElement("button");
     b.type="button";b.id=id;b.className="tile";b.setAttribute("aria-pressed","false");
-    b.innerHTML="<span>◐</span>"+label;
+    b.innerHTML="<span>🎛</span>"+label;
     b.onclick=function(){st[key]=!st[key];set(key==="mini"?K_MINI:K_MERGE,st[key]);apply()};
     g.insertBefore(b,g.firstChild);
   }
@@ -96,8 +96,8 @@
   // плитки вместо плавающих кнопок (для простого режима)
   function addTiles(){
     var g=document.querySelector("#sheet .sheet-grid");if(!g||g.dataset.slim)return;g.dataset.slim="1";
-    [["Массовая отметка","bulkMini"],["Календарь пропусков","calMini"]].forEach(function(p){
-      var b=document.createElement("button");b.type="button";b.className="tile slim-add";b.innerHTML="<span>◐</span>"+p[0];
+    [["Массовая отметка","bulkMini","✅"],["Календарь пропусков","calMini","🗓"]].forEach(function(p){
+      var b=document.createElement("button");b.type="button";b.className="tile slim-add";b.innerHTML="<span>"+p[2]+"</span>"+p[0];
       b.onclick=function(){var t=document.getElementById(p[1]);var s=document.getElementById("menuFab");if(s&&s.getAttribute("aria-expanded")==="true")s.click();if(t)setTimeout(function(){t.click()},120)};
       var ref=document.getElementById("stTile");g.insertBefore(b,ref||null)});
   }
