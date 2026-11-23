@@ -79,3 +79,34 @@ html.mini:not(#x) #stSheet #stRep{background:var(--soft)!important;border:0!impo
 /* ── Компактная плотность ── */
 html.mini.mini-dense:not(#x) .card{padding:10px 0!important}
 html.mini.mini-dense:not(#x) .wrap{--gap:8px}
+
+/* ── Простой режим старосты (html.slim): минимум кнопок, без дублей ── */
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #diaryMini,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #bulkMini,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #calMini,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #tzToggle,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #dvBackBtn,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #icsBtn,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) .dv-acts,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #hrsSave,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #pdfBtn,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) .presets [data-p="all"],
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #sheet .tile.inst,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #sheet #infoBtn,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #sheet #legendBtn,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #sheet #schedBtn,
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #sheet #guestTile{display:none!important}
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #hrsSaveNext{flex:1 1 100%}
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) .hrs-acts:has(#hrsSaveNext) #hrsSaveNext::after{content:""}
+/* плитки, добавленные в меню вместо плавающих кнопок */
+#sheet .tile.slim-add{display:none}
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) #sheet .tile.slim-add{display:flex}
+/* настройки: заголовки секций и строки-ссылки */
+#stSheet .st-h{margin:14px 0 2px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+#stSheet .st-links{display:flex;flex-direction:column;gap:6px}
+#stSheet .st-links button{min-height:44px;text-align:left;padding:0 12px;background:var(--soft)!important;border:0!important;border-radius:10px!important;color:var(--ink)!important;font:600 14px system-ui,-apple-system,"Segoe UI",sans-serif}
+#stSheet .st>*{width:100%;box-sizing:border-box}
+#stSheet .st-r,#stSheet .st-seg,#stSheet .st-h{width:100%;box-sizing:border-box}
+#stSheet .st-h{border:0;padding:0}
+
+html.slim:not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x):not(#x) .uq:not(.open) .uq-ext{display:none!important}

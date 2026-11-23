@@ -3,7 +3,7 @@
   var K_MINI="absence:mini",K_MERGE="absence:merge";
   var get=function(k,d){try{var v=localStorage.getItem(k);return v===null?d:v==="1"}catch(e){return d}};
   var set=function(k,v){try{localStorage.setItem(k,v?"1":"0")}catch(e){}};
-  var st=window.MINI={mini:get(K_MINI,true),merge:get(K_MERGE,true)};
+  var st=window.MINI={mini:true,merge:true};
   var navOrig=null,started=false;
 
   function retag(){
@@ -26,7 +26,7 @@
       var N=JSON.parse(navOrig);
       if(st.merge){
         N.user=[["diary","Дневник"],["mark","Журнал"]];
-        N.head=[["diary","Дневник"],["today","Журнал"],["self","Моя"],["set","Настройки"]];
+        N.head=[["diary","Дневник"],["today","Журнал"],["self","Моя"],["set","Группа"]];
         if(tab==="me"||tab==="grp")tab="mark";
         if(tab==="stats")tab="today";
         if(!started){started=true;if(!isHead&&!isGuest)tab="diary"}
@@ -78,7 +78,7 @@
       var b=document.createElement("button");b.type="button";b.textContent=o[1];b.dataset.v=o[0];
       b.onclick=function(){onSet(o[0]);paintSeg()};w.appendChild(b);
     });
-    w.cur=cur;return w;
+    w.cur=cur;w.get=cur;return w;
   }
   var segs=[];
   function paintSeg(){segs.forEach(function(w){var v=w.cur();w.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.v===v))})})}
@@ -88,18 +88,45 @@
     r.querySelector(".st-t").textContent=title;if(desc)r.querySelector(".st-d").textContent=desc;
     r.appendChild(w);segs.push(w);return r;
   }
+  var K_SLIM="absence:slim";
+  st.slim=get(K_SLIM,true);
+  function slimOn(){try{return st.slim&&isHead&&!isGuest}catch(e){return false}}
+  function syncSlim(){var v=slimOn();if(rootEl.classList.contains("slim")!==v)rootEl.classList.toggle("slim",v)}
+  setInterval(syncSlim,500);
+  // плитки вместо плавающих кнопок (для простого режима)
+  function addTiles(){
+    var g=document.querySelector("#sheet .sheet-grid");if(!g||g.dataset.slim)return;g.dataset.slim="1";
+    [["Массовая отметка","bulkMini"],["Календарь пропусков","calMini"]].forEach(function(p){
+      var b=document.createElement("button");b.type="button";b.className="tile slim-add";b.innerHTML="<span>◐</span>"+p[0];
+      b.onclick=function(){var t=document.getElementById(p[1]);var s=document.getElementById("menuFab");if(s&&s.getAttribute("aria-expanded")==="true")s.click();if(t)setTimeout(function(){t.click()},120)};
+      var ref=document.getElementById("stTile");g.insertBefore(b,ref||null)});
+  }
+  setInterval(addTiles,800);
   function enhance(){
     var sh=document.getElementById("stSheet");
     if(!sh||sh.dataset.mini)return;sh.dataset.mini="1";
     var h=sh.querySelector("h3");if(h)h.textContent="Настройки";
     sh.querySelectorAll(".st-t").forEach(function(e){e.textContent=e.textContent.replace(/^[^\p{L}\p{N}]+/u,"")});
-    var onoff=[["1","Вкл"],["0","Выкл"]];
-    var a=row("Минимализм","Плоский вид без стекла, теней и анимаций.",seg(onoff,function(){return st.mini?"1":"0"},function(v){st.mini=v==="1";set(K_MINI,st.mini);apply()}));
-    var b=row("Объединять вкладки","Дневник и Журнал вместо отдельных страниц.",seg(onoff,function(){return st.merge?"1":"0"},function(v){st.merge=v==="1";set(K_MERGE,st.merge);apply()}));
     var c=row("Плотность","Компактный режим уменьшает отступы.",seg([["0","Обычная"],["1","Компактная"]],function(){return st.dense?"1":"0"},function(v){st.dense=v==="1";set(K_DENSE,st.dense);rootEl.classList.toggle("mini-dense",st.dense)}));
     var box=sh.querySelector(".st");
-    var after=h||null;
-    [c,b,a].forEach(function(r){box.insertBefore(r,after?after.nextSibling:box.firstChild)});
+    function head(t){var d=document.createElement("div");d.className="st-h";d.textContent=t;return d}
+    var q=function(id){return sh.querySelector(id)};
+    var rep=q("#stRep");rep=rep&&rep.closest(".st-r");
+    var x=q(".st-x");
+    var order=[head("Вид"),q("#rTheme"),c,q("#rPerf"),q("#rVib")];
+    if(isHead&&!isGuest){
+      var sl=row("Простой режим","Староста: только нужные кнопки, без дублей.",seg([["1","Вкл"],["0","Выкл"]],function(){return st.slim?"1":"0"},function(v){st.slim=v==="1";set(K_SLIM,st.slim);syncSlim()}));
+      order.push(head("Староста"),sl);
+    }
+    order.push(head("Безопасность"),q("#rBio"),head("Прочее"));
+    var links=document.createElement("div");links.className="st-links";
+    [["Обозначения","legendBtn"],["Инфо и лог","infoBtn"],["Установить приложение","instBtn"]].forEach(function(p){
+      var src=p[1]==="instBtn"?document.querySelector("#sheet .tile.inst"):document.getElementById(p[1]);
+      if(!src)return;var b=document.createElement("button");b.type="button";b.textContent=p[0];
+      b.onclick=function(){var s=q("#stOk");if(s)s.click();setTimeout(function(){src.click()},150)};links.appendChild(b)});
+    order.push(links);if(rep)order.push(rep);
+    order.forEach(function(el){if(el)box.insertBefore(el,x)});
+    sh.querySelectorAll(".st-seg").forEach(function(w){if(!w.get)w.get=function(){return""}});
     paintSeg();
   }
   document.addEventListener("click",function(e){
