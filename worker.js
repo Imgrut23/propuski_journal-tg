@@ -1,5 +1,6 @@
 // Cloudflare Worker: проверка входа через Telegram для «Журнала пропусков».
 // Секрет BOT_TOKEN задаётся в настройках Worker (Settings → Variables and Secrets).
+// Для входа «Продолжить с Telegram» (OIDC) задайте ещё CLIENT_ID и CLIENT_SECRET (из BotFather → Login Widget).
 // Необязательная переменная GROUP_CODE — код группы для первой привязки (по умолчанию 4501).
 
 const ROOT = "https://propuski-791e4-default-rtdb.europe-west1.firebasedatabase.app";
@@ -42,20 +43,83 @@ const bind = (DB, id, name) =>
     body: JSON.stringify(name),
   });
 
+// ───── Вход через Telegram OIDC (oauth.telegram.org) ─────
+const OIDC = "https://oauth.telegram.org";
+const enc = new TextEncoder();
+const toB64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const fromB64u = (s) => { s = s.replace(/-/g, "+").replace(/_/g, "/"); return Uint8Array.from(atob(s + "=".repeat((4 - (s.length % 4)) % 4)), (c) => c.charCodeAt(0)); };
+const textB64u = (s) => new TextDecoder().decode(fromB64u(s));
+
+async function oidcIdentity(o, env) {
+  if (!env.CLIENT_ID || !env.CLIENT_SECRET) return { error: "На сервере не заданы CLIENT_ID и CLIENT_SECRET." };
+  if (!o || !o.code || !o.verifier || !o.redirect_uri) return { error: "Неверный запрос входа." };
+  const r = await fetch(OIDC + "/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: "Basic " + btoa(env.CLIENT_ID + ":" + env.CLIENT_SECRET) },
+    body: new URLSearchParams({ grant_type: "authorization_code", code: String(o.code), redirect_uri: String(o.redirect_uri), client_id: String(env.CLIENT_ID), code_verifier: String(o.verifier) }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.id_token) return { error: "Telegram не подтвердил вход. Нажмите кнопку ещё раз." };
+  const [h, p, sig] = String(j.id_token).split(".");
+  if (!h || !p || !sig) return { error: "Неверный ответ Telegram." };
+  const head = JSON.parse(textB64u(h));
+  if (head.alg !== "RS256") return { error: "Выберите алгоритм RS256 в BotFather (Login Widget → Advanced)." };
+  const jwks = await fetch(OIDC + "/.well-known/jwks.json").then((x) => x.json());
+  const jwk = (jwks.keys || []).find((k) => k.kid === head.kid);
+  if (!jwk) return { error: "Не найден ключ подписи Telegram." };
+  const key = await crypto.subtle.importKey("jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+  if (!(await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, fromB64u(sig), enc.encode(h + "." + p)))) return { error: "Подпись Telegram не прошла проверку." };
+  const c = JSON.parse(textB64u(p));
+  const aud = [].concat(c.aud || []).map(String);
+  if (c.iss !== OIDC || !aud.includes(String(env.CLIENT_ID)) || !(c.exp * 1000 > Date.now())) return { error: "Токен Telegram недействителен." };
+  const id = c.id || c.sub;
+  if (!id) return { error: "Telegram не передал ID пользователя." };
+  return { id: String(id), username: c.preferred_username || "" };
+}
+
+// Короткий подписанный «билет», чтобы после первого входа привязка имени не требовала повторного кода Telegram
+const tkKey = (env) => crypto.subtle.importKey("raw", enc.encode(env.TICKET_KEY || env.CLIENT_SECRET || env.BOT_TOKEN || ""), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+async function mkTicket(u, env) {
+  const p = toB64u(enc.encode(JSON.stringify({ id: u.id, u: u.username, exp: Date.now() + 600000 })));
+  return p + "." + toB64u(await crypto.subtle.sign("HMAC", await tkKey(env), enc.encode(p)));
+}
+async function readTicket(t, env) {
+  try {
+    const [p, s] = String(t).split(".");
+    if (!p || !s || !(await crypto.subtle.verify("HMAC", await tkKey(env), fromB64u(s), enc.encode(p)))) return null;
+    const d = JSON.parse(textB64u(p));
+    return d.exp > Date.now() ? { id: d.id, username: d.u } : null;
+  } catch (e) { return null; }
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
     if (request.method !== "POST") return json({ error: "Метод не поддерживается." }, 405);
-    if (!env.BOT_TOKEN) return json({ error: "На сервере не задан BOT_TOKEN." }, 500);
 
     let body;
     try { body = await request.json(); } catch (e) { return json({ error: "Неверный запрос." }, 400); }
-    const data = body.tg || body;
+    const raw = body.tg || body;
     const claim = body.claim || null;
+    let data, ticket = null;
 
-    if (!(await verify(data, env.BOT_TOKEN))) {
-      return json({ error: "Подпись Telegram не прошла проверку. Нажмите кнопку входа ещё раз." }, 401);
+    if (raw.oidc) {            // «Продолжить с Telegram» (OIDC)
+      const u = await oidcIdentity(raw.oidc, env).catch(() => ({ error: "Ошибка проверки входа Telegram." }));
+      if (u.error) return json({ error: u.error }, 401);
+      data = { id: u.id, username: u.username };
+      ticket = await mkTicket(u, env);
+    } else if (raw.ticket) {   // повтор после выбора имени
+      const u = await readTicket(raw.ticket, env);
+      if (!u) return json({ error: "Сессия входа истекла. Нажмите кнопку Telegram ещё раз." }, 401);
+      data = { id: u.id, username: u.username };
+    } else {                   // прежний вход (Login Widget / бот)
+      if (!env.BOT_TOKEN) return json({ error: "На сервере не задан BOT_TOKEN." }, 500);
+      if (!(await verify(raw, env.BOT_TOKEN))) {
+        return json({ error: "Подпись Telegram не прошла проверку. Нажмите кнопку входа ещё раз." }, 401);
+      }
+      data = raw;
     }
+    const ok = (name) => json({ name, username: data.username || "" });
 
     const group = String(body.group || "4501");
     if (!GROUP_RE.test(group)) return json({ error: "Неверная группа." }, 400);
@@ -76,7 +140,7 @@ export default {
 
     // 1) уже привязанный Telegram ID
     let name = tgIds[id];
-    if (name && list.includes(name)) return json({ name });
+    if (name && list.includes(name)) return ok(name);
 
     // 2) совпадение по @username или стартовая привязка администратора
     if (data.username) {
@@ -84,10 +148,10 @@ export default {
       name = list.find((s) => norm(tgNames[s]) === u) || (SEED[u] && list.includes(SEED[u]) ? SEED[u] : undefined);
       if (name) {
         await bind(DB, id, name);
-        return json({ name });
+        return ok(name);
       }
       // главный администратор входит в любую группу, даже если его нет в её списке
-      if (SEED[u]) return json({ name: SEED[u] });
+      if (SEED[u]) return ok(SEED[u]);
     }
 
     // 3) первая привязка без @username: выбрать своё имя + код группы
@@ -101,11 +165,13 @@ export default {
         return json({ error: "Это имя уже привязано к другому Telegram. Обратитесь к старосте." }, 403);
       }
       await bind(DB, id, claim.name);
-      return json({ name: claim.name });
+      return ok(claim.name);
     }
 
     return json({
       needClaim: true,
+      ticket,
+      username: data.username || "",
       free: list.filter((s) => !taken.has(s)),
     }, 403);
   },
