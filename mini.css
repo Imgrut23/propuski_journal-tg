@@ -1,0 +1,81 @@
+/* Минимализм: плоский слой поверх всех тем. Включается классом html.mini */
+html.mini:not(#x){
+  --page:#fff;--card:#fff;--bg:#fff;--soft:#f5f5f5;--ink:#111;--mute:#777;--line:#e6e6e6;
+  --acc:#111;--acc-ink:#fff;--c-pn:#fde4e1;--shadow:none;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  html.mini:not(#x){--page:#0e0e0e;--card:#0e0e0e;--bg:#0e0e0e;--soft:#1a1a1a;--ink:#f2f2f2;--mute:#8a8a8a;--line:#262626;--acc:#f2f2f2;--acc-ink:#0e0e0e;--c-pn:#3a1c19;color-scheme:dark}
+}
+html.mini:not(#x),html.mini:not(#x) body{background:var(--page)!important;background-image:none!important}
+html.mini:not(#x) *,html.mini:not(#x) *::before,html.mini:not(#x) *::after{
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  box-shadow:none!important;text-shadow:none!important;
+}
+/* карточки: без рамок и фона — только воздух и тонкая линия между блоками */
+html.mini:not(#x) .card{background:transparent!important;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;padding:18px 0!important;margin:0!important}
+html.mini:not(#x) .card .hd h2,html.mini:not(#x) .card>h2{font-size:15px;font-weight:600;letter-spacing:0}
+html.mini:not(#x) .wrap{max-width:720px}
+/* убираем всё лишнее */
+html.mini:not(#x) #santaCard,html.mini:not(#x) #streak,html.mini:not(#x) #navLens,html.mini:not(#x) #lensDefs{display:none!important}
+html.mini:not(#x) .sheet-grid .tile span{display:none}
+html.mini:not(#x) .sheet-grid .tile{border-radius:10px;background:var(--soft)!important;border:0!important}
+/* нижняя навигация как в примере: плашка по центру, иконка + подпись */
+html.mini:not(#x) #bnav{position:fixed!important;left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:366px;margin-inline:auto!important;transform:none!important;
+  display:flex!important;gap:4px;padding:5px!important;background:var(--page)!important;border:1px solid var(--line)!important;border-radius:16px!important}
+html.mini:not(#x) #bnav button{flex:1 1 0;min-width:0;display:flex!important;flex-direction:column;align-items:center;gap:2px;padding:7px 4px!important;background:none!important;border:0!important;border-radius:12px!important;color:var(--mute)!important;font:600 11px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif}
+html.mini:not(#x) #bnav button::after{content:attr(aria-label)}
+html.mini:not(#x) #bnav button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7}
+html.mini:not(#x) #bnav button.on{color:var(--ink)!important;background:var(--soft)!important}
+html.mini:not(#x) #bnav:has(>button:only-child){display:none!important}
+html.mini:not(#x) .wrap{padding-bottom:96px}
+/* кнопки и поля */
+html.mini:not(#x) button.main{background:var(--ink)!important;color:var(--page)!important;border-radius:8px!important}
+html.mini:not(#x) input,html.mini:not(#x) select,html.mini:not(#x) textarea{background:var(--soft)!important;border:1px solid var(--line)!important;border-radius:8px!important}
+html.mini:not(#x) *{animation-duration:.01ms!important;animation-iteration-count:1!important}
+html.mini:not(#x) *{transition-duration:.12s!important}
+@media (prefers-reduced-motion:reduce){html.mini:not(#x) *{transition:none!important}}
+
+/* ── Вход через Telegram: как в примере (карточка, заметка, синяя кнопка) ── */
+html.mini:not(#x) #login{max-width:420px;margin:max(8vh,24px) auto 0!important;padding:20px!important;background:var(--card)!important;border:1px solid var(--line)!important;border-radius:16px!important}
+html.mini:not(#x) #login .lg-hero{background:none!important;padding:0!important;margin:0 0 14px!important;text-align:left!important;color:var(--ink)!important}
+html.mini:not(#x) #login .lg-hero h1{margin:0;font-size:22px;font-weight:650;color:var(--ink)!important}
+html.mini:not(#x) #login .lg-sub{margin:2px 0 0;color:var(--mute)!important;font-size:14px}
+html.mini:not(#x) #login .lg-logo,html.mini:not(#x) #login .lg-feats,html.mini:not(#x) #login .lg-title,html.mini:not(#x) #login .lg-hint,html.mini:not(#x) #login .lg-inst span{display:none!important}
+html.mini:not(#x) #login .lg-body{padding:0!important}
+html.mini:not(#x) #tgBox{margin:0!important;text-align:left!important}
+html.mini:not(#x) #tgBox>p.mute{margin:0 0 12px!important;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--soft);color:var(--ink);font-size:14px;line-height:1.35}
+html.mini:not(#x) #tgWidget{display:block!important;min-height:0!important}
+html.mini:not(#x) #tgOpenBtn,html.mini:not(#x) #twaBtn{width:100%;min-width:0!important;min-height:48px;display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid #175bc4!important;border-radius:10px!important;background:#175bc4!important;color:#fff!important;font:600 15px system-ui,-apple-system,"Segoe UI",sans-serif}
+html.mini:not(#x) #tgOpenBtn::before,html.mini:not(#x) #twaBtn::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M22.122 10.040c0.006-0 0.014-0 0.022-0 0.209 0 0.403 0.065 0.562 0.177l-0.003-0.002c0.116 0.101 0.194 0.243 0.213 0.403l0 0.003c0.020 0.122 0.031 0.262 0.031 0.405 0 0.065-0.002 0.129-0.007 0.193l0-0.009c-0.225 2.369-1.201 8.114-1.697 10.766-0.21 1.123-0.623 1.499-1.023 1.535-0.869 0.081-1.529-0.574-2.371-1.126-1.318-0.865-2.063-1.403-3.342-2.246-1.479-0.973-0.52-1.51 0.322-2.384 0.221-0.23 4.052-3.715 4.127-4.031 0.004-0.019 0.006-0.040 0.006-0.062 0-0.078-0.029-0.149-0.076-0.203l0 0c-0.052-0.034-0.117-0.053-0.185-0.053-0.045 0-0.088 0.009-0.128 0.024l0.002-0.001q-0.198 0.045-6.316 4.174c-0.445 0.351-1.007 0.573-1.619 0.599l-0.006 0c-0.867-0.105-1.654-0.298-2.401-0.573l0.074 0.024c-0.938-0.306-1.683-0.467-1.619-0.985q0.051-0.404 1.114-0.827 6.548-2.853 8.733-3.761c1.607-0.853 3.47-1.555 5.429-2.010l0.157-0.031zM15.93 1.025c-8.302 0.020-15.025 6.755-15.025 15.060 0 8.317 6.742 15.060 15.060 15.060s15.060-6.742 15.060-15.060c0-8.305-6.723-15.040-15.023-15.060h-0.002q-0.035-0-0.070 0z%22/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M22.122 10.040c0.006-0 0.014-0 0.022-0 0.209 0 0.403 0.065 0.562 0.177l-0.003-0.002c0.116 0.101 0.194 0.243 0.213 0.403l0 0.003c0.020 0.122 0.031 0.262 0.031 0.405 0 0.065-0.002 0.129-0.007 0.193l0-0.009c-0.225 2.369-1.201 8.114-1.697 10.766-0.21 1.123-0.623 1.499-1.023 1.535-0.869 0.081-1.529-0.574-2.371-1.126-1.318-0.865-2.063-1.403-3.342-2.246-1.479-0.973-0.52-1.51 0.322-2.384 0.221-0.23 4.052-3.715 4.127-4.031 0.004-0.019 0.006-0.040 0.006-0.062 0-0.078-0.029-0.149-0.076-0.203l0 0c-0.052-0.034-0.117-0.053-0.185-0.053-0.045 0-0.088 0.009-0.128 0.024l0.002-0.001q-0.198 0.045-6.316 4.174c-0.445 0.351-1.007 0.573-1.619 0.599l-0.006 0c-0.867-0.105-1.654-0.298-2.401-0.573l0.074 0.024c-0.938-0.306-1.683-0.467-1.619-0.985q0.051-0.404 1.114-0.827 6.548-2.853 8.733-3.761c1.607-0.853 3.47-1.555 5.429-2.010l0.157-0.031zM15.93 1.025c-8.302 0.020-15.025 6.755-15.025 15.060 0 8.317 6.742 15.060 15.060 15.060s15.060-6.742 15.060-15.060c0-8.305-6.723-15.040-15.023-15.060h-0.002q-0.035-0-0.070 0z%22/%3E%3C/svg%3E") center/contain no-repeat}
+html.mini:not(#x) #tgOpenBtn:disabled,html.mini:not(#x) #twaBtn:disabled{opacity:.65}
+html.mini:not(#x) #login .chk{justify-content:flex-start!important}
+html.mini:not(#x) #guestBtn{width:100%;min-height:44px;background:transparent!important;border:1px solid var(--line)!important;border-radius:10px!important;color:var(--ink)!important;font-weight:600}
+html.mini:not(#x) #login .lg-inst{margin:10px auto 0;background:none!important;border:0!important;color:var(--mute)!important;font-size:13px}
+html.mini:not(#x) #login :is(input,select){min-height:44px;font-size:16px}
+@media (prefers-color-scheme:dark){html.mini:not(#x) #tgOpenBtn,html.mini:not(#x) #twaBtn{background:#3280ff!important;border-color:#3280ff!important;color:#101b31!important}}
+
+/* ── Без стекла и ряби ── */
+html.mini:not(#x) .ripple{display:none!important}
+html.mini:not(#x) #glassToggle{display:none!important}
+
+/* ── Настройки ── */
+html.mini:not(#x) #stSheet{background:rgba(0,0,0,.32)!important}
+html.mini:not(#x) #stSheet .st{max-width:480px;margin:0 auto!important;padding:20px 20px calc(20px + env(safe-area-inset-bottom))!important;background:var(--card)!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:20px 20px 0 0!important}
+html.mini:not(#x) #stSheet h3{margin:0 0 6px;font-size:20px;font-weight:650}
+html.mini:not(#x) #stSheet .st-r{padding:14px 0!important;border-top:1px solid var(--line)!important}
+html.mini:not(#x) #stSheet h3+.st-r{border-top:0!important}
+html.mini:not(#x) #stSheet .st-t{margin:0 0 2px;font-size:15px;font-weight:600}
+html.mini:not(#x) #stSheet .st-d,html.mini:not(#x) #stSheet .st-m{margin:0 0 10px;color:var(--mute);font-size:13px;line-height:1.35}
+html.mini:not(#x) #stSheet .st-seg{display:flex;gap:0;padding:3px;background:var(--soft);border-radius:12px}
+html.mini:not(#x) #stSheet .st-seg button{flex:1 1 0;min-height:38px;padding:0 10px;background:transparent!important;border:0!important;border-radius:9px!important;color:var(--mute)!important;font:600 14px system-ui,-apple-system,"Segoe UI",sans-serif}
+html.mini:not(#x) #stSheet .st-seg button[aria-pressed=true]{background:var(--card)!important;color:var(--ink)!important;box-shadow:0 0 0 1px var(--line)!important}
+html.mini:not(#x) #stSheet .st-seg button:disabled{opacity:.4}
+html.mini:not(#x) #stSheet .st-x{display:flex;gap:8px;margin-top:6px}
+html.mini:not(#x) #stSheet .st-x button{flex:1;min-height:46px;border-radius:12px!important}
+html.mini:not(#x) #stSheet #stRep{background:var(--soft)!important;border:0!important;border-radius:12px!important;color:var(--ink)!important;font-weight:600}
+@media (min-width:700px){html.mini:not(#x) #stSheet{align-items:center!important}html.mini:not(#x) #stSheet .st{border:1px solid var(--line)!important;border-radius:20px!important}}
+
+/* ── Компактная плотность ── */
+html.mini.mini-dense:not(#x) .card{padding:10px 0!important}
+html.mini.mini-dense:not(#x) .wrap{--gap:8px}
