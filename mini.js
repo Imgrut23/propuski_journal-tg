@@ -96,7 +96,7 @@
   // плитки вместо плавающих кнопок (для простого режима)
   function addTiles(){
     var g=document.querySelector("#sheet .sheet-grid");if(!g||g.dataset.slim)return;g.dataset.slim="1";
-    [["Массовая отметка","bulkMini","✅"],["Календарь пропусков","calMini","🗓"]].forEach(function(p){
+    [["Массовая отметка","bulkMini","✅"]].forEach(function(p){
       var b=document.createElement("button");b.type="button";b.className="tile slim-add";b.innerHTML="<span>"+p[2]+"</span>"+p[0];
       b.onclick=function(){var t=document.getElementById(p[1]);var s=document.getElementById("menuFab");if(s&&s.getAttribute("aria-expanded")==="true")s.click();if(t)setTimeout(function(){t.click()},120)};
       var ref=document.getElementById("stTile");g.insertBefore(b,ref||null)});
@@ -155,3 +155,34 @@
     else if(tries>40)clearInterval(t);
   },250);
 })();
+
+/*AMIA-EXTRA-START*/
+(function(){
+  // 1) Обозначения цветов предметов под панелью недели
+  function legend(){
+    var bar=document.querySelector("#schedView .sticky-bar");if(!bar)return;
+    var L=document.getElementById("dvLegend");
+    if(!L){L=document.createElement("div");L.id="dvLegend";bar.insertAdjacentElement("afterend",L)}
+    var seen={},items=[];
+    document.querySelectorAll("#schedView .panel.active .lesson-card[data-sh]").forEach(function(c){
+      var s=c.querySelector(".subject"),n=s&&s.textContent.trim();
+      if(!n||seen[n])return;seen[n]=1;items.push([n,c.style.getPropertyValue("--sh")]);
+    });
+    var sig=JSON.stringify(items);if(L._s===sig)return;L._s=sig;
+    L.hidden=!items.length;L.textContent="";
+    items.forEach(function(it){
+      var sp=document.createElement("span"),i=document.createElement("i");
+      sp.style.setProperty("--sh",it[1]);sp.appendChild(i);sp.appendChild(document.createTextNode(it[0]));L.appendChild(sp);
+    });
+  }
+  // 2) «Снять ПН / все часы» переезжают из «Мои пропуски» в статистику
+  function moveSA(){
+    var sa=document.getElementById("mineSA"),st=document.querySelector('#head .card[data-t~="stats"]');
+    if(!sa||!st||sa.dataset.moved)return;
+    var d=document.createElement("details");d.className="fold";d.id="saClearDet";
+    var s=document.createElement("summary");s.textContent="Сброс ПН и часов";d.appendChild(s);
+    sa.dataset.moved="1";d.appendChild(sa);st.appendChild(d);
+  }
+  setInterval(function(){try{legend();moveSA()}catch(e){}},1000);
+})();
+/*AMIA-EXTRA-END*/
