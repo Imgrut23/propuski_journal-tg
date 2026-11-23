@@ -2,8 +2,8 @@
 <html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
-<link rel="stylesheet" href="styles.css?v=3.0">
-<link rel="stylesheet" href="mini.css?v=5"><link rel="stylesheet" href="flat.css?v=12">
+<link rel="stylesheet" href="styles.css?v=3.1">
+<link rel="stylesheet" href="mini.css?v=5"><link rel="stylesheet" href="flat.css?v=18">
 <script id="iosInstJs">(function(){"use strict";var el=null;
 window.__iosInstall=function(){
  if(!el){var ua=navigator.userAgent,pad=/iPad/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),chrome=/CriOS|FxiOS|EdgiOS/.test(ua);
@@ -259,15 +259,15 @@ window.__clearReport=function(){ls("[]")}})();</script>
 <div id="modeSwitch" class="modeSw hidden" role="group" aria-label="Режим"><button type="button" data-m="head">👑 Староста</button><button type="button" data-m="user">🎓 Учащийся</button></div>
 </div>
 <div class="sheet-grid">
-<button type="button" class="tile inst" aria-label="Установить приложение"><span>⬇️</span>Установить</button>
-<button type="button" id="svcBtn" class="tile hidden" title="Группы, старосты, коды"><span>🛠</span>Сервис</button>
-<button type="button" id="infoBtn" class="tile"><span>ℹ️</span>Инфо и лог</button>
-<button type="button" id="stTile" class="tile" title="Настройки"><span>⚙️</span>Настройки</button>
+<button type="button" class="tile inst" aria-label="Установить приложение" title="Установить"><span>⬇️</span>Установить</button>
+<button type="button" id="svcBtn" aria-label="Сервис" class="tile hidden" title="Группы, старосты, коды"><span>🛠</span>Сервис</button>
+<button type="button" id="infoBtn" aria-label="Инфо и лог" title="Инфо и лог" class="tile"><span>ℹ️</span>Инфо и лог</button>
+<button type="button" id="stTile" aria-label="Настройки" class="tile" title="Настройки"><span>⚙️</span>Настройки</button>
 <button type="button" id="schedBtn" class="tile" aria-pressed="false" title="Дневник 4501"><span>📅</span><em id="schedLbl" style="font-style:normal">Дневник</em></button>
-<button type="button" id="legendBtn" class="tile" aria-expanded="false"><span>❓</span>Обозначения</button>
+<button type="button" id="legendBtn" aria-label="Обозначения" class="tile" aria-expanded="false"><span>❓</span>Обозначения</button>
 <button type="button" id="guestTile" class="tile" title="Только просмотр"><span>👁</span>Режим гостя</button>
-<button type="button" id="libTile" class="tile" title="Лекции на Google Диске" onclick="window.open('https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM','_blank','noopener')"><span>📚</span>Лекции</button><button type="button" id="codesTile" class="tile" title="Кодексы" onclick="openCodes()"><span>⚖️</span>Кодексы</button><button type="button" id="pracTile" class="tile" title="Практикумы" onclick="openPrac()"><span>📝</span>Практикумы</button>
-<button type="button" id="logout" class="tile out"><span>🚪</span>Выйти</button>
+<button type="button" id="libTile" aria-label="Лекции" class="tile" title="Лекции на Google Диске" onclick="window.open('https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM','_blank','noopener')"><span>📚</span>Лекции</button><button type="button" id="codesTile" class="tile" title="Кодексы и практикумы" aria-label="Кодексы и практикумы" onclick="cpPick()"><span>⚖️</span>Кодексы и практикумы</button>
+<button type="button" id="logout" aria-label="Выйти" class="tile out"><span>🚪</span>Выйти</button>
 </div>
 </aside>
 <div id="svcModal" class="floatBox hidden" role="dialog" aria-label="Сервисное меню">
@@ -1309,5 +1309,17 @@ var iv=setInterval(function(){var m=document.getElementById("menuFab"),d=documen
 setTimeout(place,500);setTimeout(place,1600);
 })();</script>
 <script src="mini.js?v=5"></script>
+<script id="cpPickJs">(function(){"use strict";
+var el=null;
+function close(){if(el)el.classList.remove("show")}
+window.cpPick=function(){
+ if(!el){el=document.createElement("div");el.id="cpPick";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","Кодексы и практикумы");
+  el.innerHTML='<div class="cp-box"><button type="button" data-k="codes"><span>⚖️</span>Кодексы</button><button type="button" data-k="prac"><span>📝</span>Практикумы</button></div>';
+  el.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("button[data-k]");close();if(!b)return;
+   setTimeout(function(){try{b.dataset.k==="prac"?window.openPrac():window.openCodes()}catch(x){}},0)});
+  document.addEventListener("keydown",function(e){e.key==="Escape"&&close()});
+  document.body.appendChild(el)}
+ requestAnimationFrame(function(){el.classList.add("show")})};
+})();</script>
 </body>
 </html>
