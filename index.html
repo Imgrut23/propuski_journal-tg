@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="styles.css?v=2.40">
-<link rel="stylesheet" href="mini.css?v=11">
+<link rel="stylesheet" href="mini.css?v=13">
 <script id="iosInstJs">(function(){"use strict";var el=null;
 window.__iosInstall=function(){
  if(!el){var ua=navigator.userAgent,pad=/iPad/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),chrome=/CriOS|FxiOS|EdgiOS/.test(ua);
@@ -176,12 +176,12 @@ window.__clearReport=function(){ls("[]")}})();</script>
 
 
 <div id="splash" role="status" aria-live="polite">
-<div class="rs-center"><div class="rs-logo" aria-hidden="true"><span>★</span></div><div class="rs-pre">imgrut23 представляет</div><h1>Дневник</h1></div>
+<div class="rs-center"><div class="rs-logo" aria-hidden="true"><img src="amia.png" alt="" onerror="this.remove()"><span>АМВД</span></div><div class="rs-pre">imgrut23 представляет</div><h1>Дневник</h1></div>
 <div class="rs-done">Миссия выполнена</div>
 <div class="rs-foot">
 <ul><li data-s="ui"><b>✓</b>Интерфейс</li><li data-s="data"><b>✓</b>Данные</li><li data-s="off"><b>✓</b>Офлайн</li><li data-s="in"><b>✓</b>Вход</li></ul>
 <div class="rs-tip"><span><em>Совет</em>отмечай пропуски вовремя</span><span><em>Совет</em>«Осталось пар» — по плашке в шапке дневника</span><span><em>Совет</em>часы можно вписать вручную</span></div>
-<div class="rs-load"><span><span class="rs-spin" aria-hidden="true">★</span>Загрузка</span><span class="rs-pct">0%</span></div>
+<div class="rs-load"><span><span class="rs-spin" aria-hidden="true"></span>Загрузка</span><span class="rs-pct">0%</span></div>
 <div class="sp-bar"><i></i></div>
 </div></div>
 <script id="splashJs">(function(){"use strict";var n=document.getElementById("splash"),h=n.querySelector(".sp-bar i"),s=n.querySelector(".rs-pct"),p=Date.now(),u=!0;try{u=!localStorage.getItem("absence:booted")}catch{}var v=u?1300:900,i={},f=4,d=!1;function a(e){if(!i[e]){i[e]=1;var t=n.querySelector('[data-s="'+e+'"]');t&&t.classList.add("ok");var o=Math.round(Object.keys(i).length/f*100);h.style.width=o+"%",s&&(s.textContent=o+"%"),y()}}function y(){d||Object.keys(i).length<f||(d=!0,n.classList.add("done"),setTimeout(function(){n.classList.add("out");try{localStorage.setItem("absence:booted","1")}catch{}setTimeout(function(){n.remove()},450)},Math.max(250,v-(Date.now()-p))))}function r(e,t){return Promise.race([Promise.resolve(e).catch(function(){}),new Promise(function(o){setTimeout(o,t)})])}var g=new Promise(function(e){document.readyState==="complete"?e():addEventListener("load",e)});Promise.all([g,r(document.fonts&&document.fonts.ready,300)]).then(function(){a("ui");var e=[];try{typeof DB_URL!="undefined"&&DB_URL&&(e.push(fetch(ROOT_URL()+"/registry.json")),e.push(fetch(base()+".json")))}catch{}r(Promise.all(e),900).then(function(){a("data")});var t=[];["manifest.webmanifest","favicon.png","apple-touch-icon.png"].forEach(function(c){t.push(fetch(c).catch(function(){}))}),"serviceWorker"in navigator&&t.push(navigator.serviceWorker.ready),r(Promise.all(t),350).then(function(){a("off")});var o=0;(function c(){var l=document.getElementById("login"),m=document.getElementById("app");l&&!l.classList.contains("hidden")||m&&!m.classList.contains("hidden")||++o>20?a("in"):setTimeout(c,100)})()}),setTimeout(function(){["ui","data","off","in"].forEach(a)},4500)})();</script>
