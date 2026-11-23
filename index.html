@@ -87,7 +87,7 @@ var hid=0;document.addEventListener("visibilitychange",function(){if(busy)return
 /* настройки */
 var sh=null;
 function seg(id,opts,get,set){var w=document.createElement("div");w.className="st-seg";opts.forEach(function(o){var b=document.createElement("button");b.type="button";b.textContent=o[1];b.dataset.v=o[0];b.onclick=function(){set(o[0]);paint()};w.appendChild(b)});w.id=id;w.get=get;return w}
-function paint(){if(!sh)return;sh.querySelectorAll(".st-seg").forEach(function(w){var v=w.get();w.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.v===v))})});
+function paint(){if(!sh)return;sh.querySelectorAll(".st-seg").forEach(function(w){if(typeof w.get!=="function")return;var v=w.get();w.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.v===v))})});
  var bo=on();sh.querySelector("#stBio").setAttribute("aria-pressed",String(bo))}
 function applyTheme(){window.__per=null;try{window.__applyPeriod&&window.__applyPeriod()}catch(e){}}
 function open(){
