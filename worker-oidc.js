@@ -59,7 +59,7 @@ async function oidcIdentity(o, env) {
     body: new URLSearchParams({ grant_type: "authorization_code", code: String(o.code), redirect_uri: String(o.redirect_uri), client_id: String(env.CLIENT_ID), code_verifier: String(o.verifier) }),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.id_token) return { error: "Telegram не подтвердил вход. Нажмите кнопку ещё раз." };
+  if (!r.ok || !j.id_token) { console.log("token fail", r.status, JSON.stringify(j)); return { error: "Telegram не подтвердил вход (" + r.status + "): " + (j.error_description || j.error || "нет ответа") }; }
   const [h, p, sig] = String(j.id_token).split(".");
   if (!h || !p || !sig) return { error: "Неверный ответ Telegram." };
   const head = JSON.parse(textB64u(h));
@@ -71,7 +71,7 @@ async function oidcIdentity(o, env) {
   if (!(await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, fromB64u(sig), enc.encode(h + "." + p)))) return { error: "Подпись Telegram не прошла проверку." };
   const c = JSON.parse(textB64u(p));
   const aud = [].concat(c.aud || []).map(String);
-  if (c.iss !== OIDC || !aud.includes(String(env.CLIENT_ID)) || !(c.exp * 1000 > Date.now())) return { error: "Токен Telegram недействителен." };
+  if (c.iss !== OIDC || !aud.includes(String(env.CLIENT_ID)) || !(c.exp * 1000 > Date.now())) { console.log("claims", JSON.stringify({ iss: c.iss, aud: c.aud, exp: c.exp })); return { error: "Токен Telegram недействителен (iss=" + c.iss + ", aud=" + aud.join(",") + ")." }; }
   const id = c.id || c.sub;
   if (!id) return { error: "Telegram не передал ID пользователя." };
   return { id: String(id), username: c.preferred_username || "" };
