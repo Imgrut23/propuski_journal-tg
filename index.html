@@ -1421,5 +1421,26 @@ function fix(){var sh=document.getElementById("stSheet");if(!sh)return;var st=sh
  if(!sh.dataset.bd){sh.dataset.bd="1";sh.addEventListener("click",function(e){if(e.target===sh){var ok=document.getElementById("stOk");ok?ok.click():sh.classList.remove("show")}})}}
 setInterval(fix,500);fix();
 })();</script>
+<style id="pubJournalCss">
+html.guest #pdfBtn,html.guest #statClr,html.guest #statMode,html.guest #hrsCard{display:none!important}
+</style>
+<script id="pubJournalJs">(function(){"use strict";
+/* Открытый журнал пропусков: любой может смотреть, править нельзя. Вход в аккаунт не меняется. */
+function el(i){return document.getElementById(i)}
+try{if(NAVS&&NAVS.guest&&!NAVS.guest.some(function(x){return x[0]==="stats"}))NAVS.guest.splice(1,0,["stats","Журнал"])}catch(e){}
+var A=window.applyTab;
+if(typeof A==="function")window.applyTab=function(){
+ var r=A.apply(this,arguments);
+ try{if(isGuest){var st=tab==="stats";el("head").classList.toggle("hidden",!st);el("user-view").classList.toggle("hidden",st)}}catch(e){}
+ return r};
+function paint(){try{if(isGuest&&tab==="stats"){window.__pubStat=1;renderHead()}}catch(e){console.error(e)}}
+var R=window.render;
+if(typeof R==="function")window.render=function(){var r=R.apply(this,arguments);paint();return r};
+var G=window.goTab;
+if(typeof G==="function")window.goTab=function(){var r=G.apply(this,arguments);paint();return r};
+function openJournal(){return Promise.resolve(startGuest()).then(function(){try{goTab("stats")}catch(e){}})}
+var b=el("guestBtn");if(b){b.onclick=openJournal;b.textContent="👁 Открыть журнал пропусков (только просмотр)"}
+var t=el("guestTile");if(t)t.onclick=openJournal;
+})();</script>
 </body>
 </html>
