@@ -8605,5 +8605,35 @@ html body #user-view{padding-bottom:calc(var(--dockB,14px) + 76px)!important}
 })();
 </script>
 
+<style id="topGapCss">
+@layer dockfix{
+/* верхний отступ: контент начинается сразу под системной полосой */
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #app.wrap{padding-top:calc(var(--st,0px) + 6px + env(safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))!important}
+html.isl-strip:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #app.wrap{padding-top:calc(var(--st,26px) + 6px + var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))!important}
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #schedView{margin-top:0!important;padding-top:0!important}
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #schedView .dv-head{margin-top:0!important}
+/* часы читаются на светлой теме */
+html[data-theme="light"].isl-strip:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #isl .isl-clock,html[data-theme="light"].isl-strip:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #isl .isl-t{color:#1d2330!important;text-shadow:none!important}
+}
+</style>
+<style id="topGapCss2">@layer dockfix{html.isl-strip:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #app.wrap{padding-top:var(--top-gap,calc(var(--st,26px) + 6px))!important}}</style>
+<script id="topGapJs">
+(function(){
+  var root=document.documentElement;
+  function fit(){
+    try{
+      var app=document.getElementById('app'),isl=document.getElementById('isl');
+      if(!app)return;
+      if(!root.classList.contains('isl-strip')||!isl){root.style.removeProperty('--top-gap');return;}
+      var b=isl.getBoundingClientRect().bottom;
+      if(b>0&&b<120)root.style.setProperty('--top-gap',Math.round(b+6)+'px');
+    }catch(e){}
+  }
+  [0,300,1000,2500].forEach(function(t){setTimeout(fit,t)});
+  addEventListener('resize',fit);addEventListener('orientationchange',fit);
+  if(window.MutationObserver)new MutationObserver(fit).observe(root,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+<style id="topGapCss3">@layer dockfix{html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #schedView .dv-head{padding-top:8px!important}}</style>
 </body>
 </html>
