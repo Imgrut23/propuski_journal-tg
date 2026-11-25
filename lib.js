@@ -359,7 +359,14 @@
     if (a === "get" && f) return download(f);
     if (a === "cancel") return cancel(id);
     if (a === "del") { if (confirm("Удалить с устройства?")) remove(id); return; }
-    if (a === "open") { if (S.have[id]) openFile(id); else if (f) openOnline(f); return; }
+    if (a === "open") {
+      if (S.have[id]) openFile(id);
+      else if (f && OFFICE[extOf(f.name)] && KEY && navigator.onLine) {
+        // презентация/документ Office ещё не скачан: скачиваем и сразу отправляем в PowerPoint/Word/Excel, не заходя на Диск
+        download(f).then(function () { if (S.have[id]) openFile(id); });
+      } else if (f) openOnline(f);
+      return;
+    }
     if (a === "dirget") return downloadFolder(id, t.dataset.name);
     if (a === "stop") { if (S.batch) { S.batch.stop = true; Object.keys(aborts).forEach(cancel); } return; }
     if (a === "retry") { S.err = ""; load(); return; }
@@ -369,7 +376,7 @@
     if (!(navigator.storage && navigator.storage.estimate)) return;
     navigator.storage.estimate().then(function (e) {
       var n = el.root && el.root.querySelector("#lbSt");
-      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v9";
+      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v10";
     }).catch(function () {});
   }
   function row(f, off) {
