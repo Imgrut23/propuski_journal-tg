@@ -51,7 +51,7 @@
   function getChunks(id) { return tx("chunks", "readonly", function (o) { return o.getAll(chunkRange(id)); }); }
 
   /* ───────── состояние ───────── */
-  var S = { tab: navigator.onLine ? "drive" : "off", stack: [{ id: ROOT, name: "Лекции" }], items: [], loading: false, err: "", cached: false, have: {}, prog: {}, batch: null };
+  var S = { tab: navigator.onLine ? "drive" : "off", stack: [{ id: ROOT, name: "Лекции" }], items: [], loading: false, err: "", cached: false, have: {}, prog: {}, batch: null, ready: null, info: "" };
   var aborts = {};
   var el = {};
 
@@ -78,10 +78,13 @@
 
   /* ───────── Drive API ───────── */
   function api(url) {
-    return fetch(url).then(function (r) {
+    var ac = ("AbortController" in window) ? new AbortController() : null;
+    var timer = ac ? setTimeout(function () { ac.abort(); }, 8000) : null;
+    return fetch(url, ac ? { signal: ac.signal } : undefined).then(function (r) {
+      if (timer) clearTimeout(timer);
       if (!r.ok) return r.text().then(function (t) { var e = new Error("HTTP " + r.status); e.status = r.status; e.body = t; throw e; });
       return r;
-    });
+    }, function (e) { if (timer) clearTimeout(timer); throw e; });
   }
   function why(e) {
     try { var m = JSON.parse(e.body).error.message; return m ? ": " + String(m).slice(0, 200) : ""; } catch (x) { return ""; }
@@ -224,6 +227,10 @@
 
   /* ───────── карточка в дневнике: «все лекции офлайн» без захода на Диск ───────── */
   function diaryCard() {
+    var old = document.getElementById("lbDiary"); if (old) old.remove();
+    return null; // карточка «Лекции без интернета» в дневнике убрана; лекции — через раздел «Лекции»
+  }
+  function diaryCardOld() {
     if (el.dv && document.contains(el.dv)) return el.dv;
     var sv = document.getElementById("schedView"), anchor = sv && (sv.querySelector("#status-bar") || sv.querySelector("#schedule"));
     if (!sv || !anchor) return null;
@@ -301,24 +308,30 @@
   }
   function openFile(id) {
     var m = S.have[id];
-    if (!m) return;
+    if (!m) return Promise.resolve();
     var ext = extOf(m.name), office = !!OFFICE[ext];
     var w = null;
     if (!office) { try { w = window.open("", "_blank"); } catch (e) {} }
-    getChunks(id).then(function (parts) {
+    return getChunks(id).then(function (parts) {
       var type = office ? OFFICE[ext] : m.mime;
       var blob = new Blob(parts, { type: type });
       if (office) {
-        // презентации и документы Office: на телефоне — меню «Открыть в…» (PowerPoint, Word, Excel), на компьютере — файл скачивается и открывается в программе
+        // презентации и документы Office: меню «Открыть в…» (PowerPoint, Word, Excel)
         var file = null;
         try { file = new File([blob], m.name, { type: type }); } catch (e) {}
         if (file && navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
-          return navigator.share({ files: [file], title: m.name }).catch(function (e) {
-            if (e && e.name === "AbortError") return;
-            saveAs(blob, m.name);
+          return navigator.share({ files: [file], title: m.name }).then(function () { S.ready = null; render(); }, function (e) {
+            if (e && e.name === "AbortError") { S.ready = null; render(); return; }
+            // браузер не дал открыть меню без нового нажатия — просим нажать ещё раз
+            S.ready = id; S.info = ""; render();
           });
         }
-        return saveAs(blob, m.name);
+        // Chrome на Android не умеет передавать PPTX в меню «Поделиться» — сохраняем файл и подсказываем, где он
+        saveAs(blob, m.name);
+        S.ready = null;
+        S.info = "Файл «" + m.name + "» сохранён в «Загрузки». Откройте его из уведомления или в приложении «Файлы» — он откроется в PowerPoint.";
+        render();
+        return;
       }
       var url = URL.createObjectURL(blob);
       if (w) { w.location.href = url; }
@@ -330,6 +343,17 @@
       setTimeout(function () { URL.revokeObjectURL(url); }, 10 * 60 * 1000);
     }).catch(function () { if (w) w.close(); S.err = "Не удалось открыть файл"; render(); });
   }
+  // нажали на файл: если скачан — открыть, если нет — скачать в память приложения и сразу открыть
+  function tapFile(id, f) {
+    S.info = ""; S.err = "";
+    if (S.have[id]) { S.ready = null; return openFile(id); }
+    if (!f) return;
+    if (KEY && navigator.onLine) {
+      return download(f).then(function () { if (S.have[id]) return openFile(id); });
+    }
+    S.err = "Этот файл ещё не скачан, а интернета нет. Скачайте его заранее (значок ⤓).";
+    render();
+  }
   function openOnline(f) { var u = f.webViewLink || "https://drive.google.com/file/d/" + f.id + "/view"; window.open(u, "_blank", "noopener"); }
 
   /* ───────── интерфейс ───────── */
@@ -337,7 +361,7 @@
     if (el.root) return;
     var r = document.createElement("div");
     r.id = "libView"; r.setAttribute("role", "dialog"); r.setAttribute("aria-label", "Лекции"); r.className = "lb-hide";
-    r.innerHTML = '<div class="lb-top"><button type="button" class="lb-x" data-a="close" aria-label="Закрыть">✕</button><div class="lb-title">Лекции</div><span class="lb-net" id="lbNet"></span></div>' +
+    r.innerHTML = '<div class="lb-top"><button type="button" class="lb-x lb-back" data-a="back" id="lbBack" aria-label="Назад в предыдущую папку">‹</button><div class="lb-title" id="lbTitle">Лекции</div><button type="button" class="lb-x" data-a="close" aria-label="Закрыть">✕</button><span class="lb-net" id="lbNet"></span></div>' +
       '<div class="lb-tabs"><button type="button" data-a="tab" data-t="drive">Папки</button><button type="button" data-a="tab" data-t="off">Скачано</button></div>' +
       '<div class="lb-body" id="lbBody"></div>';
     document.body.appendChild(r);
@@ -353,30 +377,32 @@
     var a = t.dataset.a, id = t.dataset.id;
     var f = S.items.filter(function (i) { return i.id === id; })[0];
     if (a === "close") return close();
+    if (a === "back") return goBack();
+    if (a === "ready") { var rid = S.ready; return tapFile(rid); }
+    if (a === "hideinfo") { S.info = ""; S.ready = null; render(); return; }
     if (a === "tab") { S.tab = t.dataset.t; S.err = ""; if (S.tab === "drive") load(); else refreshHave().then(render); return; }
     if (a === "dir") { S.stack.push({ id: id, name: t.dataset.name }); S.err = ""; load(); return; }
     if (a === "crumb") { S.stack = S.stack.slice(0, +t.dataset.i + 1); S.err = ""; load(); return; }
     if (a === "get" && f) return download(f);
     if (a === "cancel") return cancel(id);
     if (a === "del") { if (confirm("Удалить с устройства?")) remove(id); return; }
-    if (a === "open") {
-      if (S.have[id]) openFile(id);
-      else if (f && OFFICE[extOf(f.name)] && KEY && navigator.onLine) {
-        // презентация/документ Office ещё не скачан: скачиваем и сразу отправляем в PowerPoint/Word/Excel, не заходя на Диск
-        download(f).then(function () { if (S.have[id]) openFile(id); });
-      } else if (f) openOnline(f);
-      return;
-    }
+    if (a === "open") { tapFile(id, f); return; }
+    if (a === "drive1" && f) return openOnline(f);
     if (a === "dirget") return downloadFolder(id, t.dataset.name);
     if (a === "stop") { if (S.batch) { S.batch.stop = true; Object.keys(aborts).forEach(cancel); } return; }
     if (a === "retry") { S.err = ""; load(); return; }
     if (a === "drive") { window.open(DRIVE_URL, "_blank", "noopener"); return; }
   }
+  function canUp() { return S.tab === "drive" && S.stack.length > 1; }
+  function goBack() {
+    if (canUp()) { S.stack.pop(); S.err = ""; S.info = ""; load(); }
+    else close();
+  }
   function storageLine() {
     if (!(navigator.storage && navigator.storage.estimate)) return;
     navigator.storage.estimate().then(function (e) {
       var n = el.root && el.root.querySelector("#lbSt");
-      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v10";
+      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v11";
     }).catch(function () {});
   }
   function row(f, off) {
@@ -397,7 +423,12 @@
     if (!el.root) return;
     var net = el.root.querySelector("#lbNet"); net.textContent = navigator.onLine ? "" : "офлайн"; net.className = "lb-net" + (navigator.onLine ? "" : " on");
     el.root.querySelectorAll(".lb-tabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.t === S.tab); });
+    var bk = el.root.querySelector("#lbBack"), tt = el.root.querySelector("#lbTitle");
+    if (bk) bk.style.visibility = canUp() ? "visible" : "hidden";
+    if (tt) tt.textContent = canUp() ? S.stack[S.stack.length - 1].name : "Лекции";
     var h = "";
+    if (S.ready && S.have[S.ready]) h += '<div class="lb-ready"><span>Файл скачан</span><button type="button" class="lb-btn lb-go" data-a="ready">Открыть в PowerPoint</button></div>';
+    if (S.info) h += '<div class="lb-info"><span>' + esc(S.info) + '</span><button type="button" class="lb-btn" data-a="hideinfo">OK</button></div>';
     if (S.err === "nokey") {
       h = '<div class="lb-empty"><b>Нужен ключ Google Диска</b>Пока он не добавлен, список папки показать нельзя.<br><button type="button" class="lb-btn" data-a="drive">Открыть папку на Google Диске</button></div>';
       el.body.innerHTML = h; return;
@@ -430,13 +461,21 @@
     build();
     el.root.classList.remove("lb-hide");
     document.documentElement.classList.add("lb-lock");
+    // системная кнопка «назад» (Android) возвращает в прошлую папку, а не выкидывает из приложения
+    try { if (!(history.state && history.state.lib)) history.pushState({ lib: 1 }, ""); } catch (e) {}
     refreshHave().then(function () { if (S.tab === "drive") load(); else render(); });
   }
   function close() {
     if (!el.root) return;
     el.root.classList.add("lb-hide");
     document.documentElement.classList.remove("lb-lock");
+    try { if (history.state && history.state.lib) history.back(); } catch (e) {}
   }
+  window.addEventListener("popstate", function () {
+    if (!el.root || el.root.classList.contains("lb-hide")) return;
+    if (canUp()) { S.stack.pop(); S.err = ""; S.info = ""; try { history.pushState({ lib: 1 }, ""); } catch (e) {} load(); }
+    else { el.root.classList.add("lb-hide"); document.documentElement.classList.remove("lb-lock"); }
+  });
 
   if (KEY && window.indexedDB) {
     refreshHave().then(paintDiary); paintDiary();

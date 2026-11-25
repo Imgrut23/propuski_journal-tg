@@ -58,9 +58,24 @@
   }
 
   /* ───── открыть / закрыть ───── */
-  function open(details) {
+  function mineItems(ol) {
+    var out = [];
+    try {
+      if (typeof myName !== "function" || typeof pickers !== "function") return out;
+      var me = myName();
+      if (!me) return out;
+      ol.querySelectorAll("li[data-pk]").forEach(function (li) {
+        if (pickers(li.dataset.pk, +li.dataset.qi).indexOf(me) > -1) out.push(li);
+      });
+    } catch (e) {}
+    return out;
+  }
+  function toast(t) { try { if (window.hzToast) { window.hzToast(t); return; } } catch (e) {} }
+
+  function open(details, onlyMine) {
     var ol = details.querySelector("ol");
     if (!ol) return;
+    if (onlyMine && !mineItems(ol).length) { toast("Сначала нажми «Беру» у нужного вопроса"); return; }
     build();
     clearTimeout(closeTimer);
     if (cur) restore();
@@ -69,7 +84,7 @@
     var subj = card && card.querySelector(".subject");
     var sum = details.querySelector("summary");
     titleEl.textContent = subj ? subj.textContent.trim() : "Вопросы";
-    subEl.textContent = sum ? sum.textContent.trim() : "";
+    subEl.textContent = onlyMine ? "Мне на ответ" : (sum ? sum.textContent.trim() : "");
     statusEl.textContent = "";
 
     var ph = document.createComment("qs");
@@ -79,6 +94,10 @@
     bodyEl.scrollTop = 0;
     cur = { details: details, ol: ol, ph: ph };
     try { if (typeof paintPicks === "function") paintPicks(ol); } catch (e) {}
+    ol.querySelectorAll("li.is-mine").forEach(function (li) { li.classList.remove("is-mine"); });
+    bodyEl.classList.toggle("qs-only-mine", !!onlyMine);
+    sheet.classList.toggle("qs-mine-mode", !!onlyMine);
+    if (onlyMine) mineItems(ol).forEach(function (li) { li.classList.add("is-mine"); });
 
     document.documentElement.classList.add("qs-lock");
     sheet.style.removeProperty("--dy");
@@ -163,6 +182,8 @@
 
   /* ───── клик по «Вопросы к семинару» в карточке ───── */
   document.addEventListener("click", function (e) {
+    var m = e.target.closest && e.target.closest("#schedule details.seminar-q > .qs-mine");
+    if (m) { e.preventDefault(); e.stopPropagation(); open(m.parentNode, true); return; }
     var s = e.target.closest && e.target.closest("#schedule details.seminar-q > summary");
     if (!s) return;
     e.preventDefault();
@@ -192,6 +213,15 @@
     var m = myPick(ol);
     if (m) { if (s.dataset.mine !== m) s.dataset.mine = m; }
     else if (s.dataset.mine) delete s.dataset.mine;
+    // кнопка «Мне на ответ» рядом с «Вопросы»
+    var b = details.querySelector(":scope > .qs-mine");
+    if (!b) {
+      b = document.createElement("button");
+      b.type = "button"; b.className = "qs-mine"; b.textContent = "Мне на ответ";
+      details.appendChild(b);
+    }
+    var has = !!m;
+    if (b.classList.contains("on") !== has) b.classList.toggle("on", has);
   }
 
   /* ───── прошедшие пары + прокрутка к текущей ───── */

@@ -1,5 +1,5 @@
 // Network-first: сайт всегда берётся свежим, кэш нужен только для офлайна.
-const CACHE = "journal-v52";
+const CACHE = "journal-v55";
 const SHELL = ["./", "./index.html", "./mini.css", "./flat.css", "./mini.js", "./diary-sheet.css", "./diary-sheet.js", "./lib.css", "./lib.js", "./settings-merge.css", "./settings-merge.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -25,7 +25,10 @@ self.addEventListener("fetch", e => {
 
   e.respondWith((async () => {
     try {
-      const res = await fetch(req, { cache: "no-store" });
+      const ac = new AbortController();
+      const timer = setTimeout(() => ac.abort(), 4000);   // слабая сеть: через 4 с берём сохранённую копию
+      let res;
+      try { res = await fetch(req, { cache: "no-store", signal: ac.signal }); } finally { clearTimeout(timer); }
       if (res && res.ok) {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
@@ -34,6 +37,7 @@ self.addEventListener("fetch", e => {
     } catch (err) {
       const hit = await caches.match(req);
       if (hit) return hit;
+      if (err && err.name === "AbortError") { try { return await fetch(req); } catch (e2) {} }   // копии нет — ждём сеть как раньше
       if (req.mode === "navigate") {
         return (await caches.match("./index.html")) || (await caches.match("./")) || Response.error();
       }
