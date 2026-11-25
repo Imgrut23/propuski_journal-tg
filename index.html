@@ -3316,7 +3316,7 @@ $("date").value = workDate(), schedule(), (async () => {
   })), fillWho();
 })();
 </script>
-<script src="diary-data.js"></script><script src="diary.js?v=2"></script>
+<script src="diary-data.js"></script><script src="diary.js?v=3"></script>
 <script src="sched.js"></script>
 <script id="extraJs">
 // ── extraJs ──
@@ -8216,7 +8216,7 @@ new MutationObserver(tc).observe(r,{attributes:true,attributeFilter:["data-theme
   setTimeout(place, 1600);
 })();
 </script>
-<script src="mini.js?v=6"></script>
+<script src="mini.js?v=7"></script>
 <script id="cpPickJs">
 // ── cpPickJs ──
 (function() {
@@ -8271,6 +8271,8 @@ html #bnav{left:50%!important;right:auto!important;width:var(--dockW)!important;
 html #dockMenu{position:fixed!important;z-index:62;left:calc(50% + var(--dockW)/2 - 6px - 54px)!important;bottom:calc(var(--dockB) + 6px)!important;width:54px!important;height:48px!important;min-height:48px!important;padding:0!important;margin:0!important;border:0!important;border-radius:18px!important;background:none!important;box-shadow:none!important;color:var(--mute)!important;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .2s,background-color .2s}
 html #dockMenu svg{width:24px;height:24px;display:block}
 html #dockMenu.open{color:var(--acc)!important;background:color-mix(in srgb,var(--acc) 16%,transparent)!important}
+html #dockMenu.sub{color:var(--acc)!important}
+html #sheet.sheet .sheet-grid .tile[aria-pressed="true"]{color:var(--acc)!important;background:color-mix(in srgb,var(--acc) 16%,transparent)!important}
 html #dockMenu:active{transform:scale(.92)}
 html #menuFab{display:none!important}
 html.dock-hide #dockMenu{display:none!important}

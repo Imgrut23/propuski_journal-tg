@@ -26,7 +26,8 @@
       var N=JSON.parse(navOrig);
       if(st.merge){
         N.user=[["diary","Дневник"],["mark","Журнал"]];
-        N.head=[["diary","Дневник"],["today","Журнал"],["self","Моя"],["set","Группа"]];
+        /* в доке только «Дневник» и «Моя»; «Журнал» и «Группа» живут в меню (плитки navTile) */
+        N.head=[["diary","Дневник"],["self","Моя"]];
         if(tab==="me"||tab==="grp")tab="mark";
         if(tab==="stats")tab="today";
         if(!started){started=true;if(!isHead&&!isGuest)tab="diary"}
@@ -50,6 +51,34 @@
     b.onclick=function(){st[key]=!st[key];set(key==="mini"?K_MINI:K_MERGE,st[key]);apply()};
     g.insertBefore(b,g.firstChild);
   }
+  /* плитки меню «Журнал» и «Группа» (убраны из дока у старосты) */
+  var NAV_TILES=[["navTileToday","Журнал","📋","today"],["navTileSet","Группа","👥","set"]];
+  function navTiles(){
+    var g=document.querySelector("#sheet .sheet-grid");if(!g)return;
+    var show=false;try{show=!!(st.merge&&isHead&&!isGuest)}catch(e){}
+    NAV_TILES.forEach(function(p){
+      var b=document.getElementById(p[0]);
+      if(!b){
+        b=document.createElement("button");
+        b.type="button";b.id=p[0];b.className="tile";b.setAttribute("aria-label",p[1]);b.title=p[1];
+        b.innerHTML="<span>"+p[2]+"</span>"+p[1];
+        b.onclick=function(){
+          var f=document.getElementById("menuFab");
+          if(f&&f.getAttribute("aria-expanded")==="true")f.click();
+          setTimeout(function(){try{goTab(p[3])}catch(e){}},120);
+        };
+        var ref=document.getElementById("stTile");
+        g.insertBefore(b,ref||g.firstChild);
+      }
+      b.classList.toggle("hidden",!show);
+      var cur=false;try{cur=show&&!schedOn&&tab===p[3]}catch(e){}
+      b.setAttribute("aria-pressed",cur?"true":"false");
+    });
+    /* если открыта вкладка из меню — подсвечиваем кнопку «Меню» в доке */
+    var dm=document.getElementById("dockMenu");
+    if(dm){var sub=false;try{sub=show&&!schedOn&&(tab==="today"||tab==="set")}catch(e){}dm.classList.toggle("sub",sub)}
+  }
+  setInterval(navTiles,400);navTiles();
   function paintTiles(){
     [["miniTile","mini"],["mergeTile","merge"]].forEach(function(p){
       var b=document.getElementById(p[0]);if(!b)return;
