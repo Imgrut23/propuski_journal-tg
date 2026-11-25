@@ -83,6 +83,9 @@
       return r;
     });
   }
+  function why(e) {
+    try { var m = JSON.parse(e.body).error.message; return m ? ": " + String(m).slice(0, 200) : ""; } catch (x) { return ""; }
+  }
   function listFolder(id) {
     var out = [];
     function page(tok) {
@@ -114,7 +117,7 @@
     }).catch(function (e) {
       idbGet("lists", cur.id).then(function (c) {
         if (c) done(c.items, true);
-        else { S.items = []; S.loading = false; S.err = navigator.onLine ? "Не удалось загрузить список (" + (e.status || "сеть") + ")" : "Нет интернета, а эта папка ещё не открывалась онлайн"; render(); }
+        else { S.items = []; S.loading = false; S.err = navigator.onLine ? "Не удалось загрузить список (" + (e.status || "сеть") + ")" + why(e) : "Нет интернета, а эта папка ещё не открывалась онлайн"; render(); }
       }).catch(function () { S.loading = false; S.err = "Не удалось загрузить список"; render(); });
     });
   }
@@ -215,20 +218,20 @@
         return download(f).then(function () { if (S.batch) S.batch.base += +f.size || 0; return next(); });
       };
       return next();
-    }).catch(function () { S.batch = null; S.err = "Не удалось получить список файлов папки"; render(); });
+    }).catch(function (e) { S.batch = null; S.err = "Не удалось получить список файлов папки" + (e && e.status ? " (" + e.status + ")" + why(e) : ""); render(); });
   }
 
 
   /* ───────── карточка в дневнике: «все лекции офлайн» без захода на Диск ───────── */
   function diaryCard() {
-    if (el.dv) return el.dv;
-    var sv = document.getElementById("schedView"), head = sv && sv.querySelector(".dv-head");
-    if (!sv || !head) return null;
+    if (el.dv && document.contains(el.dv)) return el.dv;
+    var sv = document.getElementById("schedView"), anchor = sv && (sv.querySelector("#status-bar") || sv.querySelector("#schedule"));
+    if (!sv || !anchor) return null;
     var c = document.createElement("div");
     c.id = "lbDiary"; c.className = "lb-dv";
     c.innerHTML = '<div class="lb-dv-l"><b>Лекции без интернета</b><span class="lb-dv-s" id="lbDvS"></span><span class="lb-dv-b"><i id="lbDvB"></i></span></div>' +
       '<button type="button" class="lb-dv-btn" id="lbDvBtn"></button><button type="button" class="lb-dv-more" id="lbDvMore" aria-label="Открыть лекции">📚</button>';
-    head.insertAdjacentElement("afterend", c);
+    anchor.parentNode.insertBefore(c, anchor);
     c.querySelector("#lbDvBtn").addEventListener("click", function () {
       if (S.batch) { S.batch.stop = true; Object.keys(aborts).forEach(cancel); return; }
       var r = S.stack[0];
@@ -238,7 +241,25 @@
     el.dv = c;
     return c;
   }
+  function paintTile(ids, tot) {
+    var l = document.getElementById("libOffLbl");
+    if (!l) return;
+    var t;
+    if (S.batch) {
+      var live = Object.keys(S.prog).reduce(function (a, k) { return a + S.prog[k].got; }, 0);
+      t = S.batch.total ? "Скачиваю " + Math.round(Math.min(1, ((S.batch.base || 0) + live) / S.batch.total) * 100) + "%" : "Считаю файлы…";
+    } else if (S.err) t = "Ошибка, повторить";
+    else t = ids.length ? "Офлайн ✓ " + ids.length + " · " + fmt(tot) : "Лекции офлайн";
+    if (l.textContent !== t) l.textContent = t;
+  }
+  window.libOfflineAll = function () {
+    if (!KEY || !window.indexedDB) { window.open(DRIVE_URL, "_blank", "noopener"); return; }
+    if (S.batch) { if (confirm("Остановить скачивание лекций?")) { S.batch.stop = true; Object.keys(aborts).forEach(cancel); } return; }
+    refreshHave().then(function () { downloadFolder(ROOT, "Лекции"); });
+  };
   function paintDiary() {
+    var ids0 = Object.keys(S.have);
+    paintTile(ids0, ids0.reduce(function (a, k) { return a + (S.have[k].size || 0); }, 0));
     var c = diaryCard();
     if (!c) return;
     var st = c.querySelector("#lbDvS"), bar = c.querySelector("#lbDvB"), btn = c.querySelector("#lbDvBtn");
@@ -377,7 +398,11 @@
     document.documentElement.classList.remove("lb-lock");
   }
 
-  if (KEY && window.indexedDB) { refreshHave().then(paintDiary); paintDiary(); }
+  if (KEY && window.indexedDB) {
+    refreshHave().then(paintDiary); paintDiary();
+    // сайт может перестроить дневник — следим, чтобы карточка была на месте
+    setInterval(paintDiary, 2000);
+  }
 
   window.openLib = function () {
     if (!KEY) { window.open(DRIVE_URL, "_blank", "noopener"); return; }
