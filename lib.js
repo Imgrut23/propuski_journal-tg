@@ -241,6 +241,16 @@
     el.dv = c;
     return c;
   }
+  function offText() {
+    var ids = Object.keys(S.have), tot = ids.reduce(function (a, k) { return a + (S.have[k].size || 0); }, 0), t;
+    if (S.batch) {
+      var live = Object.keys(S.prog).reduce(function (a, k) { return a + S.prog[k].got; }, 0);
+      return S.batch.total ? "Скачиваю " + Math.round(Math.min(1, ((S.batch.base || 0) + live) / S.batch.total) * 100) + "%" : "Считаю файлы…";
+    }
+    if (S.err) return "Лекции офлайн · ошибка";
+    return ids.length ? "Лекции офлайн ✓ " + ids.length + " · " + fmt(tot) : "Лекции офлайн";
+  }
+  window.libOffText = function () { return offText(); };
   function paintTile(ids, tot) {
     var l = document.getElementById("libOffLbl");
     if (!l) return;
@@ -253,7 +263,7 @@
     if (l.textContent !== t) l.textContent = t;
   }
   window.libOfflineAll = function () {
-    if (!KEY || !window.indexedDB) { window.open(DRIVE_URL, "_blank", "noopener"); return; }
+    if (!KEY || !window.indexedDB) { alert("Лекции офлайн: нет ключа Google в lib.js или браузер не поддерживает хранилище."); return; }
     if (S.batch) { if (confirm("Остановить скачивание лекций?")) { S.batch.stop = true; Object.keys(aborts).forEach(cancel); } return; }
     refreshHave().then(function () { downloadFolder(ROOT, "Лекции"); });
   };
@@ -336,7 +346,7 @@
     if (!(navigator.storage && navigator.storage.estimate)) return;
     navigator.storage.estimate().then(function (e) {
       var n = el.root && el.root.querySelector("#lbSt");
-      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "");
+      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v7";
     }).catch(function () {});
   }
   function row(f, off) {
@@ -405,8 +415,8 @@
   }
 
   window.openLib = function () {
-    if (!KEY) { window.open(DRIVE_URL, "_blank", "noopener"); return; }
-    if (!window.indexedDB) { window.open(DRIVE_URL, "_blank", "noopener"); return; }
+    if (!KEY) { alert("Лекции: в lib.js не вставлен ключ Google. Открываю папку на Google Диске."); window.open(DRIVE_URL, "_blank", "noopener"); return; }
+    if (!window.indexedDB) { alert("Лекции: этот браузер не поддерживает офлайн-хранилище. Открываю Google Диск."); window.open(DRIVE_URL, "_blank", "noopener"); return; }
     open();
   };
 })();
