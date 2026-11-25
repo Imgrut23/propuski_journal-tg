@@ -283,6 +283,44 @@
     const c = /* @__PURE__ */ new Date();
     e.classList.toggle("is-today", o.toDateString() === c.toDateString());
   }
+  function dn0(c, on) {
+    c.classList.toggle("is-done", on);
+    const S = (el, o) => {
+      if (!el) return;
+      for (const k in o) on ? el.style.setProperty(k, o[k], "important") : el.style.removeProperty(k);
+    };
+    S(c, { "grid-template-columns": "34px minmax(0,1fr)", "column-gap": "10px", padding: "6px 10px", "min-height": "0", opacity: ".5" });
+    c.querySelectorAll(".lesson-time b,.lesson-time i,.lesson-meta,.details,.seminar-q,.seminar-q-note").forEach((el) => S(el, { display: "none" }));
+    S(c.querySelector(".lesson-time"), { "padding-top": "0" });
+    S(c.querySelector(".lesson-time .num"), { margin: "0", height: "18px", "min-width": "18px", "font-size": "10px" });
+    S(c.querySelector(".subject"), { "font-size": "13px", "line-height": "1.25", margin: "0", "font-weight": "500" });
+    const g = c.nextElementSibling;
+    g && g.classList.contains("dv-gap") && S(g, { display: "none" });
+  }
+  function nx0() {
+    const t = /* @__PURE__ */ new Date();
+    if (!t.getDay()) return;
+    const r = A(t), e = x(t), n = N(e, r), b = n + "|" + f.group;
+    if (q("day") !== r || +q("week") !== e || nxDone === b) return;
+    const s = j.find((c) => c[0] === f.group && c[1] === r && c[2] === e), o = (s && s[3] || []).map(([, c]) => C[c]).filter(Boolean);
+    if (!o.length) return;
+    if ((t.getHours() * 60 + t.getMinutes()) < Math.max(...o.map((c) => c[1]))) return;
+    nxDone = b;
+    let l = null, p = null;
+    for (let c = 1; c <= 21; c++) {
+      const u = new Date(t.getFullYear(), t.getMonth(), t.getDate() + c);
+      if (!u.getDay()) continue;
+      p || (p = u);
+      const a = x(u), m = A(u);
+      if (j.some((d) => d[0] === f.group && d[1] === m && d[2] === a && d[3].length)) {
+        l = u;
+        break;
+      }
+    }
+    l = l || p;
+    l && (T = "left", h("week-" + x(l)), h("day-" + A(l)), k(), w());
+  }
+  let nxDone = "";
   function m0() {
     const t = I(".panel.active");
     if (!t) {
@@ -292,12 +330,14 @@
     const r = /* @__PURE__ */ new Date(), e = r.getDay() && A(r) === q("day") && x(r) === +q("week"), n = r.getHours() * 60 + r.getMinutes();
     F(".lesson-card", t).forEach((b) => {
       var s;
-      let o = false;
+      let o = false, dn = false;
       if (e) {
         const l = C[(s = b.querySelector(".num")) == null ? void 0 : s.textContent.trim()];
         o = !!(l && n >= l[0] && n < l[1]);
+        dn = !!(l && n >= l[1]);
       }
       b.classList.contains("is-now") !== o && b.classList.toggle("is-now", o);
+      b.classList.contains("is-done") !== dn && dn0(b, dn);
     }), q0();
   }
   function f0(t) {
@@ -399,7 +439,7 @@ ${d}`, c = () => {
     e && togglePick(e);
   });
   const Z = /* @__PURE__ */ new Date();
-  h("day-" + A(Z)), h("week-" + x(Z)), w(), k(), p0();
+  h("day-" + A(Z)), h("week-" + x(Z)), w(), k(), p0(), nx0();
   let h0 = Z.toDateString();
   setInterval(() => {
     if (document.hidden) return;
@@ -407,7 +447,7 @@ ${d}`, c = () => {
     if (t.toDateString() !== h0) h0 = t.toDateString(), h("day-" + A(t)), h("week-" + x(t)), k(), w();
     else {
       const r = document.getElementById("schedView");
-      (!r || !r.classList.contains("hidden")) && m0();
+      (!r || !r.classList.contains("hidden")) && (m0(), nx0());
     }
   }, 1e3), (function() {
     const t = ["mon", "tue", "wed", "thu", "fri", "sat"], r = document.getElementById("schedule");

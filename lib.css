@@ -1,0 +1,65 @@
+/* Лекции (офлайн-библиотека) */
+html.lb-lock,html.lb-lock body{overflow:hidden!important}
+#libView{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;background:var(--page,#f6f6f4);color:var(--ink,#1d2330);
+  padding-top:env(safe-area-inset-top);font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#libView.lb-hide{display:none}
+#libView button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left}
+#libView .lb-top{display:flex;align-items:center;gap:12px;padding:12px 16px 8px}
+#libView .lb-x{width:36px;height:36px;border-radius:50%;background:var(--soft,#efede7);text-align:center;font-size:16px}
+#libView .lb-title{font-size:22px;font-weight:700;letter-spacing:-.01em;flex:1}
+#libView .lb-net{display:none;font-size:12px;font-weight:600;color:var(--acc-ink,#fff);background:var(--bad,#b42318);padding:3px 10px;border-radius:999px}
+#libView .lb-net.on{display:inline-block}
+#libView .lb-tabs{display:flex;gap:6px;margin:0 16px 8px;padding:4px;background:var(--soft,#efede7);border-radius:14px}
+#libView .lb-tabs button{flex:1;text-align:center;padding:8px 0;border-radius:10px;font-weight:600;color:var(--mute,#6b7773)}
+#libView .lb-tabs button.on{background:var(--card,#fff);color:var(--ink,#1d2330);box-shadow:0 1px 3px #0000001a}
+#libView .lb-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px calc(24px + env(safe-area-inset-bottom))}
+#libView .lb-crumbs{font-size:13px;color:var(--mute,#6b7773);margin:4px 0 10px;line-height:1.7}
+#libView .lb-crumbs button{color:var(--acc,#b3261e);font-weight:600}
+#libView .lb-crumbs span{color:var(--ink,#1d2330);font-weight:600}
+#libView .lb-tool,#libView .lb-batch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+#libView .lb-batch{padding:10px 12px;background:var(--soft,#efede7);border-radius:12px;font-weight:600}
+#libView .lb-btn{padding:9px 14px;border-radius:12px;background:var(--soft,#efede7);font-weight:600;font-size:14px}
+#libView .lb-note,#libView .lb-sum,#libView .lb-st{font-size:13px;color:var(--mute,#6b7773);padding:6px 2px}
+#libView .lb-st{text-align:center;margin-top:14px}
+#libView .lb-err{background:#fbd5d1;color:#5c0a14;padding:10px 12px;border-radius:12px;margin:0 0 10px;font-size:14px}
+#libView .lb-empty{text-align:center;padding:40px 12px;color:var(--mute,#6b7773)}
+#libView .lb-empty b{display:block;font-size:17px;color:var(--ink,#1d2330);margin-bottom:6px}
+#libView .lb-empty .lb-btn{margin-top:14px}
+#libView .lb-list{background:var(--card,#fff);border:1px solid var(--line,#ececea);border-radius:16px;overflow:hidden}
+#libView .lb-row{position:relative;display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line,#ececea)}
+#libView .lb-row:last-child{border-bottom:0}
+#libView .lb-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:12px 4px 12px 14px}
+#libView .lb-i{font-size:24px;flex:0 0 auto}
+#libView .lb-t{min-width:0;display:flex;flex-direction:column;gap:2px}
+#libView .lb-t b{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+#libView .lb-t i{font-style:normal;font-size:12.5px;color:var(--mute,#6b7773)}
+#libView .lb-t u{text-decoration:none;color:var(--ok,#13795b);font-weight:600}
+#libView .lb-ic{flex:0 0 auto;width:44px;height:44px;margin-right:6px;border-radius:50%;text-align:center;font-size:19px;color:var(--mute,#6b7773)}
+#libView .lb-ic.lb-ok{color:var(--ok,#13795b);font-weight:700}
+#libView .lb-bar{position:absolute;left:14px;right:14px;bottom:0;height:3px;background:var(--soft,#efede7);overflow:hidden;border-radius:3px}
+#libView .lb-bar i{display:block;height:100%;background:var(--acc,#b3261e);transform-origin:left;transform:scaleX(0);transition:transform .2s}
+
+/* перебиваем общие стили кнопок сайта */
+html body #libView button{background:none!important;box-shadow:none!important;border:0!important;min-height:0!important;height:auto;border-radius:0;text-align:left!important;justify-content:flex-start;color:inherit}
+html body #libView .lb-x{background:var(--soft,#efede7)!important;border-radius:50%!important;width:36px;height:36px;text-align:center!important;justify-content:center}
+html body #libView .lb-tabs button{flex:1;text-align:center!important;justify-content:center;padding:8px 0;border-radius:10px!important;color:var(--mute,#6b7773)}
+html body #libView .lb-tabs button.on{background:var(--card,#fff)!important;color:var(--ink,#1d2330);box-shadow:0 1px 3px #0000001a!important}
+html body #libView .lb-btn{background:var(--soft,#efede7)!important;border-radius:12px!important;padding:9px 14px}
+html body #libView .lb-main{display:flex;padding:12px 4px 12px 14px;width:auto}
+html body #libView .lb-ic{width:44px;height:44px;border-radius:50%!important;text-align:center!important;justify-content:center;align-items:center;display:flex;color:var(--mute,#6b7773)}
+html body #libView .lb-ic.lb-ok{color:var(--ok,#13795b)}
+html body #libView .lb-crumbs button{color:var(--acc,#b3261e);display:inline;padding:0}
+
+/* карточка в дневнике */
+.lb-dv{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:10px 12px;background:var(--card,#fff);border:1px solid var(--line,#ececea);border-radius:16px}
+.lb-dv .lb-dv-l{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lb-dv .lb-dv-l b{font-size:14px;font-weight:650;color:var(--ink,#1d2330)}
+.lb-dv .lb-dv-s{font-size:12px;color:var(--mute,#6b7773);overflow-wrap:anywhere}
+.lb-dv.is-err .lb-dv-s{color:var(--bad,#b42318)}
+.lb-dv .lb-dv-b{display:none;height:4px;background:var(--soft,#efede7);border-radius:4px;overflow:hidden;margin-top:3px}
+.lb-dv.is-run .lb-dv-b{display:block}
+.lb-dv .lb-dv-b i{display:block;height:100%;background:var(--acc,#b3261e);transform-origin:left;transform:scaleX(0);transition:transform .25s}
+html body .lb-dv button{font:inherit;font-size:13px;font-weight:650;border:0!important;box-shadow:none!important;min-height:0!important;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html body .lb-dv .lb-dv-btn{padding:9px 13px;border-radius:12px!important;background:var(--acc,#b3261e)!important;color:var(--acc-ink,#fff)!important;white-space:nowrap}
+html body .lb-dv.is-run .lb-dv-btn{background:var(--soft,#efede7)!important;color:var(--ink,#1d2330)!important}
+html body .lb-dv .lb-dv-more{width:38px;height:38px;border-radius:50%!important;background:var(--soft,#efede7)!important;font-size:17px;padding:0}

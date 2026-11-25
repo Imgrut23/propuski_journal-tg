@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="styles.css?v=3.2">
 <link rel="stylesheet" href="mini.css?v=6"><link rel="stylesheet" href="flat.css?v=19">
-<link rel="stylesheet" href="diary-sheet.css?v=3">
+<link rel="stylesheet" href="diary-sheet.css?v=3"><link rel="stylesheet" href="lib.css?v=2">
 <link rel="stylesheet" href="settings-merge.css?v=4">
 <script id="iosInstJs">
 // ── iosInstJs ──
@@ -877,7 +877,7 @@
 <button type="button" id="schedBtn" class="tile" aria-pressed="false" title="Дневник 4501"><span>📅</span><em id="schedLbl" style="font-style:normal">Дневник</em></button>
 <button type="button" id="legendBtn" aria-label="Обозначения" title="Обозначения" class="tile" aria-expanded="false"><span>❓</span>Обозначения</button>
 <button type="button" id="guestTile" style="display:none!important" class="tile" title="Только просмотр"><span>👁</span>Режим гостя</button>
-<button type="button" id="libTile" aria-label="Лекции" class="tile" title="Лекции на Google Диске" onclick="window.open('https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM','_blank','noopener')"><span>📚</span>Лекции</button><button type="button" id="codesTile" class="tile" title="Кодексы и практикумы" aria-label="Кодексы и практикумы" onclick="cpPick()"><span>⚖️</span>Кодексы и практикумы</button>
+<button type="button" id="libTile" aria-label="Лекции" class="tile" title="Лекции на Google Диске" onclick="openLib()"><span>📚</span>Лекции</button><button type="button" id="codesTile" class="tile" title="Кодексы и практикумы" aria-label="Кодексы и практикумы" onclick="cpPick()"><span>⚖️</span>Кодексы и практикумы</button>
 <button type="button" id="logout" aria-label="Выйти" title="Выйти" class="tile out"><span>🚪</span>Выйти</button>
 </div>
 </aside>
@@ -1277,7 +1277,7 @@ Telegram
 <h1>Дневник</h1>
 <span class="group-pill" id="grpPill">4501</span>
 </div>
-<span class="dv-acts"><a class="lib-pill" href="https://drive.google.com/drive/folders/1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM" target="_blank" rel="noopener" title="Лекции на Google Диске" aria-label="Лекции">📚</a><a class="lib-pill" id="codesPill" href="#" onclick="openCodes();return false" title="Кодексы" aria-label="Кодексы">⚖️</a><button type="button" id="icsBtn" class="lib-pill" title="Расписание в календарь телефона" aria-label="Добавить расписание в календарь">📆</button><button type="button" id="dvBackBtn" class="dv-back" title="К журналу" aria-label="К журналу">📒</button></span>
+<span class="dv-acts"><a class="lib-pill" href="#" onclick="openLib();return false" title="Лекции (можно скачать для офлайна)" aria-label="Лекции">📚</a><a class="lib-pill" id="codesPill" href="#" onclick="openCodes();return false" title="Кодексы" aria-label="Кодексы">⚖️</a><button type="button" id="icsBtn" class="lib-pill" title="Расписание в календарь телефона" aria-label="Добавить расписание в календарь">📆</button><button type="button" id="dvBackBtn" class="dv-back" title="К журналу" aria-label="К журналу">📒</button></span>
 </div>
 <div class="card rc-total" id="dvTotal"></div>
 <div class="card sticky-bar">
@@ -3318,7 +3318,7 @@ $("date").value = workDate(), schedule(), (async () => {
   })), fillWho();
 })();
 </script>
-<script src="diary-data.js"></script><script src="diary.js?v=3"></script>
+<script src="diary-data.js"></script><script src="diary.js?v=4"></script>
 <script src="sched.js"></script>
 <script id="extraJs">
 // ── extraJs ──
@@ -8224,7 +8224,7 @@ new MutationObserver(tc).observe(r,{attributes:true,attributeFilter:["data-theme
 })();
 </script>
 <script src="mini.js?v=8"></script>
-<script src="diary-sheet.js?v=3"></script>
+<script src="diary-sheet.js?v=3"></script><script src="lib.js?v=3"></script>
 <script src="settings-merge.js?v=4"></script>
 <script id="cpPickJs">
 // ── cpPickJs ──

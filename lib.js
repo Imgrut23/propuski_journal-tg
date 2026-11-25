@@ -1,0 +1,387 @@
+// Лекции: список папки Google Диска + «Доступно офлайн» (хранится в браузере, работает на iPhone и Android).
+(function () {
+  "use strict";
+  var ROOT = "1uhkJoeVkKWGur3FtXbzJRynd_Itu3DJM";
+  var KEY = window.LIB_KEY || "AIzaSyDSyjlz_qU38FX06noiXbJ2a2WNtH6TPg8"; // ← сюда вставь API-ключ Google (Drive API), см. инструкцию
+  var DRIVE_URL = "https://drive.google.com/drive/folders/" + ROOT;
+  var API = "https://www.googleapis.com/drive/v3/files";
+  var CHUNK = 8 * 1024 * 1024;
+  var GAPPS = {
+    "application/vnd.google-apps.document": ["application/pdf", ".pdf"],
+    "application/vnd.google-apps.presentation": ["application/pdf", ".pdf"],
+    "application/vnd.google-apps.spreadsheet": ["application/pdf", ".pdf"],
+    "application/vnd.google-apps.drawing": ["application/pdf", ".pdf"]
+  };
+  var FOLDER = "application/vnd.google-apps.folder";
+
+  /* ───────── IndexedDB ───────── */
+  var dbp = null;
+  function db() {
+    if (dbp) return dbp;
+    dbp = new Promise(function (ok, no) {
+      var r = indexedDB.open("lib1", 1);
+      r.onupgradeneeded = function () {
+        var d = r.result;
+        d.createObjectStore("meta", { keyPath: "id" });
+        d.createObjectStore("chunks");
+        d.createObjectStore("lists", { keyPath: "id" });
+      };
+      r.onsuccess = function () { ok(r.result); };
+      r.onerror = function () { no(r.error); };
+    });
+    return dbp;
+  }
+  function tx(store, mode, fn) {
+    return db().then(function (d) {
+      return new Promise(function (ok, no) {
+        var t = d.transaction(store, mode), res;
+        var out = fn(t.objectStore(store));
+        if (out && "onsuccess" in out) out.onsuccess = function () { res = out.result; };
+        t.oncomplete = function () { ok(res); };
+        t.onerror = t.onabort = function () { no(t.error || new Error("idb")); };
+      });
+    });
+  }
+  var idbGet = function (s, k) { return tx(s, "readonly", function (o) { return o.get(k); }); };
+  var idbAll = function (s) { return tx(s, "readonly", function (o) { return o.getAll(); }); };
+  var idbPut = function (s, v, k) { return tx(s, "readwrite", function (o) { return k === undefined ? o.put(v) : o.put(v, k); }); };
+  var idbDel = function (s, k) { return tx(s, "readwrite", function (o) { return o.delete(k); }); };
+  function chunkRange(id) { return IDBKeyRange.bound(id + ":", id + ":￿"); }
+  function delChunks(id) { return tx("chunks", "readwrite", function (o) { return o.delete(chunkRange(id)); }); }
+  function getChunks(id) { return tx("chunks", "readonly", function (o) { return o.getAll(chunkRange(id)); }); }
+
+  /* ───────── состояние ───────── */
+  var S = { tab: navigator.onLine ? "drive" : "off", stack: [{ id: ROOT, name: "Лекции" }], items: [], loading: false, err: "", cached: false, have: {}, prog: {}, batch: null };
+  var aborts = {};
+  var el = {};
+
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  function fmt(n) {
+    n = +n || 0;
+    if (n < 1024) return n + " Б";
+    if (n < 1048576) return Math.round(n / 1024) + " КБ";
+    if (n < 1073741824) return (n / 1048576).toFixed(n < 10485760 ? 1 : 0) + " МБ";
+    return (n / 1073741824).toFixed(2) + " ГБ";
+  }
+  function icon(m) {
+    if (m === FOLDER) return "📁";
+    if (/pdf/.test(m)) return "📕";
+    if (/word|document/.test(m)) return "📄";
+    if (/presentation|powerpoint/.test(m)) return "📊";
+    if (/sheet|excel/.test(m)) return "📗";
+    if (/^image/.test(m)) return "🖼️";
+    if (/^video/.test(m)) return "🎞️";
+    if (/^audio/.test(m)) return "🎧";
+    return "📎";
+  }
+  function dt(s) { try { return new Date(s).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return ""; } }
+
+  /* ───────── Drive API ───────── */
+  function api(url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { var e = new Error("HTTP " + r.status); e.status = r.status; e.body = t; throw e; });
+      return r;
+    });
+  }
+  function listFolder(id) {
+    var out = [];
+    function page(tok) {
+      var q = encodeURIComponent("'" + id + "' in parents and trashed=false");
+      var u = API + "?q=" + q + "&pageSize=1000&orderBy=" + encodeURIComponent("folder,name") +
+        "&fields=" + encodeURIComponent("nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink)") +
+        "&supportsAllDrives=true&includeItemsFromAllDrives=true&key=" + encodeURIComponent(KEY) + (tok ? "&pageToken=" + tok : "");
+      return api(u).then(function (r) { return r.json(); }).then(function (j) {
+        out = out.concat(j.files || []);
+        return j.nextPageToken ? page(j.nextPageToken) : out;
+      });
+    }
+    return page("");
+  }
+  function sortItems(a) {
+    return a.slice().sort(function (x, y) {
+      var fx = x.mimeType === FOLDER ? 0 : 1, fy = y.mimeType === FOLDER ? 0 : 1;
+      return fx - fy || String(x.name).localeCompare(String(y.name), "ru", { numeric: true });
+    });
+  }
+  function load() {
+    var cur = S.stack[S.stack.length - 1];
+    S.loading = true; S.err = ""; S.cached = false; render();
+    var done = function (items, cached) { S.items = sortItems(items); S.loading = false; S.cached = !!cached; render(); };
+    if (!KEY) { S.loading = false; S.err = "nokey"; render(); return; }
+    listFolder(cur.id).then(function (items) {
+      idbPut("lists", { id: cur.id, items: items, t: Date.now() }).catch(function () {});
+      done(items, false);
+    }).catch(function (e) {
+      idbGet("lists", cur.id).then(function (c) {
+        if (c) done(c.items, true);
+        else { S.items = []; S.loading = false; S.err = navigator.onLine ? "Не удалось загрузить список (" + (e.status || "сеть") + ")" : "Нет интернета, а эта папка ещё не открывалась онлайн"; render(); }
+      }).catch(function () { S.loading = false; S.err = "Не удалось загрузить список"; render(); });
+    });
+  }
+  function refreshHave() {
+    return idbAll("meta").then(function (a) {
+      S.have = {}; a.forEach(function (m) { S.have[m.id] = m; });
+    }).catch(function () {});
+  }
+
+  /* ───────── скачивание ───────── */
+  function dlUrl(f) {
+    var g = GAPPS[f.mimeType];
+    return g ? API + "/" + f.id + "/export?mimeType=" + encodeURIComponent(g[0]) + "&key=" + encodeURIComponent(KEY)
+      : API + "/" + f.id + "?alt=media&supportsAllDrives=true&key=" + encodeURIComponent(KEY);
+  }
+  function paintProg(id) {
+    paintDiary();
+    var p = S.prog[id], n = el.root && el.root.querySelectorAll('[data-p="' + id + '"]');
+    if (!n) return;
+    for (var i = 0; i < n.length; i++) {
+      var pc = p && p.total ? Math.min(100, Math.round(p.got / p.total * 100)) : null;
+      n[i].textContent = p ? (pc === null ? fmt(p.got) : pc + "% · " + fmt(p.got)) : "";
+    }
+    var b = el.root.querySelectorAll('[data-pb="' + id + '"]');
+    for (var j = 0; j < b.length; j++) b[j].style.transform = "scaleX(" + (p && p.total ? Math.min(1, p.got / p.total) : 0) + ")";
+  }
+  function download(f) {
+    if (S.prog[f.id] || S.have[f.id]) return Promise.resolve();
+    var g = GAPPS[f.mimeType];
+    var ac = ("AbortController" in window) ? new AbortController() : null;
+    aborts[f.id] = ac;
+    S.prog[f.id] = { got: 0, total: +f.size || 0 };
+    render();
+    var idx = 0, parts = [], size = 0, got = 0;
+    var flush = function () {
+      if (!size) return Promise.resolve();
+      var b = new Blob(parts), i = idx++;
+      parts = []; size = 0;
+      return idbPut("chunks", b, f.id + ":" + String(i).padStart(5, "0"));
+    };
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
+    return fetch(dlUrl(f), ac ? { signal: ac.signal } : undefined).then(function (r) {
+      if (!r.ok) { var e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
+      if (!r.body || !r.body.getReader) return r.blob().then(function (b) { parts.push(b); size = b.size; got = b.size; return flush(); });
+      var rd = r.body.getReader();
+      var pump = function () {
+        return rd.read().then(function (x) {
+          if (x.done) return flush();
+          parts.push(x.value); size += x.value.length; got += x.value.length;
+          S.prog[f.id].got = got; paintProg(f.id);
+          return (size >= CHUNK ? flush() : Promise.resolve()).then(pump);
+        });
+      };
+      return pump();
+    }).then(function () {
+      if (+f.size && !g && got !== +f.size) throw new Error("size");
+      var m = { id: f.id, name: f.name + (g && !/\.pdf$/i.test(f.name) ? g[1] : ""), size: got, mime: g ? g[0] : (f.mimeType || "application/octet-stream"), chunks: idx, t: Date.now(), link: f.webViewLink || "" };
+      return idbPut("meta", m).then(function () { S.have[f.id] = m; });
+    }).catch(function (e) {
+      return delChunks(f.id).catch(function () {}).then(function () {
+        if (e && e.name === "AbortError") return;
+        var q = e && (e.name === "QuotaExceededError" || /quota/i.test(e.message || ""));
+        S.err = q ? "Не хватает памяти на устройстве" : "Не удалось скачать «" + f.name + "»" + (e && e.status ? " (" + e.status + ")" : "");
+      });
+    }).then(function () { delete S.prog[f.id]; delete aborts[f.id]; render(); });
+  }
+  function remove(id) {
+    return Promise.all([idbDel("meta", id), delChunks(id)]).then(function () { delete S.have[id]; render(); });
+  }
+  function cancel(id) { if (aborts[id]) aborts[id].abort(); }
+
+  function walk(id, out, seen) {
+    seen = seen || {};
+    if (seen[id]) return Promise.resolve();
+    seen[id] = 1;
+    return listFolder(id).then(function (items) {
+      var fs = items.filter(function (i) { return i.mimeType !== FOLDER; });
+      out.push.apply(out, fs);
+      return items.filter(function (i) { return i.mimeType === FOLDER; }).reduce(function (p, d) { return p.then(function () { return walk(d.id, out, seen); }); }, Promise.resolve());
+    });
+  }
+  function downloadFolder(id, name) {
+    if (S.batch) return;
+    build();
+    S.batch = { text: "Считаю файлы…", stop: false }; S.err = ""; render();
+    var all = [];
+    walk(id, all).then(function () {
+      var need = all.filter(function (f) { return !S.have[f.id]; });
+      var total = need.reduce(function (a, f) { return a + (+f.size || 0); }, 0);
+      if (!need.length) { S.batch = null; S.err = ""; render(); return; }
+      if (!confirm("Скачать для офлайна: " + need.length + " файл(ов), ≈ " + fmt(total) + "?")) { S.batch = null; render(); return; }
+      var i = 0;
+      S.batch.total = total; S.batch.base = 0; S.batch.n = need.length;
+      var next = function () {
+        if (S.batch.stop || i >= need.length) { S.batch = null; render(); return; }
+        S.batch.text = "Скачиваю " + (i + 1) + " из " + need.length; render();
+        var f = need[i++];
+        return download(f).then(function () { if (S.batch) S.batch.base += +f.size || 0; return next(); });
+      };
+      return next();
+    }).catch(function () { S.batch = null; S.err = "Не удалось получить список файлов папки"; render(); });
+  }
+
+
+  /* ───────── карточка в дневнике: «все лекции офлайн» без захода на Диск ───────── */
+  function diaryCard() {
+    if (el.dv) return el.dv;
+    var sv = document.getElementById("schedView"), head = sv && sv.querySelector(".dv-head");
+    if (!sv || !head) return null;
+    var c = document.createElement("div");
+    c.id = "lbDiary"; c.className = "lb-dv";
+    c.innerHTML = '<div class="lb-dv-l"><b>Лекции без интернета</b><span class="lb-dv-s" id="lbDvS"></span><span class="lb-dv-b"><i id="lbDvB"></i></span></div>' +
+      '<button type="button" class="lb-dv-btn" id="lbDvBtn"></button><button type="button" class="lb-dv-more" id="lbDvMore" aria-label="Открыть лекции">📚</button>';
+    head.insertAdjacentElement("afterend", c);
+    c.querySelector("#lbDvBtn").addEventListener("click", function () {
+      if (S.batch) { S.batch.stop = true; Object.keys(aborts).forEach(cancel); return; }
+      var r = S.stack[0];
+      downloadFolder(ROOT, r.name);
+    });
+    c.querySelector("#lbDvMore").addEventListener("click", function () { window.openLib(); });
+    el.dv = c;
+    return c;
+  }
+  function paintDiary() {
+    var c = diaryCard();
+    if (!c) return;
+    var st = c.querySelector("#lbDvS"), bar = c.querySelector("#lbDvB"), btn = c.querySelector("#lbDvBtn");
+    var ids = Object.keys(S.have), tot = ids.reduce(function (a, k) { return a + (S.have[k].size || 0); }, 0);
+    var pct = 0, text;
+    if (S.batch) {
+      var live = Object.keys(S.prog).reduce(function (a, k) { return a + S.prog[k].got; }, 0);
+      pct = S.batch.total ? Math.min(1, ((S.batch.base || 0) + live) / S.batch.total) : 0;
+      text = S.batch.text + (S.batch.total ? " · " + Math.round(pct * 100) + "% · " + fmt((S.batch.base || 0) + live) + " из " + fmt(S.batch.total) : "");
+      btn.textContent = "Стоп";
+    } else {
+      text = S.err ? S.err : ids.length ? "Сохранено: " + ids.length + " файл(ов) · " + fmt(tot) : "Пока ничего не скачано";
+      btn.textContent = ids.length ? "⤓ Обновить" : "⤓ Скачать все";
+      pct = 0;
+    }
+    st.textContent = text;
+    c.classList.toggle("is-err", !!S.err && !S.batch);
+    bar.style.transform = "scaleX(" + pct + ")";
+    c.classList.toggle("is-run", !!S.batch);
+  }
+  /* ───────── открыть файл ───────── */
+  function openFile(id) {
+    var m = S.have[id];
+    if (!m) return;
+    var w = null;
+    try { w = window.open("", "_blank"); } catch (e) {}
+    getChunks(id).then(function (parts) {
+      var url = URL.createObjectURL(new Blob(parts, { type: m.mime }));
+      if (w) { w.location.href = url; }
+      else {
+        var a = document.createElement("a");
+        a.href = url; a.target = "_blank"; a.rel = "noopener"; a.download = m.name;
+        document.body.appendChild(a); a.click(); a.remove();
+      }
+      setTimeout(function () { URL.revokeObjectURL(url); }, 10 * 60 * 1000);
+    }).catch(function () { if (w) w.close(); S.err = "Не удалось открыть файл"; render(); });
+  }
+  function openOnline(f) { var u = f.webViewLink || "https://drive.google.com/file/d/" + f.id + "/view"; window.open(u, "_blank", "noopener"); }
+
+  /* ───────── интерфейс ───────── */
+  function build() {
+    if (el.root) return;
+    var r = document.createElement("div");
+    r.id = "libView"; r.setAttribute("role", "dialog"); r.setAttribute("aria-label", "Лекции"); r.className = "lb-hide";
+    r.innerHTML = '<div class="lb-top"><button type="button" class="lb-x" data-a="close" aria-label="Закрыть">✕</button><div class="lb-title">Лекции</div><span class="lb-net" id="lbNet"></span></div>' +
+      '<div class="lb-tabs"><button type="button" data-a="tab" data-t="drive">Папки</button><button type="button" data-a="tab" data-t="off">Скачано</button></div>' +
+      '<div class="lb-body" id="lbBody"></div>';
+    document.body.appendChild(r);
+    el.root = r; el.body = r.querySelector("#lbBody");
+    r.addEventListener("click", onClick);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !r.classList.contains("lb-hide")) close(); });
+    window.addEventListener("online", function () { if (!r.classList.contains("lb-hide")) { if (S.tab === "drive") load(); else render(); } });
+    window.addEventListener("offline", function () { if (!r.classList.contains("lb-hide")) render(); });
+  }
+  function onClick(e) {
+    var t = e.target.closest("[data-a]");
+    if (!t) return;
+    var a = t.dataset.a, id = t.dataset.id;
+    var f = S.items.filter(function (i) { return i.id === id; })[0];
+    if (a === "close") return close();
+    if (a === "tab") { S.tab = t.dataset.t; S.err = ""; if (S.tab === "drive") load(); else refreshHave().then(render); return; }
+    if (a === "dir") { S.stack.push({ id: id, name: t.dataset.name }); S.err = ""; load(); return; }
+    if (a === "crumb") { S.stack = S.stack.slice(0, +t.dataset.i + 1); S.err = ""; load(); return; }
+    if (a === "get" && f) return download(f);
+    if (a === "cancel") return cancel(id);
+    if (a === "del") { if (confirm("Удалить с устройства?")) remove(id); return; }
+    if (a === "open") { if (S.have[id]) openFile(id); else if (f) openOnline(f); return; }
+    if (a === "dirget") return downloadFolder(id, t.dataset.name);
+    if (a === "stop") { if (S.batch) { S.batch.stop = true; Object.keys(aborts).forEach(cancel); } return; }
+    if (a === "retry") { S.err = ""; load(); return; }
+    if (a === "drive") { window.open(DRIVE_URL, "_blank", "noopener"); return; }
+  }
+  function storageLine() {
+    if (!(navigator.storage && navigator.storage.estimate)) return;
+    navigator.storage.estimate().then(function (e) {
+      var n = el.root && el.root.querySelector("#lbSt");
+      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "");
+    }).catch(function () {});
+  }
+  function row(f, off) {
+    var dir = f.mimeType === FOLDER, h = S.have[f.id], p = S.prog[f.id];
+    var meta = dir ? "Папка" : [fmt(f.size || (h && h.size)), f.modifiedTime ? dt(f.modifiedTime) : ""].filter(Boolean).join(" · ");
+    var act = "";
+    if (dir) act = '<button type="button" class="lb-ic" data-a="dirget" data-id="' + f.id + '" data-name="' + esc(f.name) + '" title="Скачать всю папку для офлайна" aria-label="Скачать папку">⤓</button>';
+    else if (p) act = '<button type="button" class="lb-ic" data-a="cancel" data-id="' + f.id + '" aria-label="Отменить">✕</button>';
+    else if (h) act = '<button type="button" class="lb-ic lb-ok" data-a="del" data-id="' + f.id + '" title="Доступно офлайн — удалить с устройства" aria-label="Удалить с устройства">✓</button>';
+    else act = '<button type="button" class="lb-ic" data-a="get" data-id="' + f.id + '" title="Сохранить для офлайна" aria-label="Скачать">⤓</button>';
+    var act1 = dir ? 'data-a="dir" data-id="' + f.id + '" data-name="' + esc(f.name) + '"' : 'data-a="open" data-id="' + f.id + '"';
+    return '<div class="lb-row' + (h ? " is-off" : "") + '"><button type="button" class="lb-main" ' + act1 + '><span class="lb-i">' + icon(f.mimeType) + '</span><span class="lb-t"><b>' + esc(f.name) + '</b><i>' +
+      (p ? '<span data-p="' + f.id + '"></span>' : esc(meta)) + (h && !dir ? ' · <u>офлайн</u>' : "") + '</i></span></button>' + act +
+      (p ? '<span class="lb-bar"><i data-pb="' + f.id + '"></i></span>' : "") + "</div>";
+  }
+  function render() {
+    paintDiary();
+    if (!el.root) return;
+    var net = el.root.querySelector("#lbNet"); net.textContent = navigator.onLine ? "" : "офлайн"; net.className = "lb-net" + (navigator.onLine ? "" : " on");
+    el.root.querySelectorAll(".lb-tabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.t === S.tab); });
+    var h = "";
+    if (S.err === "nokey") {
+      h = '<div class="lb-empty"><b>Нужен ключ Google Диска</b>Пока он не добавлен, список папки показать нельзя.<br><button type="button" class="lb-btn" data-a="drive">Открыть папку на Google Диске</button></div>';
+      el.body.innerHTML = h; return;
+    }
+    if (S.tab === "off") {
+      var list = Object.keys(S.have).map(function (k) { return S.have[k]; }).sort(function (a, b) { return String(a.name).localeCompare(String(b.name), "ru", { numeric: true }); });
+      var tot = list.reduce(function (a, m) { return a + m.size; }, 0);
+      h += '<div class="lb-sum">' + (list.length ? list.length + " файл(ов) · " + fmt(tot) : "Здесь появятся файлы, сохранённые для офлайна") + '</div><div class="lb-list">';
+      h += list.map(function (m) { return row({ id: m.id, name: m.name, mimeType: m.mime, size: m.size }, true); }).join("") + "</div>";
+      Object.keys(S.prog).forEach(function () {});
+    } else {
+      var crumbs = S.stack.map(function (c, i) { return i === S.stack.length - 1 ? "<span>" + esc(c.name) + "</span>" : '<button type="button" data-a="crumb" data-i="' + i + '">' + esc(c.name) + "</button>"; }).join(" › ");
+      h += '<div class="lb-crumbs">' + crumbs + "</div>";
+      var cur = S.stack[S.stack.length - 1];
+      var bt = S.batch ? '<div class="lb-batch"><span>' + esc(S.batch.text) + '</span><button type="button" class="lb-btn" data-a="stop">Стоп</button></div>' :
+        '<div class="lb-tool"><button type="button" class="lb-btn" data-a="dirget" data-id="' + cur.id + '" data-name="' + esc(cur.name) + '">⤓ Скачать всё в этой папке</button></div>';
+      h += bt;
+      if (S.cached) h += '<div class="lb-note">Показан сохранённый список — нет связи с Диском</div>';
+      if (S.loading) h += '<div class="lb-sum">Загрузка…</div>';
+      else if (!S.items.length && !S.err) h += '<div class="lb-sum">Папка пуста</div>';
+      h += '<div class="lb-list">' + S.items.map(function (f) { return row(f); }).join("") + "</div>";
+    }
+    if (S.err) h = '<div class="lb-err">' + esc(S.err) + (S.tab === "drive" ? ' <button type="button" class="lb-btn" data-a="retry">Повторить</button>' : "") + "</div>" + h;
+    h += '<div class="lb-st" id="lbSt"></div>';
+    el.body.innerHTML = h;
+    Object.keys(S.prog).forEach(paintProg);
+    storageLine();
+  }
+  function open() {
+    build();
+    el.root.classList.remove("lb-hide");
+    document.documentElement.classList.add("lb-lock");
+    refreshHave().then(function () { if (S.tab === "drive") load(); else render(); });
+  }
+  function close() {
+    if (!el.root) return;
+    el.root.classList.add("lb-hide");
+    document.documentElement.classList.remove("lb-lock");
+  }
+
+  if (KEY && window.indexedDB) { refreshHave().then(paintDiary); paintDiary(); }
+
+  window.openLib = function () {
+    if (!KEY) { window.open(DRIVE_URL, "_blank", "noopener"); return; }
+    if (!window.indexedDB) { window.open(DRIVE_URL, "_blank", "noopener"); return; }
+    open();
+  };
+})();
