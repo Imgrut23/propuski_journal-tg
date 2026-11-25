@@ -2,8 +2,8 @@
 #stSheet .st{padding:0!important;background:var(--page,#f2f2f7)!important;overflow-y:auto}
 #stSheet .st>:not(.ios){display:none!important}
 #stSheet .ios{display:block;min-height:100%}
-#stSheet .ios-nav{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:12px 14px;background:var(--page,#f2f2f7);border-bottom:1px solid var(--line,rgba(128,128,128,.2))}
-#stSheet .ios-title{font-weight:700;font-size:17px;line-height:1.2;text-align:center;color:var(--ink,#111);white-space:nowrap}
+#stSheet .ios-nav{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:72px minmax(0,1fr) 72px;align-items:center;gap:8px;padding:12px 14px;background:var(--page,#f2f2f7);border-bottom:1px solid var(--line,rgba(128,128,128,.2))}
+#stSheet .ios-title{font-weight:700;font-size:17px;line-height:1.2;text-align:center;color:var(--ink,#111);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 #stSheet .ios-nav button{background:none!important;border:0!important;box-shadow:none!important;min-height:36px;padding:0;color:var(--acc,#0a84ff)!important;font-weight:500;font-size:16px;line-height:1;font-family:inherit;border-radius:8px!important}
 #stSheet .ios-back{justify-self:start}
 #stSheet .ios-done{justify-self:end;font-weight:700!important}
@@ -38,3 +38,17 @@
 #stSheet .ios-page>details>summary{display:none}
 #stSheet .ios-page .row{gap:8px}
 #grpTools{display:none!important}
+
+/* Шрифт как в iOS (San Francisco) везде: на iPhone/Mac это системный SF, на остальных — ближайший системный */
+html body,
+html body *:not(code):not(pre):not(kbd):not(samp):not(.mono),
+html body input,html body select,html body textarea,html body button,
+#stSheet,#stSheet *{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",system-ui,"Segoe UI",Roboto,sans-serif!important;
+}
+html body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+
+/* страница под настройками не прокручивается */
+html.st-lock,body.st-lock{overflow:hidden!important;overscroll-behavior:none}
+#stSheet{overscroll-behavior:contain;touch-action:none}
+#stSheet .st{overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch}

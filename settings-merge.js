@@ -161,7 +161,7 @@
     if (obs) obs.disconnect(); if (msgObs) msgObs.disconnect();
     pages = {}; titles = {}; ui = {};
     ios = div("ios",
-      '<div class="ios-nav"><button type="button" class="ios-back">‹ Настройки</button><b class="ios-title">Настройки</b><button type="button" class="ios-done">Готово</button></div><div class="ios-body"></div>');
+      '<div class="ios-nav"><button type="button" class="ios-back">‹ Назад</button><b class="ios-title">Настройки</b><button type="button" class="ios-done">Готово</button></div><div class="ios-body"></div>');
     box.appendChild(ios);
     ios.querySelector(".ios-done").onclick = function () { var ok = $("stOk"); ok && ok.click(); };
     ios.querySelector(".ios-back").onclick = function () { go("root"); };
@@ -230,14 +230,26 @@
     if (!watching) {
       watching = true;
       new MutationObserver(function () {
-        if (!sh.classList.contains("show")) restore();
+        var shown = sh.classList.contains("show");
+        lock(shown);
+        if (!shown) restore();
       }).observe(sh, { attributes: true, attributeFilter: ["class"] });
+      /* затемнённая область не крутит страницу под шторкой */
+      sh.addEventListener("touchmove", function (e) {
+        if (e.target === sh) e.preventDefault();
+      }, { passive: false });
     }
     return true;
   }
 
+  function lock(on) {
+    document.documentElement.classList.toggle("st-lock", !!on);
+    document.body && document.body.classList.toggle("st-lock", !!on);
+  }
+
   function sync() {
     if (!ensure()) return;
+    lock(sh.classList.contains("show"));
     restore();
     build();
     setTimeout(refresh, 300); /* биометрия определяется асинхронно */
