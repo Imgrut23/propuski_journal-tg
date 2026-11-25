@@ -1,5 +1,5 @@
 // Network-first: сайт всегда берётся свежим, кэш нужен только для офлайна.
-const CACHE = "journal-v40";
+const CACHE = "journal-v42";
 const SHELL = ["./", "./index.html", "./mini.css", "./flat.css", "./mini.js", "./diary-sheet.css", "./diary-sheet.js", "./settings-merge.css", "./settings-merge.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
