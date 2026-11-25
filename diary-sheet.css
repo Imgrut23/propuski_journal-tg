@@ -170,21 +170,74 @@ html body #schedView .seminar-q-note{margin:10px 0 0!important;font-size:12px!im
 .qs-foot{padding:10px 16px 14px;gap:6px}
 .qs-ai{height:42px;border-radius:12px;font-size:14px}
 
-/* ───── Кнопка «Мне на ответ» рядом с «Вопросы» (лежит внутри summary) ───── */
-html body #schedView details.seminar-q>summary{gap:10px}
-html body #schedView details.seminar-q>summary>.qs-mine{
-  order:1;margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
-  min-height:28px;padding:4px 12px;border:1px dashed var(--mute,#999)!important;border-radius:999px;
-  background:none!important;color:var(--mute)!important;font:600 12.5px/1.2 inherit;font-family:inherit;cursor:pointer;
-  white-space:nowrap;-webkit-tap-highlight-color:transparent;box-shadow:none!important}
-html body #schedView details.seminar-q>summary>.qs-mine.on{border:1px solid var(--acc,#111)!important;background:var(--acc,#111)!important;color:var(--acc-ink,#fff)!important}
-html body #schedView details.seminar-q>summary>.qs-mine:active{transform:scale(.96)}
-html body #schedView details.seminar-q>summary::after{order:2}
-html body #schedView details.seminar-q>summary[data-mine]::after{content:attr(data-n) "  ›"!important}
-.qs-body.qs-only-mine li.seminar-q-item:not(.is-mine){display:none!important}
-.qs-sheet.qs-mine-mode .qs-foot{display:none}
+/* ───── Плашка «Вопросы мне» (видна всем) ───── */
+.qs-plate{flex:0 0 auto;max-height:34%;overflow-y:auto;overscroll-behavior:contain;margin:0 12px 8px;padding:8px 10px;border-radius:14px;background:var(--soft,#f3f3f3);display:flex;flex-direction:column;gap:8px}
+.qs-plate[hidden]{display:none}
+.qs-pl>b{display:block;margin:0 0 4px;font-size:12px;font-weight:650;color:var(--mute,#777)}
+.qs-pl.me>b{color:var(--acc,#111)}
+.qs-pq{display:flex;align-items:baseline;gap:8px;width:100%;padding:3px 0;border:0;background:none;color:var(--ink,#111);font:inherit;font-size:13px;line-height:1.35;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.qs-pq i{flex:0 0 auto;min-width:18px;font-style:normal;font-weight:650;color:var(--mute,#777);font-variant-numeric:tabular-nums}
+.qs-pq span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body .qs-sheet .qs-pq{background:none!important;border:0!important;box-shadow:none!important;min-height:0!important;justify-content:flex-start}
 
 /* кнопки «Беру» в плашках: без лишнего отступа, с видимой рамкой */
 html body .qs-body .q-slot{padding-left:0!important}
 html body .qs-body .q-vote{background:var(--card,#fff)!important;border:1px solid var(--line,#d8d8d8)!important}
 html body .qs-body .q-vote.on{background:var(--acc,#111)!important;border-color:var(--acc,#111)!important;color:var(--acc-ink,#fff)!important}
+
+/* ───── «Ответ» рядом с «Беру» ───── */
+.qs-body .q-ans{height:30px;padding:0 13px;border-radius:999px;border:1px solid var(--acc,#111);background:none;color:var(--acc,#111);
+  font:600 12.5px/1 inherit;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.qs-body .q-ans:active{transform:scale(.97)}
+.qs-body .q-ans.has{background:var(--soft,#eee);}
+html.qa-lock{overflow:hidden}
+.qa-back{position:fixed;inset:0;z-index:9100;background:rgba(10,12,16,.5);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.qa-back.on{opacity:1;visibility:visible}
+.qa-box{box-sizing:border-box;position:fixed;left:50%;bottom:0;z-index:9101;width:min(560px,100%);max-height:92vh;max-height:92dvh;overflow:auto;-webkit-overflow-scrolling:touch;
+  transform:translate(-50%,105%);transition:transform .26s cubic-bezier(.2,.8,.2,1);visibility:hidden;
+  background:var(--card,#fff);color:var(--ink,#111);border-radius:20px 20px 0 0;padding:14px 18px calc(env(safe-area-inset-bottom,0px) + 16px);box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.qa-box.on{transform:translate(-50%,0);visibility:visible}
+.qa-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.qa-head h3{margin:0;font-size:17px}
+.qa-x{width:36px;height:36px;border:0;border-radius:10px;background:none;color:var(--mute,#777);font-size:26px;line-height:1;cursor:pointer}
+.qa-q{margin:6px 0 10px;font-size:13px;line-height:1.4;color:var(--mute,#777);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.qa-text{display:block;width:100%;box-sizing:border-box;min-height:140px;resize:vertical;padding:12px;border:1px solid var(--line,#d8d8d8);border-radius:12px;background:var(--soft,#f6f6f6);color:inherit;font:16px/1.45 inherit;font-family:inherit}
+.qa-ph{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.qa-add{position:relative;display:inline-flex;align-items:center;gap:8px;align-self:flex-start;height:40px;padding:0 16px;border:1px dashed var(--mute,#999);border-radius:12px;font:600 14px/1 inherit;font-family:inherit;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.qa-add input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.qa-prev{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.qa-prev[hidden]{display:none}
+.qa-prev img{max-width:100%;max-height:38vh;border-radius:12px;border:1px solid var(--line,#ddd);object-fit:contain;background:#000}
+.qa-rm{height:32px;padding:0 12px;border:1px solid var(--line,#d8d8d8);border-radius:10px;background:none;color:var(--mute,#777);font:600 13px/1 inherit;font-family:inherit;cursor:pointer}
+.qa-st{min-height:18px;margin:8px 0 0;font-size:12.5px;line-height:1.4;color:var(--mute,#777)}
+.qa-foot{display:flex;gap:10px;margin-top:6px}
+.qa-foot button{flex:1;height:46px;border-radius:12px;font:600 15px/1 inherit;font-family:inherit;cursor:pointer}
+.qa-cancel{border:1px solid var(--line,#d8d8d8);background:none;color:var(--ink,#111)}
+.qa-save{border:0;background:var(--acc,#111);color:var(--acc-ink,#fff)}
+.qa-save:disabled{opacity:.55}
+
+/* ───── Компактные пары: день помещается на экран без прокрутки ───── */
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lessons{padding:0 2px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past):not(.qs-open){padding:11px 4px 11px 12px!important;column-gap:14px!important;grid-template-columns:50px minmax(0,1fr)!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-time{padding-top:0!important;gap:0!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-time .num{min-width:18px!important;height:18px!important;padding:0 6px!important;margin:0 0 4px!important;font-size:10.5px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-time b{font-size:15px!important;line-height:1.15!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-time i{font-size:11.5px!important;line-height:1.2!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-body .subject{font-size:15.5px!important;line-height:1.25!important;margin:0 0 5px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-meta{gap:3px 10px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-meta .badge,html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-location{font-size:12px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .lesson-body .details{font-size:12px!important;line-height:1.4!important;margin-top:5px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) details.seminar-q{margin:8px 0 0!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) details.seminar-q>summary{min-height:34px!important;padding:5px 12px!important;border-radius:10px!important;font-size:12.5px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card:not(.qs-past) .seminar-q-note{margin:6px 0 0!important;font-size:11.5px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .lesson-card.is-now::after{top:11px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView .dv-gap{padding:2px 0!important;font-size:11px!important}
+
+/* очень плотно — включается из JS, если день всё равно не помещается */
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView.dv-tight .lesson-card:not(.qs-past):not(.qs-open){padding:6px 4px 6px 12px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView.dv-tight .lesson-card:not(.qs-past) .lesson-time .num{display:none!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView.dv-tight .lesson-card:not(.qs-past) .lesson-body .subject{font-size:14px!important;margin:0 0 3px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView.dv-tight .lesson-card:not(.qs-past) .lesson-body .details{display:none!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView.dv-tight .lesson-card:not(.qs-past) details.seminar-q{margin:5px 0 0!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView.dv-tight .lesson-card:not(.qs-past) details.seminar-q>summary{min-height:28px!important;padding:3px 10px!important;font-size:12px!important}
+html:not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk):not(#dvk) body #schedView.dv-tight .dv-gap{display:none!important}

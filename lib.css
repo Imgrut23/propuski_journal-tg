@@ -73,3 +73,28 @@ html body #libView .lb-back{font-size:26px;line-height:34px;padding:0 0 3px!impo
 html body #libView .lb-go{background:var(--acc,#b3261e)!important;color:var(--acc-ink,#fff)!important;white-space:nowrap}
 
 .lb-dv{display:none!important}
+
+/* просмотр файла внутри приложения (без сохранения на телефон) */
+#libDoc{position:fixed;inset:0;z-index:100001;display:flex;flex-direction:column;background:var(--page,#f6f6f4);color:var(--ink,#1d2330);
+  padding-top:env(safe-area-inset-top);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#libDoc.ld-hide{display:none}
+#libDoc .ld-top{flex:none;display:flex;align-items:center;gap:12px;padding:10px 14px}
+#libDoc .ld-title{flex:1;min-width:0;font-weight:650;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body #libDoc .ld-x{flex:none;width:36px;height:36px;border-radius:50%!important;background:var(--soft,#efede7)!important;border:0!important;color:inherit;font-size:16px;cursor:pointer}
+#libDoc .ld-stage{flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+#libDoc .ld-stage.ld-frame iframe{flex:1;width:100%;border:0;background:#fff}
+#libDoc .ld-stage.ld-center{align-items:center;justify-content:center;overflow:auto}
+#libDoc .ld-stage.ld-center img,#libDoc .ld-stage.ld-center video{max-width:100%;max-height:100%;object-fit:contain}
+#libDoc .ld-stage.ld-scroll{overflow:auto;-webkit-overflow-scrolling:touch}
+#libDoc .ld-doc{margin:0 auto;width:100%;max-width:720px;box-sizing:border-box;padding:6px 18px 32px;font-size:16px;line-height:1.55}
+#libDoc .ld-doc p{margin:0 0 10px;overflow-wrap:anywhere}
+#libDoc .ld-doc h2,#libDoc .ld-doc h3,#libDoc .ld-doc h4{margin:18px 0 8px;line-height:1.25}
+#libDoc .ld-doc table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+#libDoc .ld-doc td{border:1px solid var(--line,#ddd);padding:5px 8px;vertical-align:top}
+#libDoc .ld-doc td p{margin:0 0 4px}
+#libDoc .ld-pre{margin:0;padding:6px 18px 32px;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.5 ui-monospace,Menlo,monospace}
+#libDoc .ld-msg{max-width:320px;padding:24px;text-align:center;color:var(--mute,#6b7773)}
+html body #libDoc .ld-btn{margin-top:8px;padding:11px 16px;border:0!important;border-radius:12px!important;background:var(--acc,#b3261e)!important;color:var(--acc-ink,#fff)!important;font:600 14px/1 inherit;cursor:pointer}
+
+/* «Скачано»: папки */
+#libView .lb-row .lb-ic{font-size:17px}

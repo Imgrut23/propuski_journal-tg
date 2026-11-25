@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="styles.css?v=3.2">
 <link rel="stylesheet" href="mini.css?v=6"><link rel="stylesheet" href="flat.css?v=19">
-<link rel="stylesheet" href="diary-sheet.css?v=7"><link rel="stylesheet" href="lib.css?v=5">
+<link rel="stylesheet" href="diary-sheet.css?v=9"><link rel="stylesheet" href="lib.css?v=6">
 <link rel="stylesheet" href="settings-merge.css?v=4">
 <script id="iosInstJs">
 // ── iosInstJs ──
@@ -2270,11 +2270,15 @@ function pickers(t, e) {
     o && o.i === e && s.push(a);
   }), s;
 }
+function ansBtn(t) {
+  const r = ((db.picks || {})[t.dataset.pk] || {})[k(myName())] || {}, has = !!(r.a || r.ph);
+  return '<button type="button" class="q-ans' + (has ? " has" : "") + '" aria-label="Мой ответ на вопрос">\u270E Ответ' + (has ? " \u2713" : "") + (r.ph ? " \uD83D\uDCF7" : "") + "</button>";
+}
 function paintPick(t) {
   const e = t.querySelector(".q-slot");
   if (!e) return;
   const n = +t.dataset.qi, s = me && myName(), a = pickers(t.dataset.pk, n), o = !!s && a.includes(s), i = !o && a.length >= MAX_PICK;
-  e.innerHTML = '<button type="button" class="q-vote' + (o ? " on" : "") + '"' + (s && !i ? "" : " disabled") + ">" + (o ? "\u2713 \u041C\u043E\u0439 \u0432\u043E\u043F\u0440\u043E\u0441" : i ? "\u0417\u0430\u043D\u044F\u0442\u043E" : "\u0411\u0435\u0440\u0443") + (a.length ? " \xB7 " + a.length + "/" + MAX_PICK : "") + "</button>" + (a.length ? '<span class="q-who">' + a.map(esc).join(", ") + "</span>" : "");
+  e.innerHTML = '<button type="button" class="q-vote' + (o ? " on" : "") + '"' + (s && !i ? "" : " disabled") + ">" + (o ? "\u2713 \u041C\u043E\u0439 \u0432\u043E\u043F\u0440\u043E\u0441" : i ? "\u0417\u0430\u043D\u044F\u0442\u043E" : "\u0411\u0435\u0440\u0443") + (a.length ? " \xB7 " + a.length + "/" + MAX_PICK : "") + "</button>" + (o ? ansBtn(t) : "") + (a.length ? '<span class="q-who">' + a.map(esc).join(", ") + "</span>" : "");
 }
 function paintPicks(t) {
   (t || document).querySelectorAll("li[data-pk]").forEach(paintPick);
@@ -2293,7 +2297,7 @@ function togglePick(t) {
   }
   db.picks[n] = db.picks[n] || {};
   const o = db.picks[n][a], i = "/picks/" + n + "/" + encodeURIComponent(a), c = fmt(n.slice(0, 10));
-  if (o && o.i === s) delete db.picks[n][a], Object.keys(db.picks[n]).length || delete db.picks[n], save(), net(i, null), logAct("\u0441\u043D\u044F\u043B \u0432\u044B\u0431\u043E\u0440 \u0432\u043E\u043F\u0440\u043E\u0441\u0430 " + (s + 1) + " (" + c + ", " + t.dataset.subj + ")", e);
+  if (o && o.i === s) delete db.picks[n][a], window.hzPickGone && hzPickGone(n, a, o), Object.keys(db.picks[n]).length || delete db.picks[n], save(), net(i, null), logAct("\u0441\u043D\u044F\u043B \u0432\u044B\u0431\u043E\u0440 \u0432\u043E\u043F\u0440\u043E\u0441\u0430 " + (s + 1) + " (" + c + ", " + t.dataset.subj + ")", e);
   else {
     const r = { i: s, s: t.dataset.subj || "", q: (t.querySelector(".q-text") || {}).textContent || "" };
     db.picks[n][a] = r, save(), net(i, r), logAct("\u0432\u044B\u0431\u0440\u0430\u043B \u0432\u043E\u043F\u0440\u043E\u0441 " + (s + 1) + " (" + c + ", " + r.s + ")", e);
@@ -8224,7 +8228,7 @@ new MutationObserver(tc).observe(r,{attributes:true,attributeFilter:["data-theme
 })();
 </script>
 <script src="mini.js?v=8"></script>
-<script src="diary-sheet.js?v=5"></script><script src="lib.js?v=13"></script>
+<script src="diary-sheet.js?v=7"></script><script src="pptx-view.js?v=1"></script><script src="lib.js?v=15"></script>
 <script src="settings-merge.js?v=5"></script>
 <script id="cpPickJs">
 // ── cpPickJs ──

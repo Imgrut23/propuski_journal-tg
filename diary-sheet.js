@@ -6,7 +6,7 @@
   var sched = document.getElementById("schedule");
   if (!sched) return;
 
-  var back, sheet, titleEl, subEl, bodyEl, footEl, statusEl;
+  var back, sheet, titleEl, subEl, bodyEl, footEl, statusEl, plateEl;
   var cur = null; // { details, ol, ph }
   var closeTimer = 0;
 
@@ -28,6 +28,7 @@
       '<div class="qs-grab"></div>' +
       '<header class="qs-head"><div><p class="qs-sub"></p><h2 id="qsTitle"></h2></div>' +
       '<button type="button" class="qs-x" aria-label="Закрыть">\u00d7</button></header>' +
+      '<div class="qs-plate" hidden></div>' +
       '<div class="qs-body"></div>' +
       '<footer class="qs-foot"><button type="button" class="qs-ai">Скопировать вопросы для ИИ</button>' +
       '<span class="qs-status" role="status" aria-live="polite"></span></footer>';
@@ -36,6 +37,7 @@
     titleEl = sheet.querySelector("#qsTitle");
     subEl = sheet.querySelector(".qs-sub");
     bodyEl = sheet.querySelector(".qs-body");
+    plateEl = sheet.querySelector(".qs-plate");
     footEl = sheet.querySelector(".qs-foot");
     statusEl = sheet.querySelector(".qs-status");
 
@@ -58,24 +60,11 @@
   }
 
   /* ───── открыть / закрыть ───── */
-  function mineItems(ol) {
-    var out = [];
-    try {
-      if (typeof myName !== "function" || typeof pickers !== "function") return out;
-      var me = myName();
-      if (!me) return out;
-      ol.querySelectorAll("li[data-pk]").forEach(function (li) {
-        if (pickers(li.dataset.pk, +li.dataset.qi).indexOf(me) > -1) out.push(li);
-      });
-    } catch (e) {}
-    return out;
-  }
   function toast(t) { try { if (window.hzToast) { window.hzToast(t); return; } } catch (e) {} }
 
-  function open(details, onlyMine) {
+  function open(details) {
     var ol = details.querySelector("ol");
     if (!ol) return;
-    if (onlyMine && !mineItems(ol).length) { toast("Сначала нажми «Беру» у нужного вопроса"); return; }
     build();
     clearTimeout(closeTimer);
     if (cur) restore();
@@ -85,8 +74,8 @@
     var sum = details.querySelector("summary");
     titleEl.textContent = subj ? subj.textContent.trim() : "Вопросы";
     var sumText = "";
-    if (sum) { var cl = sum.cloneNode(true), mb = cl.querySelector(".qs-mine"); if (mb) mb.remove(); sumText = cl.textContent.trim(); }
-    subEl.textContent = onlyMine ? "Мне на ответ" : sumText;
+    if (sum) sumText = sum.textContent.trim();
+    subEl.textContent = sumText;
     statusEl.textContent = "";
 
     var ph = document.createComment("qs");
@@ -96,10 +85,7 @@
     bodyEl.scrollTop = 0;
     cur = { details: details, ol: ol, ph: ph };
     try { if (typeof paintPicks === "function") paintPicks(ol); } catch (e) {}
-    ol.querySelectorAll("li.is-mine").forEach(function (li) { li.classList.remove("is-mine"); });
-    bodyEl.classList.toggle("qs-only-mine", !!onlyMine);
-    sheet.classList.toggle("qs-mine-mode", !!onlyMine);
-    if (onlyMine) mineItems(ol).forEach(function (li) { li.classList.add("is-mine"); });
+    paintPlate();
 
     document.documentElement.classList.add("qs-lock");
     sheet.style.removeProperty("--dy");
@@ -184,13 +170,43 @@
 
   /* ───── клик по «Вопросы к семинару» в карточке ───── */
   document.addEventListener("click", function (e) {
-    var m = e.target.closest && e.target.closest("#schedule details.seminar-q > summary > .qs-mine");
-    if (m) { e.preventDefault(); e.stopPropagation(); open(m.parentNode.parentNode, true); return; }
     var s = e.target.closest && e.target.closest("#schedule details.seminar-q > summary");
     if (!s) return;
     e.preventDefault();
     open(s.parentNode);
   }, true);
+
+  /* ───── плашка «Вопросы мне»: кто какие вопросы взял; видят все ───── */
+  function escH(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function paintPlate() {
+    if (!plateEl) return;
+    var ol = cur && cur.ol, groups = {}, order = [], me = "";
+    try { me = typeof myName === "function" ? myName() || "" : ""; } catch (e) {}
+    if (ol && typeof pickers === "function") {
+      ol.querySelectorAll("li[data-pk]").forEach(function (li) {
+        var qi = +li.dataset.qi, tx = ((li.querySelector(".q-text") || {}).textContent || "").trim();
+        pickers(li.dataset.pk, qi).forEach(function (n) {
+          if (!groups[n]) { groups[n] = []; order.push(n); }
+          groups[n].push({ n: qi + 1, t: tx });
+        });
+      });
+    }
+    order.sort(function (a, b) { return (a === me ? -1 : 0) - (b === me ? -1 : 0) || String(a).localeCompare(String(b), "ru"); });
+    if (!order.length) { plateEl.hidden = true; plateEl.innerHTML = ""; return; }
+    var h = order.map(function (n) {
+      var mine = n === me;
+      return '<div class="qs-pl' + (mine ? " me" : "") + '"><b>' + (mine ? "Вопросы мне" : "Вопросы: " + escH(n)) + '</b>' +
+        groups[n].map(function (q) { return '<button type="button" class="qs-pq" data-qn="' + q.n + '"><i>' + q.n + '</i><span>' + escH(q.t) + '</span></button>'; }).join("") + "</div>";
+    }).join("");
+    if (plateEl.dataset.h !== h) { plateEl.dataset.h = h; plateEl.innerHTML = h; }
+    plateEl.hidden = false;
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest(".qs-plate .qs-pq");
+    if (!b || !cur) return;
+    var li = cur.ol.querySelectorAll("li[data-pk]")[+b.dataset.qn - 1];
+    if (li) { try { li.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (x) { li.scrollIntoView(); } }
+  });
 
   /* ───── счётчик вопросов и «мой вопрос» на кнопке ───── */
   function myPick(ol) {
@@ -215,15 +231,7 @@
     var m = myPick(ol);
     if (m) { if (s.dataset.mine !== m) s.dataset.mine = m; }
     else if (s.dataset.mine) delete s.dataset.mine;
-    // кнопка «Мне на ответ» рядом с «Вопросы»
-    var b = s.querySelector(".qs-mine");
-    if (!b) {
-      b = document.createElement("button");
-      b.type = "button"; b.className = "qs-mine"; b.textContent = "Мне на ответ";
-      s.appendChild(b);   // внутри summary: всё остальное в закрытом <details> браузер не показывает
-    }
-    var has = !!m;
-    if (b.classList.contains("on") !== has) b.classList.toggle("on", has);
+    var old = s.querySelector(".qs-mine"); if (old) old.remove(); // кнопка «Мне на ответ» убрана
   }
 
   /* ───── прошедшие пары + прокрутка к текущей ───── */
@@ -258,6 +266,21 @@
     }
   }
 
+  /* ───── день без прокрутки: если пары не влезли — включаем «плотный» вид ───── */
+  function fit() {
+    var sv = document.getElementById("schedView"), l = sv && sv.querySelector("#schedule .panel.active .lessons");
+    if (!sv || !l || sv.classList.contains("hidden")) return;
+    var nav = document.getElementById("bnav"), navTop = nav && nav.offsetHeight ? nav.getBoundingClientRect().top : window.innerHeight;
+    var room = Math.min(window.innerHeight, navTop) - 6;
+    var fits = function () { return l.getBoundingClientRect().bottom <= room; };
+    sv.classList.remove("dv-tight");
+    if (!fits()) sv.classList.add("dv-tight");
+  }
+  var fitT = 0;
+  function fitSoon() { clearTimeout(fitT); fitT = setTimeout(fit, 60); }
+  window.addEventListener("resize", fitSoon);
+  window.addEventListener("orientationchange", fitSoon);
+
   var raf = 0;
   function decorate() {
     raf = 0;
@@ -265,8 +288,9 @@
       var ol = d.querySelector("ol");
       if (ol) mark(d, ol);
     });
-    if (cur) mark(cur.details, cur.ol);
+    if (cur) { mark(cur.details, cur.ol); paintPlate(); }
     fade();
+    fitSoon();
   }
   function schedule() { if (!raf) raf = requestAnimationFrame(decorate); }
   new MutationObserver(schedule).observe(sched, { childList: true, subtree: true });
@@ -286,4 +310,170 @@
     c.classList.toggle("qs-open");
   });
   decorate();
+})();
+
+/* ───── «Ответ» рядом с «Беру»: текст + фото. Кнопка появляется, когда вопрос взят. ─────
+   Текст лежит в записи выбора: /picks/<пара>/<студент>/a, признак фото — .../ph.
+   Само фото (сжатый JPEG) хранится отдельно: /pimg/<группа>/<пара>/<студент>, чтобы не раздувать основную базу. */
+(function () {
+  "use strict";
+  var box, back, ta, prev, img, st, saveBtn, fileIn, addLbl;
+  var cur = null;              // { pk, key, li }
+  var ph = { data: null, changed: false, removed: false, busy: false };
+  var CACHE = {};
+
+  function toast(t) { try { if (window.hzToast) window.hzToast(t); } catch (e) {} }
+  function mkey() { return k(myName()); }
+  function rec(pk) { return ((db.picks || {})[pk] || {})[mkey()]; }
+  function recPath(pk) { return "/picks/" + pk + "/" + encodeURIComponent(mkey()); }
+  function imgUrl(pk, key) { return ROOT_URL() + "/pimg/" + encodeURIComponent(GROUP) + "/" + pk + "/" + encodeURIComponent(key) + ".json"; }
+
+  function build() {
+    if (box) return;
+    back = document.createElement("div"); back.className = "qa-back";
+    box = document.createElement("section"); box.className = "qa-box";
+    box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-labelledby", "qaT");
+    box.innerHTML =
+      '<header class="qa-head"><h3 id="qaT">Мой ответ</h3><button type="button" class="qa-x" aria-label="Закрыть">\u00d7</button></header>' +
+      '<p class="qa-q"></p>' +
+      '<textarea class="qa-text" rows="7" maxlength="4000" placeholder="Тезисы ответа, заметки\u2026" aria-label="Текст ответа"></textarea>' +
+      '<div class="qa-ph"><label class="qa-add">\uD83D\uDCF7 <span>Прикрепить фото</span><input type="file" accept="image/*" class="qa-file"></label>' +
+      '<div class="qa-prev" hidden><img alt="Фото к ответу"><button type="button" class="qa-rm">Убрать фото</button></div></div>' +
+      '<p class="qa-st" role="status" aria-live="polite"></p>' +
+      '<div class="qa-foot"><button type="button" class="qa-cancel">Отмена</button><button type="button" class="qa-save">Сохранить</button></div>';
+    document.body.appendChild(back); document.body.appendChild(box);
+    ta = box.querySelector(".qa-text"); prev = box.querySelector(".qa-prev"); img = prev.querySelector("img");
+    st = box.querySelector(".qa-st"); saveBtn = box.querySelector(".qa-save"); fileIn = box.querySelector(".qa-file"); addLbl = box.querySelector(".qa-add span");
+    back.addEventListener("click", close);
+    box.querySelector(".qa-x").addEventListener("click", close);
+    box.querySelector(".qa-cancel").addEventListener("click", close);
+    saveBtn.addEventListener("click", commit);
+    box.querySelector(".qa-rm").addEventListener("click", function () {
+      ph.data = null; ph.changed = false; ph.removed = true; paintPhoto();
+    });
+    fileIn.addEventListener("change", function () {
+      var f = fileIn.files && fileIn.files[0]; fileIn.value = "";
+      if (!f) return;
+      st.textContent = "Обрабатываю фото\u2026";
+      shrink(f).then(function (d) {
+        ph.data = d; ph.changed = true; ph.removed = false; st.textContent = ""; paintPhoto();
+      }, function () { st.textContent = "Не удалось прочитать фото. Попробуй другое."; });
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && cur && !ph.busy) close(); });
+  }
+
+  /* сжатие: длинная сторона ≤ 1280 px, JPEG ~70% (обычно 80–200 КБ) */
+  function shrink(file) {
+    function toCanvas(src, w, h) {
+      var max = 1280, k1 = Math.min(1, max / Math.max(w, h)), cw = Math.max(1, Math.round(w * k1)), ch = Math.max(1, Math.round(h * k1));
+      var c = document.createElement("canvas"); c.width = cw; c.height = ch;
+      var x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, cw, ch); x.drawImage(src, 0, 0, cw, ch);
+      var d = c.toDataURL("image/jpeg", 0.72);
+      if (d.length > 420000) d = c.toDataURL("image/jpeg", 0.55);
+      return d;
+    }
+    function viaImg() {
+      return new Promise(function (ok, no) {
+        var u = URL.createObjectURL(file), im = new Image();
+        im.onload = function () { try { ok(toCanvas(im, im.naturalWidth, im.naturalHeight)); } catch (e) { no(e); } URL.revokeObjectURL(u); };
+        im.onerror = function () { URL.revokeObjectURL(u); no(new Error("img")); };
+        im.src = u;
+      });
+    }
+    if (window.createImageBitmap) {
+      return createImageBitmap(file, { imageOrientation: "from-image" }).then(function (bm) {
+        var d = toCanvas(bm, bm.width, bm.height); try { bm.close(); } catch (e) {} return d;
+      }).catch(viaImg);
+    }
+    return viaImg();
+  }
+
+  function paintPhoto() {
+    var has = !!ph.data;
+    prev.hidden = !has;
+    if (has) img.src = ph.data;
+    addLbl.textContent = has ? "Заменить фото" : "Прикрепить фото";
+  }
+
+  function open(li) {
+    if (typeof myName !== "function" || !myName()) { toast("Войди в свой профиль"); return; }
+    var pk = li.dataset.pk, r = rec(pk);
+    if (!r) { toast("Сначала нажми «Беру»"); return; }
+    build();
+    cur = { pk: pk, key: mkey(), li: li };
+    ph = { data: null, changed: false, removed: false, busy: false };
+    box.querySelector(".qa-q").textContent = (+li.dataset.qi + 1) + ". " + (((li.querySelector(".q-text") || {}).textContent) || "").trim();
+    ta.value = r.a || ""; st.textContent = ""; saveBtn.disabled = false; saveBtn.textContent = "Сохранить";
+    paintPhoto();
+    document.documentElement.classList.add("qa-lock");
+    requestAnimationFrame(function () { back.classList.add("on"); box.classList.add("on"); });
+    if (r.ph) {
+      var ck = pk + "|" + cur.key;
+      if (CACHE[ck]) { ph.data = CACHE[ck]; paintPhoto(); }
+      else {
+        st.textContent = "Загружаю фото\u2026";
+        fetch(imgUrl(pk, cur.key)).then(function (x) { return x.json(); }).then(function (d) {
+          if (!cur || cur.pk !== pk) return;
+          if (typeof d === "string" && d.indexOf("data:image") === 0) { CACHE[ck] = d; if (!ph.changed && !ph.removed) { ph.data = d; paintPhoto(); } st.textContent = ""; }
+          else st.textContent = "Фото не найдено на сервере";
+        }).catch(function () { if (cur && cur.pk === pk) st.textContent = "Не удалось загрузить фото (нет сети?)"; });
+      }
+    }
+    setTimeout(function () { try { ta.focus({ preventScroll: true }); } catch (e) {} }, 350);
+  }
+
+  function close() {
+    if (!box || ph.busy) return;
+    back.classList.remove("on"); box.classList.remove("on");
+    document.documentElement.classList.remove("qa-lock");
+    try { ta.blur(); } catch (e) {}
+    cur = null;
+  }
+
+  function repaint(li) {
+    try { if (typeof paintPicks === "function") paintPicks(li.closest("ol")); } catch (e) {}
+  }
+
+  function commit() {
+    if (!cur || ph.busy) return;
+    var c = cur, r = rec(c.pk);
+    if (!r) { toast("Вопрос уже не выбран"); close(); return; }
+    var text = ta.value.trim();
+    if (text) r.a = text; else delete r.a;
+    try { save(); } catch (e) {}
+    net(recPath(c.pk) + "/a", text || null);
+    var path = recPath(c.pk), ck = c.pk + "|" + c.key, job = Promise.resolve(true);
+    if (ph.changed && ph.data) {
+      ph.busy = true; saveBtn.disabled = true; st.textContent = "Загружаю фото\u2026"; saveBtn.textContent = "Сохраняю\u2026";
+      job = fetch(imgUrl(c.pk, c.key), { method: "PUT", body: JSON.stringify(ph.data) }).then(function (x) {
+        if (!x.ok) throw new Error("http " + x.status);
+        CACHE[ck] = ph.data; r.ph = 1; try { save(); } catch (e) {} net(path + "/ph", 1); return true;
+      }).catch(function () { return false; });
+    } else if (ph.removed && r.ph) {
+      delete r.ph; delete CACHE[ck]; try { save(); } catch (e) {}
+      net(path + "/ph", null);
+      fetch(imgUrl(c.pk, c.key), { method: "DELETE" }).catch(function () {});
+    }
+    job.then(function (okPhoto) {
+      ph.busy = false; repaint(c.li);
+      if (!okPhoto) {
+        st.textContent = "Текст сохранён, а фото не загрузилось (нет сети или сервер не разрешил). Попробуй ещё раз.";
+        saveBtn.disabled = false; saveBtn.textContent = "Сохранить"; return;
+      }
+      toast("Ответ сохранён"); close();
+    });
+  }
+
+  // снял «Беру» → убираем и фото на сервере
+  window.hzPickGone = function (pk, key, r) {
+    try { delete CACHE[pk + "|" + key]; } catch (e) {}
+    if (r && r.ph) fetch(imgUrl(pk, key), { method: "DELETE" }).catch(function () {});
+  };
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest(".qs-body .q-ans");
+    if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    var li = b.closest("li[data-pk]"); if (li) open(li);
+  }, true);
 })();
