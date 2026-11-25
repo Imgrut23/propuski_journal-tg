@@ -52,7 +52,7 @@
     g.insertBefore(b,g.firstChild);
   }
   /* плитки меню «Журнал» и «Группа» (убраны из дока у старосты) */
-  var NAV_TILES=[["navTileToday","Журнал","📋","today"],["navTileSet","Группа","👥","set"]];
+  var NAV_TILES=[["navTileToday","Журнал","📋","today"]]; /* «Группа» теперь внутри «Настройки» */
   function navTiles(){
     var g=document.querySelector("#sheet .sheet-grid");if(!g)return;
     var show=false;try{show=!!(st.merge&&isHead&&!isGuest)}catch(e){}

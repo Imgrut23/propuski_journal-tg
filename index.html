@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="styles.css?v=3.2">
 <link rel="stylesheet" href="mini.css?v=6"><link rel="stylesheet" href="flat.css?v=19">
+<link rel="stylesheet" href="diary-sheet.css?v=2">
+<link rel="stylesheet" href="settings-merge.css?v=1">
 <script id="iosInstJs">
 // ── iosInstJs ──
 (function() {
@@ -4969,6 +4971,11 @@ $("date").value = workDate(), schedule(), (async () => {
       });
       if (e.length) {
         l("absence:loginSeen", String(e[e.length - 1].t));
+        e = e.filter(function(i) {
+          var g = i.tg || {};
+          return g.u || g.b;
+        });
+        if (!e.length) return;
         var n = e[e.length - 1], r = n.tg || {};
         window.hzToast && hzToast("\u{1F514} " + n.w + " \u0432\u043E\u0448\u0451\u043B" + (r.u ? " \xB7 @" + r.u : r.b ? " \xB7 TG \u043F\u0440\u0438\u0432\u044F\u0437\u0430\u043D" : " \xB7 TG \u043D\u0435 \u043F\u0440\u0438\u0432\u044F\u0437\u0430\u043D") + (e.length > 1 ? " (+\u0435\u0449\u0451 " + (e.length - 1) + ")" : ""));
       }
@@ -8216,7 +8223,9 @@ new MutationObserver(tc).observe(r,{attributes:true,attributeFilter:["data-theme
   setTimeout(place, 1600);
 })();
 </script>
-<script src="mini.js?v=7"></script>
+<script src="mini.js?v=8"></script>
+<script src="diary-sheet.js?v=2"></script>
+<script src="settings-merge.js?v=1"></script>
 <script id="cpPickJs">
 // ── cpPickJs ──
 (function() {
@@ -8272,6 +8281,9 @@ html #dockMenu{position:fixed!important;z-index:62;left:calc(50% + var(--dockW)/
 html #dockMenu svg{width:24px;height:24px;display:block}
 html #dockMenu.open{color:var(--acc)!important;background:color-mix(in srgb,var(--acc) 16%,transparent)!important}
 html #dockMenu.sub{color:var(--acc)!important}
+html #codesView .cv-card{text-align:center!important;align-items:center!important}
+html #codesView .cv-card>*{text-align:center!important;max-width:100%}
+html #codesView .cv-card .cv-ic{display:block!important;width:100%!important;margin:0!important;text-align:center!important}
 html #sheet.sheet .sheet-grid .tile[aria-pressed="true"]{color:var(--acc)!important;background:color-mix(in srgb,var(--acc) 16%,transparent)!important}
 html #dockMenu:active{transform:scale(.92)}
 html #menuFab{display:none!important}
@@ -8641,6 +8653,11 @@ html.sched:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#
 html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid{display:grid!important;grid-template-columns:repeat(auto-fill,52px)!important;justify-content:start!important;gap:8px!important}
 html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid .tile:not(.hidden):not(#guestTile):not(#schedBtn):not(.slim-add),html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid #logout.tile.out{display:grid!important;place-items:center!important;grid-column:auto!important;width:52px!important;height:52px!important;min-height:52px!important;min-width:0!important;padding:0!important;gap:0!important;font-size:0!important;line-height:0!important;border-radius:16px!important}
 html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid .tile span{font-size:24px!important;line-height:1!important;margin:0!important}
+/* иконки плиток меню строго по центру плитки */
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid .tile:not(.hidden):not(#guestTile):not(#schedBtn):not(.slim-add),
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid #logout.tile.out{grid-template-columns:none!important;grid-template-rows:none!important;justify-content:center!important;align-content:center!important;justify-items:center!important;align-items:center!important;text-align:center!important}
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid .tile:not(.hidden):not(#guestTile):not(#schedBtn):not(.slim-add)>span,
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid #logout.tile.out>span{display:block!important;flex:none!important;width:auto!important;height:auto!important;background:none!important;box-shadow:none!important;border-radius:0!important;margin:0!important;padding:0!important;transform:none!important;line-height:1!important;text-align:center!important}
 html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #sheet.sheet .sheet-grid .tile em{display:none!important}
 /* отметка: «Сохранить» не наезжает на варианты, а идёт в потоке под ними */
 html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body #mark-card #msave{position:static!important;bottom:auto!important;margin-top:14px!important}

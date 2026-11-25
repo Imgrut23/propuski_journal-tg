@@ -1,0 +1,15 @@
+/* Единые настройки: вкладки по ролям */
+#stSheet .sm-tabs{display:flex;gap:4px;margin:0 0 16px;padding:4px;border-radius:14px;background:var(--soft,rgba(128,128,128,.12))}
+#stSheet .sm-tabs button{flex:1 1 0;min-height:38px;padding:0 8px;border:1px solid transparent;border-radius:11px;background:none;color:var(--mute,#777);font:600 14px/1 inherit;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#stSheet .sm-tabs button[aria-selected=true]{background:var(--card,var(--bg,#fff));border-color:var(--line,rgba(128,128,128,.3));color:var(--ink,inherit)}
+
+#stSheet .sm-pane{display:none}
+#stSheet .st[data-pane=grp] .sm-pane-grp,
+#stSheet .st[data-pane=adm] .sm-pane-adm{display:block}
+#stSheet .st[data-pane=grp]>*:not(h3):not(.sm-tabs):not(.sm-pane-grp):not(.st-x),
+#stSheet .st[data-pane=adm]>*:not(h3):not(.sm-tabs):not(.sm-pane-adm):not(.st-x){display:none!important}
+#stSheet .st:not([data-pane=me]) #stReset{display:none}
+
+#stSheet .sm-pane .set-group{margin:0 0 12px!important}
+#stSheet .sm-pane .set-group:last-child{margin-bottom:0!important}
+#stSheet .sm-pane .tabhide{display:block}
