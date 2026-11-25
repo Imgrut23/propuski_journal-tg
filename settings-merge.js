@@ -34,6 +34,22 @@
     try { applyTab(); } catch (e) {}
   }
 
+
+  /* ---------- пункты, переехавшие из меню ---------- */
+  function tileOk(id) { var t = $(id); return t && !t.classList.contains("hidden") ? t : null; }
+  function closeThen(fn) { var ok = $("stOk"); ok && ok.click(); setTimeout(fn, 140); }
+  function installed() { try { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } }
+  function inTg() { return !!(window.Telegram && Telegram.WebApp && Telegram.WebApp.initData); }
+  /* из нижнего меню эти плитки убираем: теперь они в настройках (inline !important сильнее любых слоёв) */
+  function hideMenuTiles() {
+    ["infoBtn", "libTile", "codesTile"].forEach(function (id) {
+      var t = $(id); if (t) t.style.setProperty("display", "none", "important");
+    });
+    document.querySelectorAll("#sheet .inst").forEach(function (t) { t.style.setProperty("display", "none", "important"); });
+    var sv = $("svcBtn"); if (sv) sv.style.setProperty("display", "none", "important");
+  }
+  hideMenuTiles();
+
   /* ---------- строительные блоки ---------- */
   var COLORS = { blue: "#0a84ff", green: "#30b350", orange: "#ff9500", red: "#ff3b30", purple: "#af52de", gray: "#8e8e93", teal: "#30b0c7", pink: "#ff2d55" };
   function icon(emoji, color) {
@@ -192,6 +208,19 @@
     ui.bioRow = row({ icon: "🔐", color: "blue", title: "Биометрия", value: "", chev: true, onclick: function () { go("bio"); } });
     root.appendChild(group("", [ui.theme, ui.vib, ui.bioRow]));
 
+    /* Материалы: лекции, практикумы, кодексы */
+    var mat = [];
+    if ($("libTile")) mat.push(row({ icon: "📚", color: "orange", title: "Лекции", chev: true, onclick: function () {
+      var b = $("libTile"); b && b.click(); setTimeout(function () { var ok = $("stOk"); ok && ok.click(); }, 60);
+    } }));
+    mat.push(row({ icon: "📝", color: "green", title: "Практикумы", chev: true, onclick: function () {
+      closeThen(function () { try { window.openPrac(); } catch (e) {} });
+    } }));
+    mat.push(row({ icon: "⚖️", color: "purple", title: "Кодексы", chev: true, onclick: function () {
+      closeThen(function () { try { window.openCodes(); } catch (e) {} });
+    } }));
+    root.appendChild(group("Материалы", mat));
+
     if (r !== "user") {
       var gr = itemRows(["grpRoles", "grpSkin", "grpBase"]);
       if (gr.length) root.appendChild(group("Группа", gr));
@@ -200,8 +229,29 @@
       var ar = itemRows(["saCard"], $("saMsg"));
       if (ar.length) root.appendChild(group("Админ", ar));
     }
+    if (tileOk("svcBtn")) {
+      root.appendChild(group("Сервис", [row({ icon: "🛠", color: "gray", title: "Сервисное меню", chev: true, onclick: function () {
+        closeThen(function () { var b = $("svcBtn"); b && b.click(); });
+      } })]));
+    }
+    /* О дневнике: установка, инфо и лог, что нового */
+    var pAbout = addPage("about", "О дневнике");
+    var isIn = installed(), tg = inTg();
+    var instRow = row({ icon: "📲", color: "blue", title: "Приложение", value: isIn ? "Установлено" : tg ? "В Telegram" : "Не установлено", chev: !isIn && !tg, onclick: function () {
+      if (isIn || tg) return;
+      var b = document.querySelector("#sheet .inst"); b && b.click();
+    } });
+    pAbout.appendChild(group("", [instRow], isIn ? "Журнал открыт как приложение." : tg ? "Вы открыли журнал внутри Telegram." : "Нажмите, чтобы установить журнал на экран телефона."));
+    pAbout.appendChild(group("", [
+      row({ icon: "ℹ️", color: "blue", title: "Инфо и лог", chev: true, onclick: function () {
+        closeThen(function () { var b = $("infoBtn"); b && b.click(); });
+      } }),
+      row({ icon: "✨", color: "orange", title: "Что нового", chev: true, onclick: function () {
+        closeThen(function () { var b = $("infoBtn"); b && b.click(); setTimeout(function () { var n = $("tabNew"); n && n.click(); }, 60); });
+      } })
+    ]));
     var rep = row({ icon: "🛠", color: "gray", title: "Скопировать отчёт об ошибке", onclick: function () { var b = $("stRep"); b && b.click(); } });
-    var gRep = group("", [rep], "");
+    var gRep = group("", [row({ icon: "ℹ️", color: "blue", title: "О дневнике", chev: true, onclick: function () { go("about"); } }), rep], "");
     ui.rootFoot = gRep._foot;
     root.appendChild(gRep);
 
@@ -250,6 +300,7 @@
   function sync() {
     if (!ensure()) return;
     lock(sh.classList.contains("show"));
+    hideMenuTiles();
     restore();
     build();
     setTimeout(refresh, 300); /* биометрия определяется асинхронно */
