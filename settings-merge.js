@@ -5,8 +5,13 @@
   "use strict";
   var moved = [], sh = null, box = null, ios = null, obs = null, msgObs = null, watching = false;
 
+  var flipped = false, prevTab = null;
+  function realAdmin() {
+    try { return !isGuest && !!me && norm(me) === norm(SUPER_ADMIN); } catch (e) { return false; }
+  }
   function role() {
     try {
+      if (realAdmin()) return "admin"; /* привилегии админа не пропадают в режиме «Учащийся» */
       if (isGuest || !isHead) return "user";
       return norm(me) === norm(SUPER_ADMIN) ? "admin" : "head";
     } catch (e) { return "user"; }
@@ -26,6 +31,10 @@
     moved.push({ el: el, ph: ph, t: t });
   }
   function restore() {
+    if (flipped) {
+      flipped = false;
+      try { isHead = false; tab = prevTab; } catch (e) {}
+    }
     moved.forEach(function (m) {
       if (m.t !== null) m.el.setAttribute("data-t", m.t);
       if (m.ph.parentNode) { m.ph.parentNode.insertBefore(m.el, m.ph); m.ph.parentNode.removeChild(m.ph); }
@@ -316,6 +325,15 @@
     lock(sh.classList.contains("show"));
     hideMenuTiles();
     restore();
+    /* режим «Учащийся»: на время настроек подгружаем блоки старосты/админа, потом возвращаем вид студента */
+    try {
+      if (realAdmin() && !isHead) {
+        prevTab = tab; isHead = true; tab = "set"; flipped = true;
+        try { renderHead(); } catch (e) {}
+        try { window.renderSA && window.renderSA(); } catch (e) {}
+        try { qrSync(); } catch (e) {}
+      }
+    } catch (e) {}
     build();
     setTimeout(refresh, 300); /* биометрия определяется асинхронно */
   }
