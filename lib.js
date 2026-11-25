@@ -326,7 +326,22 @@
             S.ready = id; S.info = ""; render();
           });
         }
-        // Chrome на Android не умеет передавать PPTX в меню «Поделиться» — сохраняем файл и подсказываем, где он
+        // Chrome на Android не умеет передавать PPTX в меню «Поделиться».
+        var tg = window.Telegram && window.Telegram.WebApp;
+        var inTg = !!(tg && tg.initData);
+        if (inTg) {
+          // внутри Telegram файл из памяти сохранить нельзя — просим Telegram скачать его сам и открыть в PowerPoint
+          if (KEY && navigator.onLine && tg.downloadFile && (!tg.isVersionAtLeast || tg.isVersionAtLeast("8.0"))) {
+            try {
+              tg.downloadFile({ url: dlUrl({ id: m.id, mimeType: m.mime }), file_name: m.name });
+              S.ready = null; S.info = "Telegram предложит сохранить «" + m.name + "». После сохранения откройте файл — он откроется в PowerPoint.";
+              render(); return;
+            } catch (e) {}
+          }
+          S.ready = null;
+          S.info = "В Telegram файл не открыть в PowerPoint. Откройте журнал в браузере (⋮ → «Открыть в браузере») или установите его как приложение, затем снова нажмите на файл.";
+          render(); return;
+        }
         saveAs(blob, m.name);
         S.ready = null;
         S.info = "Файл «" + m.name + "» сохранён в «Загрузки». Откройте его из уведомления или в приложении «Файлы» — он откроется в PowerPoint.";

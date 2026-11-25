@@ -84,7 +84,9 @@
     var subj = card && card.querySelector(".subject");
     var sum = details.querySelector("summary");
     titleEl.textContent = subj ? subj.textContent.trim() : "Вопросы";
-    subEl.textContent = onlyMine ? "Мне на ответ" : (sum ? sum.textContent.trim() : "");
+    var sumText = "";
+    if (sum) { var cl = sum.cloneNode(true), mb = cl.querySelector(".qs-mine"); if (mb) mb.remove(); sumText = cl.textContent.trim(); }
+    subEl.textContent = onlyMine ? "Мне на ответ" : sumText;
     statusEl.textContent = "";
 
     var ph = document.createComment("qs");
@@ -182,8 +184,8 @@
 
   /* ───── клик по «Вопросы к семинару» в карточке ───── */
   document.addEventListener("click", function (e) {
-    var m = e.target.closest && e.target.closest("#schedule details.seminar-q > .qs-mine");
-    if (m) { e.preventDefault(); e.stopPropagation(); open(m.parentNode, true); return; }
+    var m = e.target.closest && e.target.closest("#schedule details.seminar-q > summary > .qs-mine");
+    if (m) { e.preventDefault(); e.stopPropagation(); open(m.parentNode.parentNode, true); return; }
     var s = e.target.closest && e.target.closest("#schedule details.seminar-q > summary");
     if (!s) return;
     e.preventDefault();
@@ -214,11 +216,11 @@
     if (m) { if (s.dataset.mine !== m) s.dataset.mine = m; }
     else if (s.dataset.mine) delete s.dataset.mine;
     // кнопка «Мне на ответ» рядом с «Вопросы»
-    var b = details.querySelector(":scope > .qs-mine");
+    var b = s.querySelector(".qs-mine");
     if (!b) {
       b = document.createElement("button");
       b.type = "button"; b.className = "qs-mine"; b.textContent = "Мне на ответ";
-      details.appendChild(b);
+      s.appendChild(b);   // внутри summary: всё остальное в закрытом <details> браузер не показывает
     }
     var has = !!m;
     if (b.classList.contains("on") !== has) b.classList.toggle("on", has);
