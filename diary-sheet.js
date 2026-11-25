@@ -247,5 +247,11 @@
   if (typeof oldPaint === "function") window._dvPaint = function () { var r = oldPaint.apply(this, arguments); schedule(); return r; };
   var oldClose = close;
   close = function () { oldClose(); setTimeout(schedule, 400); };
+  // тап по свёрнутой прошедшей паре раскрывает её (и сворачивает обратно)
+  sched.addEventListener("click", function (e) {
+    var c = e.target.closest && e.target.closest(".lesson-card.qs-past");
+    if (!c || (e.target.closest && e.target.closest("button,a,summary,details,input,select,textarea"))) return;
+    c.classList.toggle("qs-open");
+  });
   decorate();
 })();

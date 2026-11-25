@@ -136,3 +136,13 @@ html body #schedView .lesson-card.qs-past{opacity:.42}
 html body #schedView :is(.lesson-card,.status-bar,.sticky-bar,.day-tab,.card){-webkit-backdrop-filter:none!important;backdrop-filter:none!important;text-shadow:none!important}
 html body #schedView .lesson-card{content-visibility:auto;contain-intrinsic-size:auto 170px}
 html body #schedView .lesson-card:not(.is-now){animation:none!important}
+
+/* ───── Прошедшие пары: одна мелкая строка (время + название), тап раскрывает ───── */
+html:not(#q1):not(#q2):not(#q3):not(#q4):not(#q5):not(#q6):not(#q7):not(#q8):not(#q9):not(#q10) body #schedView .lesson-card.qs-past:not(.qs-open){display:flex!important;align-items:center;gap:8px;padding:5px 12px 5px 14px!important;min-height:0!important;margin:0!important;border-radius:12px!important;opacity:.5;cursor:pointer;content-visibility:visible;contain-intrinsic-size:auto 30px}
+html:not(#q1):not(#q2):not(#q3):not(#q4):not(#q5):not(#q6):not(#q7):not(#q8):not(#q9):not(#q10) body #schedView .lesson-card.qs-past:not(.qs-open) .lesson-time{flex:0 0 auto;display:flex!important;align-items:center;gap:0;margin:0!important;font-size:11px;line-height:1;color:var(--mute)}
+html:not(#q1):not(#q2):not(#q3):not(#q4):not(#q5):not(#q6):not(#q7):not(#q8):not(#q9):not(#q10) body #schedView .lesson-card.qs-past:not(.qs-open) .lesson-time>:not(b){display:none!important}
+html:not(#q1):not(#q2):not(#q3):not(#q4):not(#q5):not(#q6):not(#q7):not(#q8):not(#q9):not(#q10) body #schedView .lesson-card.qs-past:not(.qs-open) .lesson-time b{font-weight:600;font-size:11px;color:var(--mute)}
+html:not(#q1):not(#q2):not(#q3):not(#q4):not(#q5):not(#q6):not(#q7):not(#q8):not(#q9):not(#q10) body #schedView .lesson-card.qs-past:not(.qs-open) .lesson-body{flex:1;min-width:0;display:block!important}
+html:not(#q1):not(#q2):not(#q3):not(#q4):not(#q5):not(#q6):not(#q7):not(#q8):not(#q9):not(#q10) body #schedView .lesson-card.qs-past:not(.qs-open) .lesson-body>:not(.subject){display:none!important}
+html:not(#q1):not(#q2):not(#q3):not(#q4):not(#q5):not(#q6):not(#q7):not(#q8):not(#q9):not(#q10) body #schedView .lesson-card.qs-past:not(.qs-open) .lesson-body .subject{margin:0!important;font-size:12.5px!important;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:not(#q1):not(#q2):not(#q3):not(#q4):not(#q5):not(#q6):not(#q7):not(#q8):not(#q9):not(#q10) body #schedView .lesson-card.qs-past:not(.qs-open):after{display:none!important}
