@@ -291,13 +291,36 @@
     c.classList.toggle("is-run", !!S.batch);
   }
   /* ───────── открыть файл ───────── */
+  var OFFICE = { pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation", ppt: "application/vnd.ms-powerpoint", pps: "application/vnd.ms-powerpoint", ppsx: "application/vnd.openxmlformats-officedocument.presentationml.slideshow", odp: "application/vnd.oasis.opendocument.presentation", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", doc: "application/msword", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", xls: "application/vnd.ms-excel" };
+  function extOf(n) { var m = /\.([a-z0-9]+)$/i.exec(n || ""); return m ? m[1].toLowerCase() : ""; }
+  function saveAs(blob, name) {
+    var url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10 * 60 * 1000);
+  }
   function openFile(id) {
     var m = S.have[id];
     if (!m) return;
+    var ext = extOf(m.name), office = !!OFFICE[ext];
     var w = null;
-    try { w = window.open("", "_blank"); } catch (e) {}
+    if (!office) { try { w = window.open("", "_blank"); } catch (e) {} }
     getChunks(id).then(function (parts) {
-      var url = URL.createObjectURL(new Blob(parts, { type: m.mime }));
+      var type = office ? OFFICE[ext] : m.mime;
+      var blob = new Blob(parts, { type: type });
+      if (office) {
+        // презентации и документы Office: на телефоне — меню «Открыть в…» (PowerPoint, Word, Excel), на компьютере — файл скачивается и открывается в программе
+        var file = null;
+        try { file = new File([blob], m.name, { type: type }); } catch (e) {}
+        if (file && navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
+          return navigator.share({ files: [file], title: m.name }).catch(function (e) {
+            if (e && e.name === "AbortError") return;
+            saveAs(blob, m.name);
+          });
+        }
+        return saveAs(blob, m.name);
+      }
+      var url = URL.createObjectURL(blob);
       if (w) { w.location.href = url; }
       else {
         var a = document.createElement("a");
@@ -346,7 +369,7 @@
     if (!(navigator.storage && navigator.storage.estimate)) return;
     navigator.storage.estimate().then(function (e) {
       var n = el.root && el.root.querySelector("#lbSt");
-      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v7";
+      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v9";
     }).catch(function () {});
   }
   function row(f, off) {
