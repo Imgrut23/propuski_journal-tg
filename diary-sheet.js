@@ -317,7 +317,7 @@
    Само фото (сжатый JPEG) хранится отдельно: /pimg/<группа>/<пара>/<студент>, чтобы не раздувать основную базу. */
 (function () {
   "use strict";
-  var box, back, ta, prev, img, st, saveBtn, fileIn, addLbl;
+  var box, back, ta, mq, prev, img, st, saveBtn, fileIn, addLbl;
   var cur = null;              // { pk, key, li }
   var ph = { data: null, changed: false, removed: false, busy: false };
   var CACHE = {};
@@ -334,15 +334,18 @@
     box = document.createElement("section"); box.className = "qa-box";
     box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-labelledby", "qaT");
     box.innerHTML =
-      '<header class="qa-head"><h3 id="qaT">Мой ответ</h3><button type="button" class="qa-x" aria-label="Закрыть">\u00d7</button></header>' +
+      '<header class="qa-head"><h3 id="qaT">Мой вопрос и ответ</h3><button type="button" class="qa-x" aria-label="Закрыть">\u00d7</button></header>' +
       '<p class="qa-q"></p>' +
-      '<textarea class="qa-text" rows="7" maxlength="4000" placeholder="Тезисы ответа, заметки\u2026" aria-label="Текст ответа"></textarea>' +
+      '<label class="qa-lab" for="qaMq">Вопрос</label>' +
+      '<textarea class="qa-text qa-mq" id="qaMq" rows="3" maxlength="1000" placeholder="Твой вопрос по этой теме (его увидят остальные)\u2026" aria-label="Мой вопрос"></textarea>' +
+      '<label class="qa-lab" for="qaAns">Ответ</label>' +
+      '<textarea class="qa-text" id="qaAns" rows="6" maxlength="4000" placeholder="Ответ на этот вопрос, тезисы, заметки\u2026" aria-label="Текст ответа"></textarea>' +
       '<div class="qa-ph"><label class="qa-add">\uD83D\uDCF7 <span>Прикрепить фото</span><input type="file" accept="image/*" class="qa-file"></label>' +
       '<div class="qa-prev" hidden><img alt="Фото к ответу"><button type="button" class="qa-rm">Убрать фото</button></div></div>' +
       '<p class="qa-st" role="status" aria-live="polite"></p>' +
       '<div class="qa-foot"><button type="button" class="qa-cancel">Отмена</button><button type="button" class="qa-save">Сохранить</button></div>';
     document.body.appendChild(back); document.body.appendChild(box);
-    ta = box.querySelector(".qa-text"); prev = box.querySelector(".qa-prev"); img = prev.querySelector("img");
+    ta = box.querySelector("#qaAns"); mq = box.querySelector("#qaMq"); prev = box.querySelector(".qa-prev"); img = prev.querySelector("img");
     st = box.querySelector(".qa-st"); saveBtn = box.querySelector(".qa-save"); fileIn = box.querySelector(".qa-file"); addLbl = box.querySelector(".qa-add span");
     back.addEventListener("click", close);
     box.querySelector(".qa-x").addEventListener("click", close);
@@ -403,7 +406,7 @@
     cur = { pk: pk, key: mkey(), li: li };
     ph = { data: null, changed: false, removed: false, busy: false };
     box.querySelector(".qa-q").textContent = (+li.dataset.qi + 1) + ". " + (((li.querySelector(".q-text") || {}).textContent) || "").trim();
-    ta.value = r.a || ""; st.textContent = ""; saveBtn.disabled = false; saveBtn.textContent = "Сохранить";
+    ta.value = r.a || ""; mq.value = r.mq || ""; st.textContent = ""; saveBtn.disabled = false; saveBtn.textContent = "Сохранить";
     paintPhoto();
     document.documentElement.classList.add("qa-lock");
     requestAnimationFrame(function () { back.classList.add("on"); box.classList.add("on"); });
@@ -426,7 +429,7 @@
     if (!box || ph.busy) return;
     back.classList.remove("on"); box.classList.remove("on");
     document.documentElement.classList.remove("qa-lock");
-    try { ta.blur(); } catch (e) {}
+    try { ta.blur(); mq.blur(); } catch (e) {}
     cur = null;
   }
 
@@ -438,10 +441,12 @@
     if (!cur || ph.busy) return;
     var c = cur, r = rec(c.pk);
     if (!r) { toast("Вопрос уже не выбран"); close(); return; }
-    var text = ta.value.trim();
+    var text = ta.value.trim(), mqt = mq.value.trim();
     if (text) r.a = text; else delete r.a;
+    if (mqt) r.mq = mqt; else delete r.mq;
     try { save(); } catch (e) {}
     net(recPath(c.pk) + "/a", text || null);
+    net(recPath(c.pk) + "/mq", mqt || null);
     var path = recPath(c.pk), ck = c.pk + "|" + c.key, job = Promise.resolve(true);
     if (ph.changed && ph.data) {
       ph.busy = true; saveBtn.disabled = true; st.textContent = "Загружаю фото\u2026"; saveBtn.textContent = "Сохраняю\u2026";
@@ -460,7 +465,7 @@
         st.textContent = "Текст сохранён, а фото не загрузилось (нет сети или сервер не разрешил). Попробуй ещё раз.";
         saveBtn.disabled = false; saveBtn.textContent = "Сохранить"; return;
       }
-      toast("Ответ сохранён"); close();
+      toast("Вопрос и ответ сохранены"); close();
     });
   }
 

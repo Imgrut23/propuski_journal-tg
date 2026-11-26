@@ -51,7 +51,8 @@
   function getChunks(id) { return tx("chunks", "readonly", function (o) { return o.getAll(chunkRange(id)); }); }
 
   /* ───────── состояние ───────── */
-  var S = { tab: navigator.onLine ? "drive" : "off", stack: [{ id: ROOT, name: "Лекции" }], items: [], loading: false, err: "", cached: false, have: {}, prog: {}, batch: null, ready: null, info: "", offDir: [] };
+  var IC = {"DL": "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4v11\"/><path d=\"M7 11l5 5 5-5\"/><path d=\"M5 20h14\"/></svg>", "OK": "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>", "X": "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg>", "TR": "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 7h16\"/><path d=\"M9 7V4h6v3\"/><path d=\"M6.5 7l1 13h9l1-13\"/></svg>", "BK": "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 5l-7 7 7 7\"/></svg>"};
+  var S = { tab: "drive", stack: [{ id: ROOT, name: "Лекции" }], items: [], loading: false, err: "", cached: false, have: {}, prog: {}, batch: null, ready: null, info: "", offDir: [] };
   var aborts = {};
   var el = {};
 
@@ -351,7 +352,7 @@
     if (dv) return dv;
     dv = document.createElement("div");
     dv.id = "libDoc"; dv.className = "ld-hide"; dv.setAttribute("role", "dialog");
-    dv.innerHTML = '<div class="ld-top"><button type="button" class="ld-x" data-d="close" aria-label="Закрыть">✕</button><div class="ld-title"></div></div><div class="ld-stage"></div>';
+    dv.innerHTML = '<div class="ld-top"><button type="button" class="ld-x" data-d="close" aria-label="Закрыть">' + IC.X + '</button><div class="ld-title"></div></div><div class="ld-stage"></div>';
     document.body.appendChild(dv);
     dv.addEventListener("click", function (e) {
       var t = e.target.closest("[data-d]"); if (!t) return;
@@ -481,15 +482,62 @@
       return viewFile(id, m, new Blob(parts, { type: type }), ext);
     }).catch(function () { S.err = "Не удалось открыть файл"; render(); });
   }
-  // нажали на файл: если скачан — открыть, если нет — скачать в память приложения и сразу открыть
+  /* тихо сохраняет уже загруженный файл для офлайна: без повторной загрузки, без индикаторов и ошибок на экране */
+  function saveQuiet(f, whole, m, path) {
+    if (S.have[f.id]) return;
+    var n = Math.max(1, Math.ceil(whole.size / CHUNK)), i = 0;
+    var next = function () {
+      if (i >= n) return Promise.resolve();
+      var k = i++;
+      return idbPut("chunks", whole.slice(k * CHUNK, (k + 1) * CHUNK), f.id + ":" + String(k).padStart(5, "0")).then(next);
+    };
+    next().then(function () {
+      var meta = { id: f.id, name: m.name, size: whole.size, mime: m.mime, chunks: n, t: Date.now(), link: m.link || "", path: path };
+      return idbPut("meta", meta).then(function () { S.have[f.id] = meta; render(); });
+    }).catch(function () { delCha();
+    });
+    function delCha() { delChunks(f.id).catch(function () {}); }
+  }
+  /* открыть без явного скачивания: файл показывается сразу, а в фоне тихо сохраняется для офлайна */
+  function viewOnlineMem(f) {
+    if (S.prog[f.id]) return Promise.resolve();
+    var g = GAPPS[f.mimeType], ac = ("AbortController" in window) ? new AbortController() : null, parts = [], got = 0;
+    aborts[f.id] = ac;
+    S.prog[f.id] = { got: 0, total: +f.size || 0 };
+    render();
+    return fetch(dlUrl(f), ac ? { signal: ac.signal } : undefined).then(function (r) {
+      if (!r.ok) { var e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
+      if (!r.body || !r.body.getReader) return r.blob().then(function (b) { parts.push(b); got = b.size; });
+      var rd = r.body.getReader();
+      var pump = function () {
+        return rd.read().then(function (x) {
+          if (x.done) return;
+          parts.push(x.value); got += x.value.length;
+          S.prog[f.id].got = got; paintProg(f.id);
+          return pump();
+        });
+      };
+      return pump();
+    }).then(function () {
+      delete S.prog[f.id]; delete aborts[f.id]; render();
+      var name = f.name + (g && !/\.pdf$/i.test(f.name) ? g[1] : ""), ext = extOf(name);
+      var m = { id: f.id, name: name, size: got, mime: g ? g[0] : (f.mimeType || "application/octet-stream"), link: f.webViewLink || "" };
+      var whole = new Blob(parts, { type: OFFICE[ext] || m.mime });
+      saveQuiet(f, whole, m, curPath());
+      return viewFile(f.id, m, whole, ext);
+    }).catch(function (e) {
+      delete S.prog[f.id]; delete aborts[f.id];
+      if (!(e && e.name === "AbortError")) S.err = "Не удалось открыть «" + f.name + "»" + (e && e.status ? " (" + e.status + ")" : "");
+      render();
+    });
+  }
+  // нажали на файл: если скачан — открыть из памяти устройства, если нет — открыть онлайн без сохранения
   function tapFile(id, f) {
     S.info = ""; S.err = ""; S.link = null;
     if (S.have[id]) { S.ready = null; return openFile(id); }
     if (!f) return;
-    if (KEY && navigator.onLine) {
-      return download(f).then(function () { if (S.have[id]) return openFile(id); });
-    }
-    S.err = "Этот файл ещё не скачан, а интернета нет. Скачайте его заранее (значок ⤓).";
+    if (KEY && navigator.onLine) return viewOnlineMem(f);
+    S.err = "Этот файл ещё не скачан, а интернета нет. Скачайте его заранее (кнопка со стрелкой вниз).";
     render();
   }
   function openOnline(f) {
@@ -504,8 +552,8 @@
     if (el.root) return;
     var r = document.createElement("div");
     r.id = "libView"; r.setAttribute("role", "dialog"); r.setAttribute("aria-label", "Лекции"); r.className = "lb-hide";
-    r.innerHTML = '<div class="lb-top"><button type="button" class="lb-x lb-back" data-a="back" id="lbBack" aria-label="Назад в предыдущую папку">‹</button><div class="lb-title" id="lbTitle">Лекции</div><button type="button" class="lb-x" data-a="close" aria-label="Закрыть">✕</button><span class="lb-net" id="lbNet"></span></div>' +
-      '<div class="lb-tabs"><button type="button" data-a="tab" data-t="drive">Папки</button><button type="button" data-a="tab" data-t="off">Скачано</button></div>' +
+    r.innerHTML = '<div class="lb-top"><button type="button" class="lb-x lb-back" data-a="back" id="lbBack" aria-label="Назад в предыдущую папку">' + IC.BK + '</button><div class="lb-title" id="lbTitle">Лекции</div><button type="button" class="lb-x" data-a="close" aria-label="Закрыть">' + IC.X + '</button><span class="lb-net" id="lbNet"></span></div>' +
+      '' +
       '<div class="lb-body" id="lbBody"></div>';
     document.body.appendChild(r);
     el.root = r; el.body = r.querySelector("#lbBody");
@@ -580,10 +628,10 @@
     var dir = f.mimeType === FOLDER, h = S.have[f.id], p = S.prog[f.id];
     var meta = dir ? "Папка" : [fmt(f.size || (h && h.size)), f.modifiedTime ? dt(f.modifiedTime) : ""].filter(Boolean).join(" · ");
     var act = "";
-    if (dir) act = '<button type="button" class="lb-ic" data-a="dirget" data-id="' + f.id + '" data-name="' + esc(f.name) + '" title="Скачать всю папку для офлайна" aria-label="Скачать папку">⤓</button>';
-    else if (p) act = '<button type="button" class="lb-ic" data-a="cancel" data-id="' + f.id + '" aria-label="Отменить">✕</button>';
-    else if (h) act = '<button type="button" class="lb-ic lb-ok" data-a="del" data-id="' + f.id + '" title="Доступно офлайн — удалить с устройства" aria-label="Удалить с устройства">✓</button>';
-    else act = '<button type="button" class="lb-ic" data-a="get" data-id="' + f.id + '" title="Сохранить для офлайна" aria-label="Скачать">⤓</button>';
+    if (dir) act = '<button type="button" class="lb-ic" data-a="dirget" data-id="' + f.id + '" data-name="' + esc(f.name) + '" title="Скачать всю папку для офлайна" aria-label="Скачать папку">' + IC.DL + '</button>';
+    else if (p) act = '<button type="button" class="lb-ic" data-a="cancel" data-id="' + f.id + '" aria-label="Отменить">' + IC.X + '</button>';
+    else if (h) act = '<button type="button" class="lb-ic lb-ok" data-a="del" data-id="' + f.id + '" title="Доступно офлайн — удалить с устройства" aria-label="Удалить с устройства">' + IC.OK + '</button>';
+    else act = '<button type="button" class="lb-ic" data-a="get" data-id="' + f.id + '" title="Сохранить для офлайна" aria-label="Скачать">' + IC.DL + '</button>';
     var act1 = dir ? 'data-a="dir" data-id="' + f.id + '" data-name="' + esc(f.name) + '"' : 'data-a="open" data-id="' + f.id + '"';
     return '<div class="lb-row' + (h ? " is-off" : "") + '"><button type="button" class="lb-main" ' + act1 + '><span class="lb-i">' + icon(f.mimeType) + '</span><span class="lb-t"><b>' + esc(f.name) + '</b><i>' +
       (p ? '<span data-p="' + f.id + '"></span>' : esc(meta)) + (h && !dir ? ' · <u>офлайн</u>' : "") + '</i></span></button>' + act +
@@ -614,7 +662,7 @@
       if (lv.dirs.length || lv.files.length) {
         h += '<div class="lb-list">' + lv.dirs.map(function (d) {
           return '<div class="lb-row"><button type="button" class="lb-main" data-a="odir" data-id="' + esc(d.id) + '" data-name="' + esc(d.name) + '"><span class="lb-i">📁</span><span class="lb-t"><b>' + esc(d.name) + '</b><i>' + d.n + " файл(ов) · " + fmt(d.size) + '</i></span></button>' +
-            '<button type="button" class="lb-ic" data-a="odeldir" data-id="' + esc(d.id) + '" data-name="' + esc(d.name) + '" title="Удалить папку с устройства" aria-label="Удалить папку с устройства">🗑</button></div>';
+            '<button type="button" class="lb-ic" data-a="odeldir" data-id="' + esc(d.id) + '" data-name="' + esc(d.name) + '" title="Удалить папку с устройства" aria-label="Удалить папку с устройства">' + IC.TR + '</button></div>';
         }).join("") + lv.files.map(function (m) { return row({ id: m.id, name: m.name, mimeType: m.mime, size: m.size }, true); }).join("") + "</div>";
       }
     } else {
@@ -622,7 +670,7 @@
       h += '<div class="lb-crumbs">' + crumbs + "</div>";
       var cur = S.stack[S.stack.length - 1];
       var bt = S.batch ? '<div class="lb-batch"><span>' + esc(S.batch.text) + '</span><button type="button" class="lb-btn" data-a="stop">Стоп</button></div>' :
-        '<div class="lb-tool"><button type="button" class="lb-btn" data-a="dirget" data-id="' + cur.id + '" data-name="' + esc(cur.name) + '">⤓ Скачать всё в этой папке</button></div>';
+        '<div class="lb-tool"><button type="button" class="lb-btn" data-a="dirget" data-id="' + cur.id + '" data-name="' + esc(cur.name) + '">' + IC.DL + '<span>Скачать всё в этой папке</span></button></div>';
       h += bt;
       if (S.cached) h += '<div class="lb-note">Показан сохранённый список — нет связи с Диском</div>';
       if (S.loading) h += '<div class="lb-sum">Загрузка…</div>';

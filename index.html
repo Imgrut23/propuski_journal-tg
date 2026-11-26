@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="styles.css?v=3.2">
 <link rel="stylesheet" href="mini.css?v=6"><link rel="stylesheet" href="flat.css?v=20">
-<link rel="stylesheet" href="diary-sheet.css?v=9"><link rel="stylesheet" href="lib.css?v=7">
-<link rel="stylesheet" href="settings-merge.css?v=5">
+<link rel="stylesheet" href="diary-sheet.css?v=11"><link rel="stylesheet" href="lib.css?v=19">
+<link rel="stylesheet" href="settings-merge.css?v=6">
 <script id="iosInstJs">
 // ── iosInstJs ──
 (function() {
@@ -2277,14 +2277,22 @@ function pickers(t, e) {
   }), s;
 }
 function ansBtn(t) {
-  const r = ((db.picks || {})[t.dataset.pk] || {})[k(myName())] || {}, has = !!(r.a || r.ph);
-  return '<button type="button" class="q-ans' + (has ? " has" : "") + '" aria-label="Мой ответ на вопрос">\u270E Ответ' + (has ? " \u2713" : "") + (r.ph ? " \uD83D\uDCF7" : "") + "</button>";
+  const r = ((db.picks || {})[t.dataset.pk] || {})[k(myName())] || {}, has = !!(r.a || r.ph || r.mq);
+  return '<button type="button" class="q-ans' + (has ? " has" : "") + '" aria-label="Мой вопрос и ответ">\u270E Вопрос и ответ' + (has ? " \u2713" : "") + (r.ph ? " \uD83D\uDCF7" : "") + "</button>";
+}
+function qaOthers(t, a, s) {
+  const m = (db.picks || {})[t.dataset.pk] || {};
+  return a.filter((n) => n !== s).map((n) => {
+    const r = m[k(n)] || {};
+    if (!(r.mq || r.a || r.ph)) return "";
+    return '<details class="q-qa"><summary>' + esc(n) + ": вопрос и ответ</summary>" + (r.mq ? '<div class="q-qa-b"><b>Вопрос</b><p>' + esc(r.mq) + "</p></div>" : "") + (r.a ? '<div class="q-qa-b"><b>Ответ</b><p>' + esc(r.a) + "</p></div>" : "") + (r.ph ? '<div class="q-qa-ph">\uD83D\uDCF7 к ответу приложено фото</div>' : "") + "</details>";
+  }).join("");
 }
 function paintPick(t) {
   const e = t.querySelector(".q-slot");
   if (!e) return;
   const n = +t.dataset.qi, s = me && myName(), a = pickers(t.dataset.pk, n), o = !!s && a.includes(s), i = !o && a.length >= MAX_PICK;
-  e.innerHTML = '<button type="button" class="q-vote' + (o ? " on" : "") + '"' + (s && !i ? "" : " disabled") + ">" + (o ? "\u2713 \u041C\u043E\u0439 \u0432\u043E\u043F\u0440\u043E\u0441" : i ? "\u0417\u0430\u043D\u044F\u0442\u043E" : "\u0411\u0435\u0440\u0443") + (a.length ? " \xB7 " + a.length + "/" + MAX_PICK : "") + "</button>" + (o ? ansBtn(t) : "") + (a.length ? '<span class="q-who">' + a.map(esc).join(", ") + "</span>" : "");
+  e.innerHTML = '<button type="button" class="q-vote' + (o ? " on" : "") + '"' + (s && !i ? "" : " disabled") + ">" + (o ? "\u2713 \u041C\u043E\u0439 \u0432\u043E\u043F\u0440\u043E\u0441" : i ? "\u0417\u0430\u043D\u044F\u0442\u043E" : "\u0411\u0435\u0440\u0443") + (a.length ? " \xB7 " + a.length + "/" + MAX_PICK : "") + "</button>" + (o ? ansBtn(t) : "") + (a.length ? '<span class="q-who">' + a.map(esc).join(", ") + "</span>" : "") + qaOthers(t, a, s);
 }
 function paintPicks(t) {
   (t || document).querySelectorAll("li[data-pk]").forEach(paintPick);
@@ -8237,8 +8245,8 @@ new MutationObserver(tc).observe(r,{attributes:true,attributeFilter:["data-theme
 })();
 </script>
 <script src="mini.js?v=9"></script>
-<script src="diary-sheet.js?v=7"></script><script src="pptx-view.js?v=5"></script><script src="pdf-view.js?v=2"></script><script src="lib.js?v=16"></script>
-<script src="settings-merge.js?v=6"></script>
+<script src="diary-sheet.js?v=8"></script><script src="pptx-view.js?v=5"></script><script src="pdf-view.js?v=2"></script><script src="lib.js?v=20"></script>
+<script src="settings-merge.js?v=7"></script>
 <script id="cpPickJs">
 // ── cpPickJs ──
 (function() {

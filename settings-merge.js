@@ -219,6 +219,12 @@
 
     var root = addPage("root", "Настройки");
 
+    /* шапка с названием и группой */
+    var heroSub = "";
+    try { heroSub = (typeof grpTitle == "function" && typeof GROUP != "undefined") ? grpTitle(GROUP) : ""; } catch (e) {}
+    root.appendChild(div("ios-hero", '<div class="ios-hero-i">📒</div><div class="ios-hero-t"><b>Журнал пропусков</b><span></span></div>'));
+    var hs = root.querySelector(".ios-hero-t span"); if (hs) { hs.textContent = heroSub || "Настройки приложения"; }
+
     /* экран «Тема» */
     var pTheme = addPage("theme", "Тема");
     pTheme.appendChild(group("", radios("sgTheme"), "«Авто» следует теме вашего телефона."));
