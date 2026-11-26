@@ -654,8 +654,10 @@
     "#pvView button{font:inherit;color:#fff;background:#2c2c2e;border:0;border-radius:10px;min-width:40px;height:38px;padding:0 12px;font-size:15px;cursor:pointer;touch-action:manipulation}" +
     "#pvView button:active{background:#3a3a3c}#pvView button[disabled]{opacity:.35}" +
     "#pvView button.on{background:#0a84ff}" +
-    "#pvView .pv-stage{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;background:#000}" +
-    "#pvView .pv-fit{margin:auto;position:relative;flex:none;background:#fff;box-shadow:0 2px 18px rgba(0,0,0,.6)}" +
+    "#pvView .pv-stage{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;display:block;background:#000}" +
+    "#pvView .pv-list{position:relative;display:flex;flex-direction:column;align-items:center;min-width:100%;width:max-content;padding:8px 0 6px;box-sizing:border-box}" +
+    "#pvView .pv-fit{margin:0 0 10px;position:relative;flex:none;background:#fff;box-shadow:0 2px 18px rgba(0,0,0,.6)}" +
+    "#pvView .pv-fit.ld{background:#1c1c1e}#pvView .pv-fit.ld::after{content:attr(data-n);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;font-size:22px}" +
     "#pvView .pv-slide{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;--fs:1;color:#000;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif}" +
     "#pvView .pv-sh{position:absolute;box-sizing:border-box;margin:0}" +
     "#pvView .pv-tx{width:100%;word-wrap:break-word;overflow-wrap:anywhere}" +
@@ -663,6 +665,9 @@
     "#pvView .pv-miss small{font-size:12px;margin-top:4px}" +
     "#pvView .pv-tb{position:absolute;border-collapse:collapse;table-layout:fixed;box-sizing:border-box}#pvView .pv-tb td{padding:3px 6px;vertical-align:top;overflow:hidden}" +
     "#pvView .pv-bar{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 10px calc(env(safe-area-inset-bottom,0px) + 8px);background:#1c1c1e;flex:none}" +
+    "#pvView .pv-menu{position:absolute;right:10px;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:5;min-width:240px;padding:6px;background:#2c2c2e;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.6)}" +
+    "#pvView .pv-menu button{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;height:46px;padding:0 12px;background:none;border-radius:10px;text-align:left}#pvView .pv-menu button:active{background:#3a3a3c}" +
+    "#pvView .pv-go{display:flex;gap:8px;padding:4px}#pvView .pv-go input{flex:1;min-width:0;height:42px;border:0;border-radius:10px;padding:0 12px;font-size:16px;background:#1c1c1e;color:#fff;outline:none}#pvView .pv-go button{width:auto;background:#0a84ff;justify-content:center}" +
     "#pvView .pv-pg{min-width:76px;text-align:center;font-size:14px;color:#ddd}" +
     "#pvView .pv-txt{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 28px;background:#111;line-height:1.45;font-size:16px}" +
     "#pvView .pv-txt h4{margin:22px 0 6px;color:#8ab4ff;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}" +
@@ -678,11 +683,13 @@
     V = document.createElement("div"); V.id = "pvView"; V.className = "pv-hide";
     V.setAttribute("role", "dialog"); V.setAttribute("aria-label", "Презентация");
     V.innerHTML = '<div class="pv-top"><button type="button" data-a="close" aria-label="Закрыть">✕</button><div class="pv-title"></div>' +
-      '<button type="button" data-a="text" aria-label="Текст слайдов">Aa</button><button type="button" data-a="zo" aria-label="Уменьшить">−</button><button type="button" data-a="zi" aria-label="Увеличить">+</button><button type="button" data-a="more" aria-label="Открыть в другом приложении">⋯</button></div>' +
-      '<div class="pv-stage"><div class="pv-fit"></div></div><div class="pv-txt" hidden></div>' +
+      '<button type="button" data-a="text" aria-label="Текст слайдов">Aa</button><button type="button" data-a="zo" aria-label="Уменьшить">−</button><button type="button" data-a="zi" aria-label="Увеличить">+</button><button type="button" data-a="more" aria-label="Меню">⋯</button></div>' +
+      '<div class="pv-stage"><div class="pv-list"></div></div><div class="pv-txt" hidden></div>' +
       '<div class="pv-bar"><button type="button" data-a="prev" aria-label="Назад">‹</button><span class="pv-pg"></span><button type="button" data-a="next" aria-label="Вперёд">›</button></div>';
     document.body.appendChild(V);
     V.addEventListener("click", function (e) {
+      var mu = V.querySelector(".pv-menu");
+      if (mu && !(e.target.closest && (e.target.closest(".pv-menu") || e.target.closest('[data-a="more"]')))) mu.remove();
       var b = e.target.closest && e.target.closest("[data-a]"); if (!b) return;
       var a = b.dataset.a;
       if (a === "close") close();
@@ -691,25 +698,22 @@
       else if (a === "zi") zoom(1);
       else if (a === "zo") zoom(-1);
       else if (a === "text") { st.text = !st.text; paintMode(); }
-      else if (a === "more" && st.opts && st.opts.more) st.opts.more();
+      else if (a === "more") menu();
     });
     document.addEventListener("keydown", function (e) {
       if (!live) return;
-      if (e.key === "Escape") close();
-      else if (e.key === "ArrowRight" || e.key === "PageDown") go(st.cur + 1);
-      else if (e.key === "ArrowLeft" || e.key === "PageUp") go(st.cur - 1);
+      if (e.key === "Escape") { if (V.querySelector(".pv-menu")) closeMenu(); else close(); }
+      else if (e.key === "ArrowRight") go(st.cur + 1);
+      else if (e.key === "ArrowLeft") go(st.cur - 1);
     });
-    // свайп влево/вправо (когда слайд не увеличен)
-    var x0 = 0, y0 = 0, t0 = 0, stage = V.querySelector(".pv-stage");
-    stage.addEventListener("touchstart", function (e) { if (e.touches.length !== 1) { t0 = 0; return; } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now(); }, { passive: true });
-    stage.addEventListener("touchend", function (e) {
-      if (!t0 || st.zoom > 1 || !e.changedTouches.length) return;
-      var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
-      if (Date.now() - t0 < 700 && Math.abs(dx) > 50 && Math.abs(dy) < 60) go(st.cur + (dx < 0 ? 1 : -1));
-      t0 = 0;
+    // прокрутка: следим, какой слайд сейчас на экране
+    var stage = V.querySelector(".pv-stage"), raf = 0;
+    stage.addEventListener("scroll", function () {
+      if (raf) return;
+      raf = requestAnimationFrame(function () { raf = 0; updateCur(); });
     }, { passive: true });
-    window.addEventListener("resize", fit);
-    window.addEventListener("orientationchange", function () { setTimeout(fit, 250); });
+    window.addEventListener("resize", relayout);
+    window.addEventListener("orientationchange", function () { setTimeout(relayout, 250); });
   }
   // «назад» (Android) закрывает просмотр, а не список лекций под ним; слушатель стоит раньше, чем у lib.js
   var swallow = 0;
@@ -717,36 +721,76 @@
     if (live) { e.stopImmediatePropagation(); live = false; teardown(); return; }
     if (swallow) { swallow = 0; e.stopImmediatePropagation(); }
   });
+  function closeMenu() { var m = V && V.querySelector(".pv-menu"); if (m) m.remove(); }
+  function copySlide(b) {
+    getSlide(st.cur).then(function (r) {
+      var t = r ? r.texts.map(function (x) { return x.lines.join("\n"); }).join("\n") : "";
+      if (!t) { b.textContent = "На слайде нет текста"; setTimeout(closeMenu, 1200); return; }
+      var done = function () { b.textContent = "Скопировано ✓"; setTimeout(closeMenu, 900); };
+      var fb = function () {
+        var ta = document.createElement("textarea"); ta.value = t; ta.style.cssText = "position:fixed;opacity:0";
+        V.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); done(); } catch (x) { b.textContent = "Не удалось скопировать"; }
+        ta.remove();
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fb); else fb();
+    });
+  }
+  // меню «⋯»: перейти к слайду, скопировать текст слайда, ссылка на Диск (если передана), закрыть
+  function menu() {
+    if (V.querySelector(".pv-menu")) { closeMenu(); return; }
+    var n = st.deck.slides.length, m = document.createElement("div"); m.className = "pv-menu";
+    m.innerHTML = '<button type="button" data-m="goto">🔢 Перейти к слайду…</button><button type="button" data-m="copy">⧉ Копировать текст слайда</button>' +
+      (st.opts && st.opts.link ? '<button type="button" data-m="link">☁️ Открыть на Google Диске</button>' : "") +
+      '<button type="button" data-m="close">✕ Закрыть презентацию</button>';
+    m.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest("[data-m]"); if (!b) return;
+      var k = b.dataset.m;
+      if (k === "goto") {
+        m.innerHTML = '<div class="pv-go"><input type="number" inputmode="numeric" min="1" max="' + n + '" placeholder="1–' + n + '"><button type="button" data-m="go">Перейти</button></div>';
+        var inp = m.querySelector("input"); inp.focus();
+        inp.addEventListener("keydown", function (ev) { if (ev.key === "Enter") m.querySelector('[data-m="go"]').click(); });
+      } else if (k === "go") {
+        var v = parseInt(m.querySelector("input").value, 10);
+        if (v >= 1 && v <= n) { closeMenu(); if (st.text) { st.text = false; paintMode(); } go(v - 1); }
+      } else if (k === "copy") copySlide(b);
+      else if (k === "link") { closeMenu(); try { window.open(st.opts.link, "_blank", "noopener"); } catch (x) {} }
+      else if (k === "close") { closeMenu(); close(); }
+    });
+    V.appendChild(m);
+  }
   function zoom(d) {
     var z = [1, 1.5, 2, 3], i = Math.max(0, Math.min(z.length - 1, z.indexOf(st.zoom) + d));
-    st.zoom = z[i]; fit();
+    st.zoom = z[i]; relayout();
   }
   function paintMode() {
     V.querySelector(".pv-stage").hidden = st.text;
     V.querySelector(".pv-txt").hidden = !st.text;
     V.querySelector('[data-a="text"]').classList.toggle("on", st.text);
     V.querySelector('[data-a="zi"]').style.display = V.querySelector('[data-a="zo"]').style.display = st.text ? "none" : "";
-    if (st.text) buildText(); else fit();
+    if (st.text) buildText(); else if (st.boxes) relayout();
+  }
+  function getSlide(i) {
+    if (!st.cache[i]) st.cache[i] = renderSlide(st.deck, st.deck.slides[i], st.urls, st.media).then(function (x) { st.items[i] = x; return x; }, function () { return null; });
+    return st.cache[i];
   }
   function buildText() {
-    var h = "";
-    st.items.forEach(function (it, i) {
-      if (!it) return;
-      h += "<h4>Слайд " + (i + 1) + "</h4>";
-      it.texts.forEach(function (b) { b.lines.forEach(function (l) { h += '<p' + (b.title ? ' class="t"' : "") + ">" + esc(l) + "</p>"; }); });
+    var d = st.deck, box = V.querySelector(".pv-txt"), p = Promise.resolve();
+    box.innerHTML = '<div class="pv-msg">Загрузка…</div>';
+    d.slides.forEach(function (_, i) { p = p.then(function () { return st.deck === d ? getSlide(i) : null; }); });
+    p.then(function () {
+      if (st.deck !== d || !st.text) return;
+      var h = "";
+      st.items.forEach(function (it, i) {
+        if (!it) return;
+        h += "<h4>Слайд " + (i + 1) + "</h4>";
+        it.texts.forEach(function (b) { b.lines.forEach(function (l) { h += '<p' + (b.title ? ' class="t"' : "") + ">" + esc(l) + "</p>"; }); });
+      });
+      box.innerHTML = h || '<div class="pv-msg">В презентации нет текста</div>';
     });
-    V.querySelector(".pv-txt").innerHTML = h || '<div class="pv-msg">В презентации нет текста</div>';
   }
-  function fit() {
-    if (!V || !st.deck) return;
-    var stage = V.querySelector(".pv-stage"), box = V.querySelector(".pv-fit"), sl = box.firstElementChild;
-    if (!sl || !sl.classList.contains("pv-slide")) return;
-    var W = st.deck.W / EMU, H = st.deck.H / EMU, aw = stage.clientWidth - 16, ah = stage.clientHeight - 16;
-    var k = Math.min(aw / W, ah / H) * st.zoom;
-    if (!(k > 0)) return;
-    box.style.width = (W * k) + "px"; box.style.height = (H * k) + "px";
-    sl.style.transform = "scale(" + k + ")";
-    // подгон текста: если не помещается — уменьшаем шрифт
+  // подгон текста: если не помещается — уменьшаем шрифт
+  function fitText(sl) {
     sl.querySelectorAll("[data-fit]").forEach(function (n) {
       var tx = n.firstElementChild; if (!tx) return;
       var cs = getComputedStyle(n), avail = n.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom), fs = parseFloat(n.style.getPropertyValue("--fs")) || 1, tries = 0;
@@ -754,40 +798,77 @@
       n.removeAttribute("data-fit");
     });
   }
+  // размеры всех слайдов в ленте (по ширине экрана × масштаб)
+  function fit() {
+    if (!V || !st.deck || !st.boxes) return;
+    var stage = V.querySelector(".pv-stage"), W = st.deck.W / EMU, H = st.deck.H / EMU;
+    var k = (stage.clientWidth - 16) / W * st.zoom;
+    if (!(k > 0)) return;
+    st.boxes.forEach(function (box) {
+      box.style.width = (W * k) + "px"; box.style.height = (H * k) + "px";
+      var sl = box.firstElementChild;
+      if (sl && sl.classList.contains("pv-slide")) { sl.style.transform = "scale(" + k + ")"; fitText(sl); }
+    });
+  }
+  function relayout() {
+    if (!V || !st.boxes || st.text) return;
+    var i = st.cur, stage = V.querySelector(".pv-stage");
+    fit();
+    if (st.boxes[i]) stage.scrollTop = i ? st.boxes[i].offsetTop - 8 : 0;
+    st.cur = i;
+  }
   function paintBar() {
     var n = st.deck ? st.deck.slides.length : 0;
     V.querySelector(".pv-pg").textContent = n ? (st.cur + 1) + " / " + n : "";
     V.querySelector('[data-a="prev"]').disabled = st.cur <= 0;
     V.querySelector('[data-a="next"]').disabled = st.cur >= n - 1;
   }
+  function updateCur() {
+    if (!st.boxes || st.text) return;
+    var stage = V.querySelector(".pv-stage"), y = stage.scrollTop + stage.clientHeight * 0.35, c = 0;
+    for (var i = 0; i < st.boxes.length; i++) { if (st.boxes[i].offsetTop <= y) c = i; else break; }
+    if (stage.scrollTop + stage.clientHeight >= stage.scrollHeight - 2) c = st.boxes.length - 1;
+    if (c !== st.cur) { st.cur = c; paintBar(); }
+  }
   function go(i) {
-    if (!st.deck || i < 0 || i >= st.deck.slides.length) return;
-    st.cur = i; show();
+    if (!st.deck || !st.boxes || i < 0 || i >= st.boxes.length) return;
+    st.cur = i; paintBar();
+    V.querySelector(".pv-stage").scrollTop = i ? st.boxes[i].offsetTop - 8 : 0;
+  }
+  // слайд рисуется, когда подъезжает к экрану
+  function paintBox(i) {
+    var box = st.boxes && st.boxes[i], d = st.deck;
+    if (!box || box._done || box._busy) return;
+    box._busy = true;
+    getSlide(i).then(function (r) {
+      box._busy = false;
+      if (st.deck !== d) return;
+      box._done = true; box.classList.remove("ld");
+      if (!r) { box.innerHTML = '<div class="pv-msg" style="color:#333">Не удалось отрисовать слайд ' + (i + 1) + "</div>"; return; }
+      box.innerHTML = r.html; fit();
+    });
+  }
+  function observe() {
+    if (st.io) { st.io.disconnect(); st.io = null; }
+    if (!("IntersectionObserver" in window)) { st.boxes.forEach(function (b, i) { paintBox(i); }); return; }
+    st.io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) paintBox(+e.target.dataset.i); });
+    }, { root: V.querySelector(".pv-stage"), rootMargin: "1500px 0px" });
+    st.boxes.forEach(function (b) { st.io.observe(b); });
   }
   function show() {
-    var tok = ++st.tok, i = st.cur, box = V.querySelector(".pv-fit"), stage = V.querySelector(".pv-stage");
-    paintBar();
-    var done = function (r) {
-      if (tok !== st.tok || !live) return;
-      st.items[i] = r;
-      box.innerHTML = r.html; stage.scrollTop = 0; stage.scrollLeft = 0;
-      fit();
-      if (st.text) buildText();
-      // заранее готовим следующий слайд
-      if (i + 1 < st.deck.slides.length && !st.cache[i + 1]) st.cache[i + 1] = renderSlide(st.deck, st.deck.slides[i + 1], st.urls, st.media).then(function (x) { st.items[i + 1] = x; return x; }, function () { return null; });
-    };
-    if (!st.cache[i]) st.cache[i] = renderSlide(st.deck, st.deck.slides[i], st.urls, st.media);
-    st.cache[i].then(done, function () {
-      if (tok !== st.tok) return;
-      box.innerHTML = ""; box.style.width = "auto"; box.style.height = "auto";
-      box.innerHTML = '<div class="pv-msg" style="color:#333">Не удалось отрисовать слайд ' + (i + 1) + "</div>";
-    });
+    var list = V.querySelector(".pv-list"), h = "";
+    for (var i = 0; i < st.deck.slides.length; i++) h += '<div class="pv-fit ld" data-i="' + i + '" data-n="' + (i + 1) + '"></div>';
+    list.innerHTML = h;
+    st.boxes = Array.prototype.slice.call(list.children);
+    fit(); observe(); go(0);
   }
   function teardown() {
     st.tok++;
+    if (st.io) { st.io.disconnect(); st.io = null; }
     st.urls.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} });
-    st.urls = []; st.media = {}; st.cache = {}; st.items = []; st.deck = null;
-    if (V) { V.classList.add("pv-hide"); V.querySelector(".pv-fit").innerHTML = ""; }
+    st.urls = []; st.media = {}; st.cache = {}; st.items = []; st.deck = null; st.boxes = null;
+    if (V) { closeMenu(); V.classList.add("pv-hide"); V.querySelector(".pv-list").innerHTML = ""; }
     document.documentElement.classList.remove("pv-lock");
     document.body.style.overflow = st.prevOverflow || "";
   }
@@ -807,7 +888,7 @@
       st.deck = deck; st.cur = 0; st.zoom = 1; st.text = false; st.opts = opts || {}; st.name = name || "";
       st.prevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden";
       V.querySelector(".pv-title").textContent = name || "Презентация";
-      V.querySelector('[data-a="more"]').style.display = opts && opts.more ? "" : "none";
+      V.querySelector('[data-a="more"]').style.display = "";
       V.classList.remove("pv-hide"); live = true;
       try { history.pushState({ pv: 1 }, ""); } catch (e) {}
       paintMode(); show();
