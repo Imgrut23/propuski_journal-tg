@@ -426,7 +426,7 @@
     if (xf.fv) tr.push("scaleY(-1)");
     return { css: s, tr: tr.length ? "transform:" + tr.join(" ") + ";" : "", w: w / EMU, h: h / EMU };
   }
-  var GEO = { ellipse: "border-radius:50%;", roundRect: "border-radius:12%;", snipRoundRect: "border-radius:12%;", flowChartTerminator: "border-radius:999px;", triangle: "clip-path:polygon(50% 0,100% 100%,0 100%);", diamond: "clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);", hexagon: "clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);", parallelogram: "clip-path:polygon(20% 0,100% 0,80% 100%,0 100%);" };
+  var GEO = { rightArrow: "clip-path:polygon(0 25%,60% 25%,60% 0,100% 50%,60% 100%,60% 75%,0 75%);", leftArrow: "clip-path:polygon(100% 25%,40% 25%,40% 0,0 50%,40% 100%,40% 75%,100% 75%);", downArrow: "clip-path:polygon(25% 0,75% 0,75% 60%,100% 60%,50% 100%,0 60%,25% 60%);", upArrow: "clip-path:polygon(50% 0,100% 40%,75% 40%,75% 100%,25% 100%,25% 40%,0 40%);", chevron: "clip-path:polygon(0 0,75% 0,100% 50%,75% 100%,0 100%,25% 50%);", homePlate: "clip-path:polygon(0 0,80% 0,100% 50%,80% 100%,0 100%);", ellipse: "border-radius:50%;", roundRect: "border-radius:12%;", snipRoundRect: "border-radius:12%;", flowChartTerminator: "border-radius:999px;", triangle: "clip-path:polygon(50% 0,100% 100%,0 100%);", diamond: "clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);", hexagon: "clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);", parallelogram: "clip-path:polygon(20% 0,100% 0,80% 100%,0 100%);" };
 
   function lineOf(ctx, spPr, style, ph) {
     var ln = kid(spPr, "ln"), w = 0, col = null;
@@ -560,6 +560,25 @@
     var xf = xfrmOf(el);
     if (!xf) return Promise.resolve();
     var pos = posCss(xf, mp), gd = pth(el, "graphic", "graphicData"), tbl = gd && kid(gd, "tbl");
+    if (!tbl && /diagram/.test(at(gd, "uri") || "")) {
+      /* SmartArt: PowerPoint кладёт готовый рисунок схемы в ppt/diagrams/drawingN.xml — рисуем его фигуры внутри рамки */
+      var ri = gd.getElementsByTagNameNS("*", "relIds")[0], dmId = ri && ri.getAttributeNS(NSR, "dm");
+      var dmRel = dmId && ctx.rels[dmId];
+      var miss = function () {
+        ctx.out.push('<div class="pv-sh pv-miss" style="' + pos.css + '">🔷 Схема SmartArt<small>показывается в PowerPoint</small></div>');
+      };
+      return (dmRel && dmRel.target ? ctx.pkg.xml(dmRel.target) : Promise.resolve(null)).then(function (dm) {
+        var ext = dm && dm.getElementsByTagNameNS("*", "dataModelExt")[0], rid = ext && ext.getAttribute("relId");
+        var dr = (rid && ctx.rels[rid]) || null;
+        if (!dr) { for (var k in ctx.rels) if (/diagramDrawing$/.test(ctx.rels[k].type) && !ctx.diagUsed[k]) { dr = ctx.rels[k]; ctx.diagUsed[k] = 1; break; } }
+        if (!dr || !dr.target) return miss();
+        return ctx.pkg.xml(dr.target).then(function (dx) {
+          var tree = dx && (kid(dx, "spTree") || dx.getElementsByTagNameNS("*", "spTree")[0]);
+          if (!tree) return miss();
+          return drawTree(ctx, tree, { sx: mp.sx, sy: mp.sy, ox: mp.ox + xf.x * mp.sx, oy: mp.oy + xf.y * mp.sy });
+        });
+      }).catch(function () { miss(); });
+    }
     if (!tbl) {
       var uri = at(gd, "uri") || "";
       ctx.out.push('<div class="pv-sh pv-miss" style="' + pos.css + '">' + (/chart/.test(uri) ? "📈 Диаграмма" : /diagram/.test(uri) ? "🔷 Схема SmartArt" : "▣ Объект") + "<small>показывается в PowerPoint</small></div>");
@@ -599,7 +618,7 @@
   }
   // отрисовать слайд -> { html, texts }
   function renderSlide(deck, s, urls, media) {
-    var ctx = { deck: deck, pkg: deck.pkg, slide: s.xml, rels: s.rels, lay: s.lay, m: s.m, out: [], texts: [], urls: urls, media: media };
+    var ctx = { deck: deck, pkg: deck.pkg, slide: s.xml, rels: s.rels, lay: s.lay, m: s.m, out: [], texts: [], urls: urls, media: media, diagUsed: {} };
     var W = deck.W / EMU, H = deck.H / EMU;
     return slideBg(ctx).then(function (bg) {
       // фигуры мастера/макета без плейсхолдеров (логотипы, линии) под содержимым слайда

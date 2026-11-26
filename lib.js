@@ -130,6 +130,45 @@
     }).catch(function () {});
   }
 
+  /* «Скачано»: файлы, сохранённые раньше (без пути), раскладываем по папкам как на Диске */
+  var folderCache = {}, fixTried = {}, fixing = false;
+  function getMeta(id) {
+    if (folderCache[id]) return Promise.resolve(folderCache[id]);
+    return fetch(API + "/" + id + "?fields=id,name,parents&supportsAllDrives=true&key=" + encodeURIComponent(KEY)).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (j) { return (folderCache[id] = j); });
+  }
+  function resolvePath(fileId) {
+    var chain = [];
+    function up(id, n) {
+      return getMeta(id).then(function (m) {
+        var p = m.parents && m.parents[0];
+        if (!p || n > 12) return null;
+        if (p === ROOT) return chain;
+        return getMeta(p).then(function (pm) { chain.unshift({ id: pm.id, name: pm.name }); return up(p, n + 1); });
+      });
+    }
+    return up(fileId, 0);
+  }
+  function fixPaths() {
+    if (fixing || !KEY || !navigator.onLine) return;
+    var todo = Object.keys(S.have).filter(function (k) { return !Array.isArray(S.have[k].path) && !fixTried[k]; });
+    if (!todo.length) return;
+    fixing = true;
+    todo.reduce(function (p, k) {
+      return p.then(function () {
+        fixTried[k] = 1;
+        return resolvePath(k).then(function (ch) {
+          var m = S.have[k];
+          if (!ch || !m) return;
+          m.path = [{ id: ROOT, name: S.stack[0].name }].concat(ch);
+          return idbPut("meta", m);
+        }).catch(function () {});
+      });
+    }, Promise.resolve()).then(function () { fixing = false; render(); });
+  }
+
   /* ───────── скачивание ───────── */
   function dlUrl(f) {
     var g = GAPPS[f.mimeType];
@@ -534,7 +573,7 @@
     if (!(navigator.storage && navigator.storage.estimate)) return;
     navigator.storage.estimate().then(function (e) {
       var n = el.root && el.root.querySelector("#lbSt");
-      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v16";
+      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v17";
     }).catch(function () {});
   }
   function row(f, off) {
@@ -566,6 +605,7 @@
       el.body.innerHTML = h; return;
     }
     if (S.tab === "off") {
+      fixPaths();
       var lv = offLevel(), nAll = Object.keys(S.have).length, tot = Object.keys(S.have).reduce(function (a, k) { return a + (S.have[k].size || 0); }, 0);
       var oc = ['<button type="button" data-a="ocrumb" data-n="0">' + esc(S.stack[0].name) + "</button>"];
       S.offDir.forEach(function (c, i) { oc.push(i === S.offDir.length - 1 ? "<span>" + esc(c.name) + "</span>" : '<button type="button" data-a="ocrumb" data-n="' + (i + 1) + '">' + esc(c.name) + "</button>"); });
