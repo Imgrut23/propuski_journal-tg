@@ -334,7 +334,7 @@
     box = document.createElement("section"); box.className = "qa-box";
     box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-labelledby", "qaT");
     box.innerHTML =
-      '<header class="qa-head"><h3 id="qaT">Мой вопрос и ответ</h3><button type="button" class="qa-x" aria-label="Закрыть">\u00d7</button></header>' +
+      '<header class="qa-head"><h3 id="qaT">Вопросы мне</h3><button type="button" class="qa-x" aria-label="Закрыть">\u00d7</button></header>' +
       '<p class="qa-q"></p>' +
       '<label class="qa-lab" for="qaMq">Вопрос</label>' +
       '<textarea class="qa-text qa-mq" id="qaMq" rows="3" maxlength="1000" placeholder="Твой вопрос по этой теме (его увидят остальные)\u2026" aria-label="Мой вопрос"></textarea>' +
@@ -400,8 +400,16 @@
 
   function open(li) {
     if (typeof myName !== "function" || !myName()) { toast("Войди в свой профиль"); return; }
-    var pk = li.dataset.pk, r = rec(pk);
-    if (!r) { toast("Сначала нажми «Беру»"); return; }
+    var pk = li.dataset.pk, qi = +li.dataset.qi, r = rec(pk);
+    // «Вопросы мне» доступна и до «Беру»: вопрос берётся автоматически
+    if (!r || r.i !== qi) {
+      if (r && (r.a || r.mq || r.ph) && !confirm("В этой паре ты уже взял(а) другой вопрос. Перейти на этот? Записи и фото по прежнему вопросу удалятся.")) return;
+      if (r && r.ph && typeof window.hzPickGone === "function") window.hzPickGone(pk, mkey(), r);
+      try { if (typeof togglePick === "function") togglePick(li); } catch (e) {}
+      r = rec(pk);
+      if (!r || r.i !== qi) return;            // «Занято» — togglePick уже показал сообщение
+      toast("Вопрос отмечен как «Беру»");
+    }
     build();
     cur = { pk: pk, key: mkey(), li: li };
     ph = { data: null, changed: false, removed: false, busy: false };

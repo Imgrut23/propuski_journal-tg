@@ -13,6 +13,7 @@
     try {
       if (realAdmin()) return "admin"; /* привилегии админа не пропадают в режиме «Учащийся» */
       if (isGuest || !isHead) return "user";
+      if (typeof isJourn === "function" && isJourn()) return "user"; /* журналист: только заполнение журнала */
       return norm(me) === norm(SUPER_ADMIN) ? "admin" : "head";
     } catch (e) { return "user"; }
   }
