@@ -12,7 +12,7 @@
       if(el.dataset.t0===undefined)el.dataset.t0=el.dataset.t;
       var parts=el.dataset.t0.split(" ");
       if(st.merge){
-        if(el.closest("#user-view")&&(parts.indexOf("me")>-1||parts.indexOf("grp")>-1))parts.push("mark");
+        if(el.id!=="grpCard"&&el.closest("#user-view")&&(parts.indexOf("me")>-1||parts.indexOf("grp")>-1))parts.push("mark");
         if(el.closest("#head")&&parts.indexOf("stats")>-1)parts.push("today");
       }
       el.dataset.t=parts.join(" ");

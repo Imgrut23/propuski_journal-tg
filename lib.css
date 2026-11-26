@@ -98,3 +98,20 @@ html body #libDoc .ld-btn{margin-top:8px;padding:11px 16px;border:0!important;bo
 
 /* «Скачано»: папки */
 #libView .lb-row .lb-ic{font-size:17px}
+
+/* PDF внутри приложения */
+#libDoc .ld-stage.ld-pdf{min-height:0}
+#libDoc .ld-pdfhost{flex:1;min-height:0;display:flex;flex-direction:column}
+#libDoc .pdv{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:var(--soft,#e9e8e3)}
+#libDoc .pdv-scroll{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;overscroll-behavior:contain;outline:0}
+#libDoc .pdv-pages{margin:0 auto;padding:10px;box-sizing:content-box;display:flex;flex-direction:column;gap:10px;will-change:transform}
+#libDoc .pdv-box{position:relative;flex:none;background:#fff;border-radius:3px;box-shadow:0 1px 6px #0000002e;overflow:hidden}
+#libDoc .pdv-box canvas{display:block;position:absolute;inset:0;width:100%;height:100%;animation:pdvIn .18s ease-out}
+@keyframes pdvIn{from{opacity:0}to{opacity:1}}
+#libDoc .pdv-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mute,#6b7773);font-weight:600;pointer-events:none}
+#libDoc .pdv-bar{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translate(-50%,10px);display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:#1d2330d9;color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+#libDoc .pdv-bar.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#libDoc .pdv-bar[hidden]{display:none}
+html body #libDoc .pdv-bar button{height:36px;min-width:40px;padding:0 10px;border:0!important;border-radius:999px!important;background:none!important;color:#fff!important;font:600 17px/1 inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html body #libDoc .pdv-bar .pdv-pg{font-size:14px;min-width:64px;font-variant-numeric:tabular-nums}
+@media (min-width:900px){#libDoc .pdv-pages{padding:16px;gap:14px}}

@@ -307,7 +307,7 @@
   function extOf(n) { var m = /\.([a-z0-9]+)$/i.exec(n || ""); return m ? m[1].toLowerCase() : ""; }
   /* Файлы не сохраняются в «Загрузки» телефона: всё открывается внутри приложения.
      Что показать нельзя (старые .ppt/.doc/.xls) — открываем онлайн через Google Диск. */
-  var dv = null, dvUrl = "";
+  var dv = null, dvUrl = "", dvKill = null;
   function dvBuild() {
     if (dv) return dv;
     dv = document.createElement("div");
@@ -321,14 +321,17 @@
     });
     return dv;
   }
+  function dvStop() { if (dvKill) { try { dvKill(); } catch (e) {} dvKill = null; } }
   function dvClose() {
     if (!dv) return;
+    dvStop();
     dv.classList.add("ld-hide");
     dv.querySelector(".ld-stage").innerHTML = "";
     if (dvUrl) { URL.revokeObjectURL(dvUrl); dvUrl = ""; }
   }
   function dvOpen(m, node, cls) {
     dvBuild();
+    dvStop();
     if (dvUrl) { URL.revokeObjectURL(dvUrl); dvUrl = ""; }
     dv.dataset.id = m.id;
     dv.querySelector(".ld-title").textContent = m.name;
@@ -412,8 +415,18 @@
       var el2 = document.createElement(/^video/.test(mime) ? "video" : "audio"); el2.controls = true; el2.src = url; el2.setAttribute("playsinline", ""); dvOpen(m, el2, "ld-center"); return;
     }
     if (mime === "application/pdf" || ext === "pdf") {
-      url = dvUrl = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
-      var fr = document.createElement("iframe"); fr.src = url; fr.title = m.name; dvOpen(m, fr, "ld-frame"); return;
+      // свой просмотрщик (pdf-view.js): все страницы, зум щипком, без перехода в другое приложение и без iframe
+      var host = document.createElement("div"); host.className = "ld-pdfhost";
+      dvOpen(m, host, "ld-pdf");
+      var pdfBlob = new Blob([blob], { type: "application/pdf" }), cur = dv.dataset.id;
+      return window.pdfView.attach(host, pdfBlob).then(function (h) {
+        if (!h) return;
+        if (dv.classList.contains("ld-hide") || dv.dataset.id !== cur) { h.destroy(); return; }
+        dvKill = h.destroy;
+      }, function (e) {
+        try { console.warn("pdf view:", e); } catch (x) {}
+        dvMsg(m, "Не удалось показать PDF внутри приложения.");
+      });
     }
     if (/^text\//.test(mime) || /^(txt|md|csv|log)$/.test(ext)) {
       return blob.text().then(function (t) { dvOpen(m, '<pre class="ld-pre">' + esc(t) + "</pre>", "ld-scroll"); });
@@ -521,7 +534,7 @@
     if (!(navigator.storage && navigator.storage.estimate)) return;
     navigator.storage.estimate().then(function (e) {
       var n = el.root && el.root.querySelector("#lbSt");
-      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v15";
+      if (n && e && e.usage != null) n.textContent = "Занято на устройстве: " + fmt(e.usage) + (e.quota ? " из ~" + fmt(e.quota) : "") + " · lib v16";
     }).catch(function () {});
   }
   function row(f, off) {

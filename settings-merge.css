@@ -39,10 +39,10 @@
 #stSheet .ios-page .row{gap:8px}
 #grpTools{display:none!important}
 
-/* Шрифт как в iOS (San Francisco) везде: на iPhone/Mac это системный SF, на остальных — ближайший системный */
-html body,
-html body *:not(code):not(pre):not(kbd):not(samp):not(.mono),
-html body input,html body select,html body textarea,html body button,
+/* Шрифт как в iOS (San Francisco) везде: на iPhone/Mac системный SF, на остальных — ближайший системный */
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body,
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body *:not(code):not(pre):not(kbd):not(samp):not(.mono),
+html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body input,html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body select,html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body textarea,html:not(#_):not(#_):not(#_):not(#_):not(#_):not(#_) body button,
 #stSheet,#stSheet *{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",system-ui,"Segoe UI",Roboto,sans-serif!important;
 }

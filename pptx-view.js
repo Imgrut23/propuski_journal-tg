@@ -529,7 +529,7 @@
         if (t.texts.length) ctx.texts.push({ title: !!ph && /title/i.test(ph.type), lines: t.texts });
         var pad = [bp.tIns, bp.rIns, bp.bIns, bp.lIns].map(function (v, i) { return ((v != null ? +v : (i % 2 ? 91440 : 45720)) / EMU).toFixed(2) + "px"; }).join(" ");
         var jc = bp.anchor === "ctr" ? "center" : bp.anchor === "b" ? "flex-end" : "flex-start";
-        st += ";display:flex;flex-direction:column;justify-content:" + jc + ";padding:" + pad + ";overflow:hidden;--fs:" + bp.scale;
+        st += ";display:flex;flex-direction:column;justify-content:" + jc + ";padding:" + pad + ";overflow:visible;--fs:" + bp.scale;
         if (bp.wrap === "none") st += ";white-space:nowrap";
         if (bp.fit) fit = ' data-fit="1"';
         inner = '<div class="pv-tx">' + t.html + "</div>";
