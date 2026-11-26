@@ -73,17 +73,6 @@
       var l = $("libTile"); l && l.click();
     });
     box.insertBefore(b, box.firstChild);
-    if (window.libOfflineAll) {
-      var o = document.createElement("button");
-      o.type = "button"; o.dataset.k = "liboff";
-      o.innerHTML = "<span>📥</span>" + (window.libOffText ? window.libOffText() : "Офлайн").replace(/^Лекции\s+офлайн/i, "Офлайн");
-      o.addEventListener("click", function (e) {
-        e.stopPropagation();
-        el.classList.remove("show");
-        window.libOfflineAll();
-      });
-      box.insertBefore(o, b.nextSibling);
-    }
   }
   function setupMaterials() {
     var t = $("codesTile");
