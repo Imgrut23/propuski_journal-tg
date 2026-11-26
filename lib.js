@@ -633,7 +633,7 @@
     else if (h) act = '<button type="button" class="lb-ic lb-ok" data-a="del" data-id="' + f.id + '" title="Доступно офлайн — удалить с устройства" aria-label="Удалить с устройства">' + IC.OK + '</button>';
     else act = '<button type="button" class="lb-ic" data-a="get" data-id="' + f.id + '" title="Сохранить для офлайна" aria-label="Скачать">' + IC.DL + '</button>';
     var act1 = dir ? 'data-a="dir" data-id="' + f.id + '" data-name="' + esc(f.name) + '"' : 'data-a="open" data-id="' + f.id + '"';
-    return '<div class="lb-row' + (h ? " is-off" : "") + '"><button type="button" class="lb-main" ' + act1 + '><span class="lb-i">' + icon(f.mimeType) + '</span><span class="lb-t"><b>' + esc(f.name) + '</b><i>' +
+    return '<div class="lb-row' + (h ? " is-off" : "") + '"><button type="button" class="lb-main" title="' + esc(f.name) + '" ' + act1 + '><span class="lb-i">' + icon(f.mimeType) + '</span><span class="lb-t"><b>' + esc(f.name) + '</b><i>' +
       (p ? '<span data-p="' + f.id + '"></span>' : esc(meta)) + (h && !dir ? ' · <u>офлайн</u>' : "") + '</i></span></button>' + act +
       (p ? '<span class="lb-bar"><i data-pb="' + f.id + '"></i></span>' : "") + "</div>";
   }
@@ -661,7 +661,7 @@
       h += '<div class="lb-sum">' + (nAll ? nAll + " файл(ов) · " + fmt(tot) : "Здесь появятся файлы, сохранённые для офлайна") + '</div>';
       if (lv.dirs.length || lv.files.length) {
         h += '<div class="lb-list">' + lv.dirs.map(function (d) {
-          return '<div class="lb-row"><button type="button" class="lb-main" data-a="odir" data-id="' + esc(d.id) + '" data-name="' + esc(d.name) + '"><span class="lb-i">📁</span><span class="lb-t"><b>' + esc(d.name) + '</b><i>' + d.n + " файл(ов) · " + fmt(d.size) + '</i></span></button>' +
+          return '<div class="lb-row"><button type="button" class="lb-main" title="' + esc(d.name) + '" data-a="odir" data-id="' + esc(d.id) + '" data-name="' + esc(d.name) + '"><span class="lb-i">📁</span><span class="lb-t"><b>' + esc(d.name) + '</b><i>' + d.n + " файл(ов) · " + fmt(d.size) + '</i></span></button>' +
             '<button type="button" class="lb-ic" data-a="odeldir" data-id="' + esc(d.id) + '" data-name="' + esc(d.name) + '" title="Удалить папку с устройства" aria-label="Удалить папку с устройства">' + IC.TR + '</button></div>';
         }).join("") + lv.files.map(function (m) { return row({ id: m.id, name: m.name, mimeType: m.mime, size: m.size }, true); }).join("") + "</div>";
       }

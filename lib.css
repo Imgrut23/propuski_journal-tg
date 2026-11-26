@@ -188,3 +188,24 @@ html body #libView .lb-x{display:flex;align-items:center;justify-content:center;
 html body #libView .lb-back{font-size:0;line-height:0}
 html body #libView .lb-back svg{width:21px;height:21px;margin-left:-1px}
 html body #libDoc .ld-x{display:flex;align-items:center;justify-content:center}
+
+
+/* ───── «Лекции»: плитки-квадратики, как в «Кодексах» и «Практикуме» ───── */
+html body #libView .lb-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;align-items:stretch}
+html body #libView .lb-list .lb-row{position:relative;display:block;min-height:128px;border-radius:16px;overflow:hidden;animation-duration:.22s}
+html body #libView .lb-list .lb-row .lb-main{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;
+  width:100%;height:100%;box-sizing:border-box;padding:26px 5px 12px;text-align:center!important}
+html body #libView .lb-list .lb-row .lb-i{flex:0 0 auto;width:46px;height:46px;border-radius:14px;font-size:25px}
+html body #libView .lb-list .lb-row .lb-t{width:100%;align-items:center;text-align:center;gap:3px}
+html body #libView .lb-list .lb-row .lb-t b{width:100%;min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden;
+  font-size:12px;font-weight:650;line-height:1.22;letter-spacing:-.01em;overflow-wrap:break-word;word-break:normal;hyphens:auto;-webkit-hyphens:auto;text-align:center}
+html body #libView .lb-list .lb-row .lb-t i{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;max-width:100%;font-size:10.5px;line-height:1.25;text-align:center;
+  overflow:hidden;overflow-wrap:break-word}
+/* кнопка действия — маленький кружок в углу плитки */
+html body #libView .lb-list .lb-row .lb-ic{position:absolute;top:6px;right:6px;z-index:2;width:30px;height:30px;margin:0;font-size:15px}
+html body #libView .lb-list .lb-row .lb-ic svg{width:16px;height:16px}
+html body #libView .lb-list .lb-row .lb-ic.lb-ok svg{width:17px;height:17px}
+html body #libView .lb-list .lb-row .lb-bar{left:10px;right:10px;bottom:6px}
+@media (min-width:700px){html body #libView .lb-list{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  html body #libView .lb-list .lb-row{min-height:140px}
+  html body #libView .lb-list .lb-row .lb-t b{font-size:12.5px}}
