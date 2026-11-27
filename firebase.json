@@ -1,0 +1,14 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "worker.js"],
+    "rewrites": [
+      { "source": "/api/tg-login", "function": { "functionId": "tgLogin", "region": "europe-west1" } }
+    ],
+    "headers": [
+      { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }, { "key": "Service-Worker-Allowed", "value": "/" }] },
+      { "source": "/manifest.webmanifest", "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }, { "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  },
+  "functions": [{ "source": "functions", "codebase": "default" }]
+}
