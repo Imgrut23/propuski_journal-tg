@@ -104,11 +104,41 @@
     }
     return page("");
   }
+  /* сортировка списка: имя / дата / размер / тип; папки всегда сверху; выбор помнится */
+  var SORTS = [["name", "Имя"], ["date", "Дата"], ["size", "Размер"], ["type", "Тип"]];
+  function loadSort() { try { var o = JSON.parse(localStorage.getItem("lib.sort") || "null"); if (o && /^(name|date|size|type)$/.test(o.k)) return { k: o.k, d: o.d === -1 ? -1 : 1 }; } catch (e) {} return { k: "name", d: 1 }; }
+  var SORT = loadSort();
+  function nameCmp(a, b) { return String(a.name).localeCompare(String(b.name), "ru", { numeric: true, sensitivity: "base" }); }
+  function keyOf(x, k) {
+    if (k === "date") return x.modifiedTime ? Date.parse(x.modifiedTime) || 0 : (x.t || 0);
+    if (k === "size") return +x.size || 0;
+    if (k === "type") return extOf(x.name);
+    return 0;
+  }
+  function cmpBy(x, y) {
+    var k = SORT.k, r = 0;
+    if (k === "type") r = keyOf(x, k).localeCompare(keyOf(y, k));
+    else if (k !== "name") r = keyOf(x, k) - keyOf(y, k);
+    if (k === "name") r = nameCmp(x, y);
+    return r ? r * SORT.d : nameCmp(x, y);
+  }
   function sortItems(a) {
     return a.slice().sort(function (x, y) {
       var fx = x.mimeType === FOLDER ? 0 : 1, fy = y.mimeType === FOLDER ? 0 : 1;
-      return fx - fy || String(x.name).localeCompare(String(y.name), "ru", { numeric: true });
+      if (fx !== fy) return fx - fy;
+      return fx === 0 ? (SORT.k === "name" ? nameCmp(x, y) * SORT.d : nameCmp(x, y)) : cmpBy(x, y);
     });
+  }
+  function setSort(k) {
+    if (SORT.k === k) SORT.d = -SORT.d; else SORT = { k: k, d: (k === "date" || k === "size") ? -1 : 1 };
+    try { localStorage.setItem("lib.sort", JSON.stringify(SORT)); } catch (e) {}
+    S.items = sortItems(S.items); render();
+  }
+  function sortBar() {
+    return '<div class="lb-sortbar" role="group" aria-label="Сортировка">' + SORTS.map(function (s) {
+      var on = SORT.k === s[0], ar = on ? ((s[0] === "date" || s[0] === "size") ? (SORT.d === -1 ? " ↓" : " ↑") : (SORT.d === 1 ? " ↓" : " ↑")) : "";
+      return '<button type="button" data-a="sort" data-k="' + s[0] + '" class="' + (on ? "on" : "") + '" aria-pressed="' + on + '">' + s[1] + ar + "</button>";
+    }).join("") + "</div>";
   }
   function load() {
     var cur = S.stack[S.stack.length - 1];
@@ -437,7 +467,7 @@
     var mime = m.mime || "", url;
     if (/^(pptx|ppsx|pptm|ppsm)$/.test(ext) && window.pptxView) {
       var warnTxt = ""; try { warnTxt = ((m.path && m.path.length ? m.path : curPath()).map(function (c) { return c.name; }).join(" / ") + " / " + m.name); } catch (x) { warnTxt = m.name || ""; }
-      return window.pptxView.open(blob, m.name, { warn: /гражданск/i.test(warnTxt), more: function () { dvMsg(m, "Этот файл показывается только внутри приложения."); } }).then(function () {
+      return window.pptxView.open(blob, m.name, { warn: /гражданск/i.test(warnTxt), link: m.link || "", more: function () { dvMsg(m, "Этот файл показывается только внутри приложения."); } }).then(function () {
         S.ready = null; S.info = ""; S.link = null; render();
       }, function (e) {
         try { console.warn("pptx view:", e); } catch (x) {}
@@ -568,6 +598,7 @@
     if (!t) return;
     var a = t.dataset.a, id = t.dataset.id;
     var f = S.items.filter(function (i) { return i.id === id; })[0];
+    if (a === "sort") return setSort(t.dataset.k);
     if (a === "close") return close();
     if (a === "back") return goBack();
     if (a === "ready") { var rid = S.ready; return tapFile(rid); }
@@ -607,8 +638,8 @@
         x.n++; x.size += m.size || 0;
       }
     });
-    var cmp = function (a, b) { return String(a.name).localeCompare(String(b.name), "ru", { numeric: true }); };
-    return { files: files.sort(cmp), dirs: Object.keys(dirs).map(function (k) { return dirs[k]; }).sort(cmp) };
+    var dcmp = function (a, b) { return SORT.k === "name" ? nameCmp(a, b) * SORT.d : (SORT.k === "size" ? ((a.size || 0) - (b.size || 0)) * SORT.d || nameCmp(a, b) : nameCmp(a, b)); };
+    return { files: files.sort(cmpBy), dirs: Object.keys(dirs).map(function (k) { return dirs[k]; }).sort(dcmp) };
   }
   function removeDir(id) {
     var at = S.offDir.length, ids = Object.keys(S.have).filter(function (k) {
@@ -661,6 +692,7 @@
       if (S.offDir.length) h += '<div class="lb-crumbs">' + oc.join(" › ") + "</div>";
       h += '<div class="lb-sum">' + (nAll ? nAll + " файл(ов) · " + fmt(tot) : "Здесь появятся файлы, сохранённые для офлайна") + '</div>';
       if (lv.dirs.length || lv.files.length) {
+        h += (lv.files.length + lv.dirs.length > 1 ? sortBar() : "");
         h += '<div class="lb-list">' + lv.dirs.map(function (d) {
           return '<div class="lb-row"><button type="button" class="lb-main" title="' + esc(d.name) + '" data-a="odir" data-id="' + esc(d.id) + '" data-name="' + esc(d.name) + '"><span class="lb-i">📁</span><span class="lb-t"><b>' + esc(d.name) + '</b><i>' + d.n + " файл(ов) · " + fmt(d.size) + '</i></span></button>' +
             '<button type="button" class="lb-ic" data-a="odeldir" data-id="' + esc(d.id) + '" data-name="' + esc(d.name) + '" title="Удалить папку с устройства" aria-label="Удалить папку с устройства">' + IC.TR + '</button></div>';
@@ -676,6 +708,7 @@
       if (S.cached) h += '<div class="lb-note">Показан сохранённый список — нет связи с Диском</div>';
       if (S.loading) h += '<div class="lb-sum">Загрузка…</div>';
       else if (!S.items.length && !S.err) h += '<div class="lb-sum">Папка пуста</div>';
+      if (S.items.length > 1) h += sortBar();
       h += '<div class="lb-list">' + S.items.map(function (f) { return row(f); }).join("") + "</div>";
     }
     if (S.err) h = '<div class="lb-err">' + esc(S.err) + (S.tab === "drive" ? ' <button type="button" class="lb-btn" data-a="retry">Повторить</button>' : "") + "</div>" + h;

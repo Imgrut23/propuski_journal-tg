@@ -1046,6 +1046,7 @@
     "#pvView .pv-menu button{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;height:46px;padding:0 12px;background:none;border-radius:10px;text-align:left}#pvView .pv-menu button:active{background:#3a3a3c}" +
     "#pvView .pv-go{display:flex;gap:8px;padding:4px}#pvView .pv-go input{flex:1;min-width:0;height:42px;border:0;border-radius:10px;padding:0 12px;font-size:16px;background:#1c1c1e;color:#fff;outline:none}#pvView .pv-go button{width:auto;background:#0a84ff;justify-content:center}" +
     "#pvView .pv-warn{flex:none;background:#2a2112;color:#ffd37a;font-size:14px;border-bottom:1px solid #4a3a16}#pvView .pv-warn summary{list-style:none;cursor:pointer;padding:9px 14px;font-weight:600}#pvView .pv-warn summary::-webkit-details-marker{display:none}#pvView .pv-warn summary::after{content:\" ▸\"}#pvView .pv-warn[open] summary::after{content:\" ▾\"}#pvView .pv-warn div{padding:0 14px 12px;line-height:1.4;color:#f1e3c0}#pvView .pv-warn button{margin-top:8px;background:#0a84ff;width:auto}" +
+    "#pvView .pv-toast{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);z-index:6;padding:12px 14px;border-radius:12px;background:#2c2c2e;color:#fff;font-size:14px;line-height:1.4;box-shadow:0 6px 24px rgba(0,0,0,.6)}" +
     "#pvView .pv-pg{min-width:76px;text-align:center;font-size:14px;color:#ddd}" +
     "#pvView .pv-txt{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 28px;background:#111;line-height:1.45;font-size:16px}" +
     "#pvView .pv-txt h4{margin:22px 0 6px;color:#8ab4ff;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}" +
@@ -1120,13 +1121,36 @@
     var nm0 = (st.name || "presentation").replace(/[\\/:*?"<>|]+/g, "_"); if (!/\.(pptx|ppsx|pptm|ppsm)$/i.test(nm0)) nm0 += ".pptx";
     return { name: nm0, file: (function () { try { return new File([st.blob], nm0, { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" }); } catch (e) { return null; } })() };
   }
+  function pvToast(t) {
+    var o = V.querySelector(".pv-toast"); if (o) o.remove();
+    var d = document.createElement("div"); d.className = "pv-toast"; d.textContent = t; V.appendChild(d);
+    setTimeout(function () { if (d.parentNode) d.remove(); }, 6000);
+  }
+  /* цепочка: системное «Поделиться» файлом (там выбирается приложение PowerPoint) → Google Диск (откроется в приложении Диска, оттуда «Открыть в PowerPoint») → скачивание файла */
   function openInPpt(download) {
-    var f = pptFile();
-    if (!download && f.file && navigator.canShare && navigator.canShare({ files: [f.file] })) {
-      return navigator.share({ files: [f.file], title: f.name }).catch(function () {});
+    var f = pptFile(), link = st.opts && st.opts.link;
+    var viaDrive = function () {
+      if (!link) return false;
+      try { window.open(link, "_blank", "noopener"); } catch (x) { try { location.href = link; } catch (y) { return false; } }
+      pvToast("Открыл на Google Диске. В приложении Диска нажмите «Открыть в приложении» или ⋮ → «Открыть с помощью» → PowerPoint.");
+      return true;
+    };
+    var viaFile = function () {
+      try {
+        var u = URL.createObjectURL(st.blob), a = document.createElement("a"); a.href = u; a.download = f.name; a.rel = "noopener"; a.style.display = "none";
+        V.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000);
+        pvToast("Файл «" + f.name + "» сохраняется. Откройте его из «Загрузок» в PowerPoint.");
+      } catch (x) { pvToast("Не удалось сохранить файл из встроенного окна. Откройте приложение в обычном браузере."); }
+    };
+    if (download) { viaFile(); return Promise.resolve(); }
+    if (f.file && navigator.canShare && navigator.share) {
+      var ok = false; try { ok = navigator.canShare({ files: [f.file] }); } catch (x) {}
+      if (ok) return navigator.share({ files: [f.file], title: f.name }).catch(function (e) {
+        if (e && e.name === "AbortError") return;
+        if (!viaDrive()) viaFile();
+      });
     }
-    var u = URL.createObjectURL(st.blob), a = document.createElement("a"); a.href = u; a.download = f.name; a.style.display = "none";
-    V.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000);
+    if (!viaDrive()) viaFile();
     return Promise.resolve();
   }
   // меню «⋯»: перейти к слайду, скопировать текст слайда, ссылка на Диск (если передана), закрыть
