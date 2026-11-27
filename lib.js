@@ -436,7 +436,8 @@
   function viewFile(id, m, blob, ext) {
     var mime = m.mime || "", url;
     if (/^(pptx|ppsx|pptm|ppsm)$/.test(ext) && window.pptxView) {
-      return window.pptxView.open(blob, m.name, { more: function () { dvMsg(m, "Этот файл показывается только внутри приложения."); } }).then(function () {
+      var warnTxt = ""; try { warnTxt = ((m.path && m.path.length ? m.path : curPath()).map(function (c) { return c.name; }).join(" / ") + " / " + m.name); } catch (x) { warnTxt = m.name || ""; }
+      return window.pptxView.open(blob, m.name, { warn: /гражданск/i.test(warnTxt), more: function () { dvMsg(m, "Этот файл показывается только внутри приложения."); } }).then(function () {
         S.ready = null; S.info = ""; S.link = null; render();
       }, function (e) {
         try { console.warn("pptx view:", e); } catch (x) {}

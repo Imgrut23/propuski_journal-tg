@@ -726,6 +726,200 @@
       ctx.out.push('<div class="pv-sh" style="' + css + ";overflow:hidden;" + rad + bd + '"><img alt="" src="' + u + '" style="' + imgCss + '"></div>');
     });
   }
+  /* ───────── диаграммы (chartN.xml → SVG): столбцы, линии, области, круговые, кольцевые, точечные ───────── */
+  function chTxt(ctx, node, defC) {   // текст из c:tx/c:rich или c:strRef
+    var rich = node && node.getElementsByTagNameNS("*", "t"), s = "";
+    if (rich && rich.length) { for (var i = 0; i < rich.length; i++) s += rich[i].textContent; return s; }
+    var v = node && node.getElementsByTagNameNS("*", "v")[0]; return v ? v.textContent : "";
+  }
+  function chPts(ref) {   // [{v:"..."}] из strCache/numCache (c:cat, c:val, c:tx)
+    var cache = ref && (ref.getElementsByTagNameNS("*", "strCache")[0] || ref.getElementsByTagNameNS("*", "numCache")[0]), out = [];
+    if (!cache) return out;
+    var cnt = nm(kid(cache, "ptCount"), "val", 0);
+    for (var i = 0; i < cnt; i++) out.push(null);
+    kids(cache, "pt").forEach(function (p) { var idx = nm(p, "idx", 0), v = kid(p, "v"); out[idx] = v ? v.textContent : null; });
+    return out;
+  }
+  function chFmt(v, code) {
+    if (v == null || isNaN(v)) return "";
+    var pct = /%/.test(code || ""), d = /0\.(0+)/.exec(code || ""), dec = d ? d[1].length : (Math.abs(v) < 10 && v % 1 ? 1 : 0);
+    if (pct) return (v * 100).toFixed(dec) + "%";
+    var s = (+v).toFixed(dec), p = s.split(".");
+    if (/#,##|# ##/.test(code || "") || Math.abs(v) >= 1000) p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
+    return p.join(".");
+  }
+  function chColor(ctx, spPr, fallback) {
+    var f = spPr && kid(spPr, "solidFill"); var c = f && firstColor(ctx, f);
+    if (c) return c;
+    if (spPr && kid(spPr, "gradFill")) { var g = fillOf(ctx, spPr); if (g && g.css) { var m = /#[0-9a-f]{6}|rgba?\([^)]*\)/i.exec(g.css); if (m) return m[0]; } }
+    return fallback;
+  }
+  function chAccent(ctx, i, n) {
+    var th = ctx.m.theme || {}, a = th["accent" + (i % 6 + 1)] || ["4472C4", "ED7D31", "A5A5A5", "FFC000", "5B9BD5", "70AD47"][i % 6];
+    var r = parseInt(a.substr(0, 2), 16), g = parseInt(a.substr(2, 2), 16), b = parseInt(a.substr(4, 2), 16), k = Math.floor(i / 6);
+    if (k) { var f = k % 2 ? 0.7 : 1.3; r = r * f; g = g * f; b = b * f; if (f > 1) { r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b); } }
+    return "#" + hex2(r) + hex2(g) + hex2(b);
+  }
+  function drawChart(ctx, pos, gd, part) {
+    var cEl = gd.getElementsByTagNameNS("*", "chart")[0], rid = cEl && cEl.getAttributeNS(NSR, "id"), rel = rid && ctx.rels[rid];
+    if (!rel || !rel.target) return Promise.resolve(false);
+    return ctx.pkg.xml(rel.target).then(function (cs) {
+      if (!cs) return false;
+      var chart = kid(cs, "chart"), plot = chart && kid(chart, "plotArea");
+      if (!plot) return false;
+      var W = pos.w, H = pos.h, th = ctx.m.theme || {}, tx1 = "#" + (th[(ctx.m.clrMap && ctx.m.clrMap.tx1) || "dk1"] || "000000");
+      var txc = (function () { var tp = kid(cs, "txPr"), d = tp && tp.getElementsByTagNameNS("*", "defRPr")[0], f = d && kid(d, "solidFill"); return (f && firstColor(ctx, f)) || tx1; })();
+      var fsz = (function () { var tp = kid(cs, "txPr"), d = tp && tp.getElementsByTagNameNS("*", "defRPr")[0]; return d && nm(d, "sz", 0) ? nm(d, "sz", 1000) / 100 : Math.max(10, Math.min(18, H / 18)); })();
+      var svg = [], L = 8, T = 6, R = W - 8, B = H - 6;
+      var csp = kid(cs, "spPr"), bgc = csp && !kid(csp, "noFill") && chColor(ctx, csp, null);
+      if (bgc) svg.push('<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + bgc + '"/>');
+      // заголовок
+      var ttl = kid(chart, "title"), atd = at(kid(chart, "autoTitleDeleted"), "val") === "1";
+      if (ttl && !atd) {
+        var tt = chTxt(ctx, ttl); if (tt) { var tfs = fsz * 1.3; svg.push('<text x="' + W / 2 + '" y="' + (T + tfs) + '" text-anchor="middle" font-size="' + tfs + '" font-weight="700" fill="' + txc + '">' + esc(tt) + "</text>"); T += tfs * 1.7; }
+      }
+      // типы диаграмм
+      var groups = kids(plot).filter(function (g) { return /Chart$/.test(g.localName); });
+      if (!groups.length) return false;
+      var g0 = groups[0], kind = g0.localName.replace(/^(.*?)(3D)?Chart$/, "$1"), isPie = kind === "pie" || kind === "doughnut" || kind === "ofPie";
+      var sers = [];
+      groups.forEach(function (g) {
+        var k = g.localName.replace(/^(.*?)(3D)?Chart$/, "$1"), bd = kid(g, "barDir");
+        kids(g, "ser").forEach(function (s) {
+          var cat = kid(s, "cat"), val = kid(s, "val") || kid(s, "yVal"), xv = kid(s, "xVal");
+          sers.push({ el: s, kind: k, horiz: bd && at(bd, "val") === "bar", grouping: at(kid(g, "grouping"), "val") || "clustered", name: chTxt(ctx, kid(s, "tx")), cats: chPts(cat || xv), vals: chPts(val).map(function (v) { return v == null || v === "" ? null : +v; }), fc: val && (val.getElementsByTagNameNS("*", "formatCode")[0] || {}).textContent, dl: kid(s, "dLbls") || kid(g, "dLbls"), idx: sers.length });
+        });
+      });
+      if (!sers.length) return false;
+      var nPts = Math.max.apply(null, sers.map(function (s) { return s.vals.length; }));
+      function dlOf(s) {   // что показывать в подписях данных
+        var d = s.dl; if (!d) return null;
+        var f = function (n) { return at(kid(d, n), "val") === "1"; };
+        if (kid(d, "delete") && at(kid(d, "delete"), "val") === "1") return null;
+        if (!(f("showVal") || f("showPercent") || f("showCatName") || f("showSerName"))) return null;
+        var dr = d.getElementsByTagNameNS("*", "defRPr")[0], fc = dr && kid(dr, "solidFill");
+        return { val: f("showVal"), pct: f("showPercent"), cat: f("showCatName"), ser: f("showSerName"), color: fc && firstColor(ctx, fc), size: dr && nm(dr, "sz", 0) ? nm(dr, "sz", 0) / 100 : null };
+      }
+      // легенда
+      var lg = kid(chart, "legend"), lgPos = lg ? (at(kid(lg, "legendPos"), "val") || "r") : null;
+      var items = isPie ? (sers[0].cats.length ? sers[0].cats : sers[0].vals.map(function (_, i) { return "" + (i + 1); })).map(function (c, i) { return { n: c || "", c: null, i: i }; }) : sers.map(function (s, i) { return { n: s.name || ("Ряд " + (i + 1)), c: null, i: i }; });
+      function serColor(s, i) { return chColor(ctx, kid(s.el, "spPr"), chAccent(ctx, s.idx)); }
+      function dPtCol(s, i, def) {
+        var dp = kids(s.el, "dPt").filter(function (d) { return nm(kid(d, "idx"), "val", -1) === i; })[0];
+        return chColor(ctx, dp && kid(dp, "spPr"), def);
+      }
+      function ptColor(s, i) {
+        var dp = kids(s.el, "dPt").filter(function (d) { return nm(kid(d, "idx"), "val", -1) === i; })[0];
+        return chColor(ctx, dp && kid(dp, "spPr"), chAccent(ctx, i));
+      }
+      items.forEach(function (it) { it.c = isPie ? ptColor(sers[0], it.i) : serColor(sers[it.i], it.i); });
+      var lfs = fsz * 0.95;
+      if (lg && lgPos && !(items.length < 2 && !isPie && sers.length < 2 && false)) {
+        if (lgPos === "r" || lgPos === "l" || lgPos === "tr") {
+          var lw = 0; items.forEach(function (it) { lw = Math.max(lw, it.n.length * lfs * 0.55 + lfs * 1.8); }); lw = Math.min(lw, W * 0.4);
+          var lx = lgPos === "l" ? L : R - lw, ly = T + ((B - T) - items.length * lfs * 1.6) / 2;
+          items.forEach(function (it, k) { var y = ly + k * lfs * 1.6; svg.push('<rect x="' + lx + '" y="' + (y + lfs * 0.1) + '" width="' + lfs * 0.8 + '" height="' + lfs * 0.8 + '" fill="' + it.c + '"/><text x="' + (lx + lfs * 1.2) + '" y="' + (y + lfs * 0.85) + '" font-size="' + lfs + '" fill="' + txc + '">' + esc(it.n) + "</text>"); });
+          if (lgPos === "l") L += lw + 8; else R -= lw + 8;
+        } else {
+          var rowW = 0; items.forEach(function (it) { rowW += it.n.length * lfs * 0.55 + lfs * 2.4; });
+          var ly2 = lgPos === "t" ? T : B - lfs * 1.4, lx2 = Math.max(L, (W - rowW) / 2);
+          items.forEach(function (it) { svg.push('<rect x="' + lx2 + '" y="' + (ly2 + lfs * 0.15) + '" width="' + lfs * 0.8 + '" height="' + lfs * 0.8 + '" fill="' + it.c + '"/><text x="' + (lx2 + lfs * 1.2) + '" y="' + (ly2 + lfs * 0.9) + '" font-size="' + lfs + '" fill="' + txc + '">' + esc(it.n) + "</text>"); lx2 += it.n.length * lfs * 0.55 + lfs * 2.4; });
+          if (lgPos === "t") T += lfs * 1.8; else B -= lfs * 1.8;
+        }
+      }
+      // ───── круговые / кольцевые
+      if (isPie) {
+        var s0 = sers[0], tot = 0, vals = s0.vals.map(function (v) { v = Math.max(0, v || 0); tot += v; return v; });
+        var cx = (L + R) / 2, cy = (T + B) / 2, rad = Math.max(10, Math.min(R - L, B - T) / 2 - 4), hole = kind === "doughnut" ? rad * (nm(g0.getElementsByTagNameNS("*", "holeSize")[0], "val", 50) / 100) : 0;
+        var a = (nm(g0.getElementsByTagNameNS("*", "firstSliceAng")[0], "val", 0) - 90) * Math.PI / 180, dl = dlOf(s0);
+        if (!tot) return false;
+        vals.forEach(function (v, i) {
+          if (!v) return;
+          var da = v / tot * Math.PI * 2, a2 = a + da, big = da > Math.PI ? 1 : 0, col = ptColor(s0, i);
+          var x1 = cx + rad * Math.cos(a), y1 = cy + rad * Math.sin(a), x2 = cx + rad * Math.cos(a2), y2 = cy + rad * Math.sin(a2), d;
+          if (da > Math.PI * 2 - 1e-4) d = "M" + (cx + rad) + " " + cy + "A" + rad + " " + rad + " 0 1 1 " + (cx - rad) + " " + cy + "A" + rad + " " + rad + " 0 1 1 " + (cx + rad) + " " + cy + (hole ? "M" + (cx + hole) + " " + cy + "A" + hole + " " + hole + " 0 1 0 " + (cx - hole) + " " + cy + "A" + hole + " " + hole + " 0 1 0 " + (cx + hole) + " " + cy : "") + "Z";
+          else if (hole) { var x3 = cx + hole * Math.cos(a2), y3 = cy + hole * Math.sin(a2), x4 = cx + hole * Math.cos(a), y4 = cy + hole * Math.sin(a); d = "M" + x1 + " " + y1 + "A" + rad + " " + rad + " 0 " + big + " 1 " + x2 + " " + y2 + "L" + x3 + " " + y3 + "A" + hole + " " + hole + " 0 " + big + " 0 " + x4 + " " + y4 + "Z"; }
+          else d = "M" + cx + " " + cy + "L" + x1 + " " + y1 + "A" + rad + " " + rad + " 0 " + big + " 1 " + x2 + " " + y2 + "Z";
+          svg.push('<path d="' + d + '" fill="' + col + '" stroke="' + (bgc || "#fff") + '" stroke-width="1" fill-rule="evenodd"/>');
+          if (dl) {
+            var am = a + da / 2, rr = hole ? (rad + hole) / 2 : rad * 0.65, lab = [];
+            if (dl.cat) lab.push(s0.cats[i] || ""); if (dl.val) lab.push(chFmt(v, s0.fc)); if (dl.pct) lab.push(Math.round(v / tot * 100) + "%");
+            svg.push('<text x="' + (cx + rr * Math.cos(am)) + '" y="' + (cy + rr * Math.sin(am) + fsz * 0.35) + '" text-anchor="middle" font-size="' + (dl.size || fsz) + '" font-weight="700" fill="' + (dl.color || "#fff") + '">' + esc(lab.join(", ")) + "</text>");
+          }
+          a = a2;
+        });
+        return { svg: svg, W: W, H: H };
+      }
+      // ───── оси: столбцы / линии / области / точки
+      var horiz = sers.some(function (s) { return s.horiz; }), stacked = sers.some(function (s) { return /stacked|percentStacked/i.test(s.grouping) && (s.kind === "bar" || s.kind === "area"); }), pctSt = sers.some(function (s) { return s.grouping === "percentStacked"; });
+      var scatter = sers.some(function (s) { return s.kind === "scatter"; });
+      var xsNum = scatter ? sers[0].cats.map(function (v) { return +v; }) : null;
+      var tot2 = [], mn = 0, mx = -Infinity;
+      for (var p = 0; p < nPts; p++) { var pos0 = 0, neg0 = 0; sers.forEach(function (s) { var v = s.vals[p] || 0; if (stacked) { if (v >= 0) pos0 += v; else neg0 += v; } else { mx = Math.max(mx, v); mn = Math.min(mn, v); } }); if (stacked) { mx = Math.max(mx, pos0); mn = Math.min(mn, neg0); tot2.push(pos0 - neg0); } }
+      if (pctSt) { mn = 0; mx = 1; }
+      if (!isFinite(mx)) mx = 1;
+      var vAx = kid(plot, "valAx"), sc = vAx && kid(vAx, "scaling"), uMin = sc && kid(sc, "min"), uMax = sc && kid(sc, "max");
+      if (uMin) mn = nm(uMin, "val", mn); if (uMax) mx = nm(uMax, "val", mx);
+      var mu = vAx && kid(vAx, "majorUnit"), step;
+      if (mu) step = nm(mu, "val", 0);
+      if (!step) { var span = (mx - mn) || 1, pw = Math.pow(10, Math.floor(Math.log(span / 5) / Math.LN10)), r0 = span / 5 / pw; step = (r0 < 1.5 ? 1 : r0 < 3 ? 2 : r0 < 7 ? 5 : 10) * pw; }
+      if (!uMax) mx = Math.ceil(mx / step - 1e-9) * step; if (!uMin && mn < 0) mn = Math.floor(mn / step + 1e-9) * step;
+      if (mx === mn) mx = mn + step;
+      var delV = vAx && at(kid(vAx, "delete"), "val") === "1", delC = (function () { var ca = kid(plot, "catAx") || kid(plot, "dateAx"); return ca && at(kid(ca, "delete"), "val") === "1"; })();
+      var fcode = sers[0].fc, labW = delV ? 0 : Math.max(String(chFmt(mx, pctSt ? "0%" : fcode)).length, String(chFmt(mn, pctSt ? "0%" : fcode)).length) * fsz * 0.58 + 6;
+      var axFs = fsz * 0.95, catLabH = delC ? 0 : axFs * 1.8;
+      var pl = L + (horiz ? 0 : labW), pr = R - (horiz ? Math.max(6, labW / 2) : 6), pt = T + 6, pb = B - (horiz ? 0 : catLabH);
+      if (horiz) { var maxCat = 0; sers[0].cats.forEach(function (c) { maxCat = Math.max(maxCat, (c || "").length); }); pl = L + (delC ? 0 : Math.min(maxCat * axFs * 0.55 + 8, (R - L) * 0.4)); pb = B - (delV ? 0 : axFs * 1.8); }
+      var cw = pr - pl, ch2 = pb - pt, gcol = "rgba(128,128,128,.35)";
+      function vx(v) { return horiz ? pl + (v - mn) / (mx - mn) * cw : 0; }
+      function vy(v) { return pb - (v - mn) / (mx - mn) * ch2; }
+      // сетка и подписи значений
+      for (var tv = mn; tv <= mx + step * 1e-6; tv += step) {
+        var lab2 = chFmt(pctSt ? tv : tv, pctSt ? "0%" : fcode);
+        if (horiz) { var gx = vx(tv); svg.push('<line x1="' + gx + '" x2="' + gx + '" y1="' + pt + '" y2="' + pb + '" stroke="' + gcol + '"/>'); if (!delV) svg.push('<text x="' + gx + '" y="' + (pb + axFs * 1.3) + '" text-anchor="middle" font-size="' + axFs + '" fill="' + txc + '">' + esc(lab2) + "</text>"); }
+        else { var gy = vy(tv); svg.push('<line x1="' + pl + '" x2="' + pr + '" y1="' + gy + '" y2="' + gy + '" stroke="' + gcol + '"/>'); if (!delV) svg.push('<text x="' + (pl - 5) + '" y="' + (gy + axFs * 0.35) + '" text-anchor="end" font-size="' + axFs + '" fill="' + txc + '">' + esc(lab2) + "</text>"); }
+        if (step <= 0) break;
+      }
+      var cats = sers[0].cats, slot = (horiz ? ch2 : cw) / Math.max(nPts, 1), nBar = sers.filter(function (s) { return s.kind === "bar"; }).length, bi = 0;
+      var base = Math.max(mn, 0), gap = nm(g0.getElementsByTagNameNS("*", "gapWidth")[0], "val", 150) / 100;
+      var bw = stacked ? slot / (1 + gap) : slot / (nBar + gap), cum = [];
+      // подписи категорий
+      if (!delC) for (var q = 0; q < nPts; q++) {
+        var cl = cats[q] != null ? cats[q] : "" + (q + 1), mxc = Math.max(3, Math.floor(slot / (axFs * 0.5))), cs = String(cl);
+        if (!horiz && cs.length > mxc && slot < axFs * 6) cs = cs.slice(0, Math.max(2, mxc - 1)) + "…";
+        if (horiz) svg.push('<text x="' + (pl - 5) + '" y="' + (pt + slot * q + slot / 2 + axFs * 0.35) + '" text-anchor="end" font-size="' + axFs + '" fill="' + txc + '">' + esc(cs) + "</text>");
+        else svg.push('<text x="' + (pl + slot * q + slot / 2) + '" y="' + (pb + axFs * 1.35) + '" text-anchor="middle" font-size="' + axFs + '" fill="' + txc + '">' + esc(cs) + "</text>");
+      }
+      svg.push('<line x1="' + pl + '" x2="' + (horiz ? pl : pr) + '" y1="' + (horiz ? pt : pb) + '" y2="' + pb + '" stroke="' + txc + '" opacity=".5"/>');
+      if (!horiz) svg.push('<line x1="' + pl + '" x2="' + pr + '" y1="' + vy(base) + '" y2="' + vy(base) + '" stroke="' + txc + '" opacity=".5"/>');
+      // ряды
+      sers.forEach(function (s) {
+        var col = serColor(s), dl = dlOf(s), kk = s.kind, pts = [], lnw = (function () { var l = kid(kid(s.el, "spPr"), "ln"); return l && nm(l, "w", 0) ? Math.max(1.5, nm(l, "w", 28575) / EMU) : 2.25; })();
+        var isBar = kk === "bar", off = isBar ? (stacked ? 0 : bi - nBar / 2) : 0; if (isBar) bi++;
+        s.vals.forEach(function (v, i) {
+          if (v == null) { pts.push(null); return; }
+          var cx2 = horiz ? 0 : pl + slot * i + slot / 2, cy2 = horiz ? pt + slot * i + slot / 2 : 0, y0, y1, c = dPtCol(s, i, col);
+          if (stacked) { var cu = cum[i] || { p: 0, n: 0 }, vv = pctSt ? v / (tot2[i] || 1) : v; y0 = vv >= 0 ? cu.p : cu.n; y1 = y0 + vv; if (vv >= 0) cu.p = y1; else cu.n = y1; cum[i] = cu; }
+          else { y0 = base; y1 = v; }
+          if (scatter) { var xx = pl + ((+xsNum[i] || i) - Math.min.apply(null, xsNum)) / ((Math.max.apply(null, xsNum) - Math.min.apply(null, xsNum)) || 1) * cw * 0.94 + cw * 0.03; pts.push([xx, vy(v)]); return; }
+          if (isBar) {
+            if (horiz) { var bx1 = vx(y0), bx2 = vx(y1), by = cy2 - bw * (stacked ? 0.5 : nBar / 2) + (stacked ? 0 : (off + nBar / 2) * bw); svg.push('<rect x="' + Math.min(bx1, bx2) + '" y="' + by + '" width="' + Math.abs(bx2 - bx1) + '" height="' + bw + '" fill="' + c + '"/>'); if (dl) svg.push('<text x="' + (stacked ? (bx1 + bx2) / 2 : Math.max(bx1, bx2) + 4) + '" y="' + (by + bw / 2 + fsz * 0.35) + '" text-anchor="' + (stacked ? "middle" : "start") + '" font-size="' + (dl.size || fsz) + '" fill="' + (dl.color || txc) + '">' + esc(chFmt(v, s.fc)) + "</text>"); }
+            else { var by1 = vy(y0), by2 = vy(y1), bx = cx2 - (stacked ? bw / 2 : (nBar * bw) / 2) + (stacked ? 0 : (off + nBar / 2) * bw); svg.push('<rect x="' + bx + '" y="' + Math.min(by1, by2) + '" width="' + bw + '" height="' + Math.max(0.5, Math.abs(by2 - by1)) + '" fill="' + c + '"/>'); if (dl) svg.push('<text x="' + (bx + bw / 2) + '" y="' + (stacked ? (by1 + by2) / 2 + fsz * 0.35 : Math.min(by1, by2) - 4) + '" text-anchor="middle" font-size="' + (dl.size || fsz) + '" fill="' + (dl.color || txc) + '">' + esc(chFmt(v, s.fc)) + "</text>"); }
+          } else pts.push([cx2, vy(stacked ? y1 : v), v]);
+        });
+        if (!isBar) {
+          var seg = pts.filter(Boolean);
+          if (seg.length) {
+            if (kk === "area") { var d2 = "M" + seg[0][0] + " " + vy(base) + seg.map(function (q2) { return "L" + q2[0] + " " + q2[1]; }).join("") + "L" + seg[seg.length - 1][0] + " " + vy(base) + "Z"; svg.push('<path d="' + d2 + '" fill="' + col + '" fill-opacity=".75"/>'); }
+            else if (kk !== "scatter" || !(kid(kid(s.el, "spPr"), "ln") && kid(kid(kid(s.el, "spPr"), "ln"), "noFill"))) svg.push('<polyline points="' + seg.map(function (q2) { return q2[0] + "," + q2[1]; }).join(" ") + '" fill="none" stroke="' + col + '" stroke-width="' + lnw + '" stroke-linejoin="round" stroke-linecap="round"/>');
+            if (kk === "line" || kk === "scatter") seg.forEach(function (q2) { svg.push('<circle cx="' + q2[0] + '" cy="' + q2[1] + '" r="' + Math.max(3, lnw * 1.4) + '" fill="' + col + '"/>'); });
+            if (dl) seg.forEach(function (q2) { svg.push('<text x="' + q2[0] + '" y="' + (q2[1] - 7) + '" text-anchor="middle" font-size="' + (dl.size || fsz) + '" fill="' + (dl.color || txc) + '">' + esc(chFmt(q2[2], s.fc)) + "</text>"); });
+          }
+        }
+      });
+      return { svg: svg, W: W, H: H };
+    });
+  }
   function drawFrame(ctx, el, mp) {
     var xf = xfrmOf(el);
     if (!xf) return Promise.resolve();
@@ -735,7 +929,7 @@
       var ri = gd.getElementsByTagNameNS("*", "relIds")[0], dmId = ri && ri.getAttributeNS(NSR, "dm");
       var dmRel = dmId && ctx.rels[dmId];
       var miss = function () {
-        ctx.out.push('<div class="pv-sh pv-miss" style="' + pos.css + '">🔷 Схема SmartArt<small>показывается в PowerPoint</small></div>');
+        ctx.out.push('<div class="pv-sh pv-miss" style="' + pos.css + '">🔷 Схема SmartArt<small class=\"pv-sp\" data-pvppt=\"1\">▸ Смотрите через PowerPoint</small></div>');
       };
       return (dmRel && dmRel.target ? ctx.pkg.xml(dmRel.target) : Promise.resolve(null)).then(function (dm) {
         var ext = dm && dm.getElementsByTagNameNS("*", "dataModelExt")[0], rid = ext && ext.getAttribute("relId");
@@ -754,9 +948,16 @@
         });
       }).catch(function () { miss(); });
     }
+    if (!tbl && /chart/.test(at(gd, "uri") || "")) {
+      var rot = pos.tr;
+      return drawChart(ctx, pos, gd).then(function (r) {
+        if (!r) { ctx.out.push('<div class="pv-sh pv-miss" style="' + pos.css + '">📈 Диаграмма<small class=\"pv-sp\" data-pvppt=\"1\">▸ Смотрите через PowerPoint</small></div>'); return; }
+        ctx.out.push('<svg class="pv-sh pv-ch" style="' + pos.css + ";" + rot + ';overflow:hidden" viewBox="0 0 ' + r.W + " " + r.H + '" width="' + r.W + '" height="' + r.H + '" font-family="-apple-system,Segoe UI,Roboto,Arial,sans-serif">' + r.svg.join("") + "</svg>");
+      }, function () { ctx.out.push('<div class="pv-sh pv-miss" style="' + pos.css + '">📈 Диаграмма<small class=\"pv-sp\" data-pvppt=\"1\">▸ Смотрите через PowerPoint</small></div>'); });
+    }
     if (!tbl) {
       var uri = at(gd, "uri") || "";
-      ctx.out.push('<div class="pv-sh pv-miss" style="' + pos.css + '">' + (/chart/.test(uri) ? "📈 Диаграмма" : /diagram/.test(uri) ? "🔷 Схема SmartArt" : "▣ Объект") + "<small>показывается в PowerPoint</small></div>");
+      ctx.out.push('<div class="pv-sh pv-miss" style="' + pos.css + '">' + (/chart/.test(uri) ? "📈 Диаграмма" : /diagram/.test(uri) ? "🔷 Схема SmartArt" : "▣ Объект") + "<small class=\"pv-sp\" data-pvppt=\"1\">▸ Смотрите через PowerPoint</small></div>");
       return Promise.resolve();
     }
     var cols = kids(kid(tbl, "tblGrid"), "gridCol").map(function (g) { return nm(g, "w", 0) * mp.sx / EMU; });
@@ -838,12 +1039,13 @@
     "#pvView .pv-tx{width:100%;word-wrap:break-word;overflow-wrap:anywhere}" +
     "#pvView .pv-bg{position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;margin:0}#pvView .pv-tw{position:absolute;box-sizing:border-box;display:flex;flex-direction:column;overflow:visible}" +
     "#pvView .pv-miss{display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(128,128,128,.12);border:1px dashed rgba(128,128,128,.5);color:#666;font-size:18px;text-align:center}" +
-    "#pvView .pv-miss small{font-size:12px;margin-top:4px}" +
+    "#pvView .pv-miss small{font-size:12px;margin-top:4px}#pvView .pv-miss .pv-sp{font-size:15px;font-weight:600;color:#0a84ff;padding:6px 12px;border-radius:999px;background:rgba(10,132,255,.12);cursor:pointer}" +
     "#pvView .pv-tb{position:absolute;border-collapse:collapse;table-layout:fixed;box-sizing:border-box}#pvView .pv-tb td{padding:3px 6px;vertical-align:top;overflow:hidden}" +
     "#pvView .pv-bar{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 10px calc(env(safe-area-inset-bottom,0px) + 8px);background:#1c1c1e;flex:none}" +
     "#pvView .pv-menu{position:absolute;right:10px;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:5;min-width:240px;padding:6px;background:#2c2c2e;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.6)}" +
     "#pvView .pv-menu button{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;height:46px;padding:0 12px;background:none;border-radius:10px;text-align:left}#pvView .pv-menu button:active{background:#3a3a3c}" +
     "#pvView .pv-go{display:flex;gap:8px;padding:4px}#pvView .pv-go input{flex:1;min-width:0;height:42px;border:0;border-radius:10px;padding:0 12px;font-size:16px;background:#1c1c1e;color:#fff;outline:none}#pvView .pv-go button{width:auto;background:#0a84ff;justify-content:center}" +
+    "#pvView .pv-warn{flex:none;background:#2a2112;color:#ffd37a;font-size:14px;border-bottom:1px solid #4a3a16}#pvView .pv-warn summary{list-style:none;cursor:pointer;padding:9px 14px;font-weight:600}#pvView .pv-warn summary::-webkit-details-marker{display:none}#pvView .pv-warn summary::after{content:\" ▸\"}#pvView .pv-warn[open] summary::after{content:\" ▾\"}#pvView .pv-warn div{padding:0 14px 12px;line-height:1.4;color:#f1e3c0}#pvView .pv-warn button{margin-top:8px;background:#0a84ff;width:auto}" +
     "#pvView .pv-pg{min-width:76px;text-align:center;font-size:14px;color:#ddd}" +
     "#pvView .pv-txt{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 28px;background:#111;line-height:1.45;font-size:16px}" +
     "#pvView .pv-txt h4{margin:22px 0 6px;color:#8ab4ff;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}" +
@@ -858,6 +1060,7 @@
     var s = document.createElement("style"); s.textContent = CSS; document.head.appendChild(s);
     V = document.createElement("div"); V.id = "pvView"; V.className = "pv-hide";
     V.setAttribute("role", "dialog"); V.setAttribute("aria-label", "Презентация");
+    V.addEventListener("click", function (e) { var t = e.target.closest && e.target.closest("[data-pvppt]"); if (t) { e.preventDefault(); openInPpt(false); } });
     V.innerHTML = '<div class="pv-top"><button type="button" data-a="close" aria-label="Закрыть">✕</button><div class="pv-title"></div>' +
       '<button type="button" data-a="text" aria-label="Текст слайдов">Aa</button><button type="button" data-a="zo" aria-label="Уменьшить">−</button><button type="button" data-a="zi" aria-label="Увеличить">+</button><button type="button" data-a="more" aria-label="Меню">⋯</button></div>' +
       '<div class="pv-stage"><div class="pv-list"></div></div><div class="pv-txt" hidden></div>' +
@@ -912,16 +1115,31 @@
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fb); else fb();
     });
   }
+  /* «Открыть как…»: в PowerPoint/другом приложении (системное «Поделиться» → PowerPoint), скачать, текст, слайды */
+  function pptFile() {
+    var nm0 = (st.name || "presentation").replace(/[\\/:*?"<>|]+/g, "_"); if (!/\.(pptx|ppsx|pptm|ppsm)$/i.test(nm0)) nm0 += ".pptx";
+    return { name: nm0, file: (function () { try { return new File([st.blob], nm0, { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" }); } catch (e) { return null; } })() };
+  }
+  function openInPpt(download) {
+    var f = pptFile();
+    if (!download && f.file && navigator.canShare && navigator.canShare({ files: [f.file] })) {
+      return navigator.share({ files: [f.file], title: f.name }).catch(function () {});
+    }
+    var u = URL.createObjectURL(st.blob), a = document.createElement("a"); a.href = u; a.download = f.name; a.style.display = "none";
+    V.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000);
+    return Promise.resolve();
+  }
   // меню «⋯»: перейти к слайду, скопировать текст слайда, ссылка на Диск (если передана), закрыть
   function menu() {
     if (V.querySelector(".pv-menu")) { closeMenu(); return; }
     var n = st.deck.slides.length, m = document.createElement("div"); m.className = "pv-menu";
-    m.innerHTML = '<button type="button" data-m="goto">🔢 Перейти к слайду…</button><button type="button" data-m="copy">⧉ Копировать текст слайда</button>' +
+    m.innerHTML = '<button type="button" data-m="goto">🔢 Перейти к слайду…</button><button type="button" data-m="copy">⧉ Копировать текст слайда</button><button type=\"button\" data-m=\"as\">📂 Открыть как…</button>' +
       (st.opts && st.opts.link ? '<button type="button" data-m="link">☁️ Открыть на Google Диске</button>' : "") +
       '<button type="button" data-m="close">✕ Закрыть презентацию</button>';
     m.addEventListener("click", function (e) {
       var b = e.target.closest && e.target.closest("[data-m]"); if (!b) return;
       var k = b.dataset.m;
+      if (k === "goto" || k === "as") e.stopPropagation();   /* кнопка исчезает из DOM — иначе внешний обработчик решит, что клик мимо меню, и закроет его */
       if (k === "goto") {
         m.innerHTML = '<div class="pv-go"><input type="number" inputmode="numeric" min="1" max="' + n + '" placeholder="1–' + n + '"><button type="button" data-m="go">Перейти</button></div>';
         var inp = m.querySelector("input"); inp.focus();
@@ -930,6 +1148,12 @@
         var v = parseInt(m.querySelector("input").value, 10);
         if (v >= 1 && v <= n) { closeMenu(); if (st.text) { st.text = false; paintMode(); } go(v - 1); }
       } else if (k === "copy") copySlide(b);
+      else if (k === "as") {
+        m.innerHTML = '<button type="button" data-m="a-slides">🖼 Слайды</button><button type="button" data-m="a-text">📝 Текст</button><button type="button" data-m="a-ppt">📊 В PowerPoint</button><button type="button" data-m="a-dl">⬇ Скачать файл</button>';
+      } else if (k === "a-slides") { closeMenu(); if (st.text) { st.text = false; paintMode(); } }
+      else if (k === "a-text") { closeMenu(); if (!st.text) { st.text = true; paintMode(); } }
+      else if (k === "a-ppt") { closeMenu(); openInPpt(false); }
+      else if (k === "a-dl") { closeMenu(); openInPpt(true); }
       else if (k === "link") { closeMenu(); try { window.open(st.opts.link, "_blank", "noopener"); } catch (x) {} }
       else if (k === "close") { closeMenu(); close(); }
     });
@@ -1061,9 +1285,15 @@
       return loadDeck(pkg);
     }).then(function (deck) {
       if (live) { live = false; teardown(); }
-      st.deck = deck; st.cur = 0; st.zoom = 1; st.text = false; st.opts = opts || {}; st.name = name || "";
+      st.deck = deck; st.cur = 0; st.zoom = 1; st.text = false; st.opts = opts || {}; st.name = name || ""; st.blob = blob;
       st.prevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden";
       V.querySelector(".pv-title").textContent = name || "Презентация";
+      var ow = V.querySelector(".pv-warn"); if (ow) ow.remove();
+      if (st.opts.warn) {
+        var w = document.createElement("details"); w.className = "pv-warn";
+        w.innerHTML = '<summary>⚠ Гражданский процесс: отображается не полностью</summary><div>В этих презентациях бывают диаграммы, схемы, анимации и гиф-картинки, которые здесь рисуются упрощённо или не показываются. Если слайд выглядит неверно — смотрите через PowerPoint.<br><button type="button" data-pvppt="1">📊 Смотрите через PowerPoint</button></div>';
+        V.querySelector(".pv-top").after(w);
+      }
       V.querySelector('[data-a="more"]').style.display = "";
       V.classList.remove("pv-hide"); live = true;
       try { history.pushState({ pv: 1 }, ""); } catch (e) {}
